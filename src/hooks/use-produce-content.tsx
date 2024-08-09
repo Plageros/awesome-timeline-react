@@ -34,10 +34,9 @@ const useProduceContent = ({
 
   const rowsContentRef = useRef<HTMLDivElement[]>([]);
 
-  const allRowsHeightRef = useRef(0);
-
-  const content = useMemo(
-    () =>
+  const [content, internalAllRowsHeight] = useMemo(() => {
+    let internalAllRowsHeight = 0;
+    return [
       rows.map((row, i) => {
         let eventOrder = 0;
         let prevEvent: EventType[] = [];
@@ -101,7 +100,7 @@ const useProduceContent = ({
             minHeight: 40 + highestEventOrder * 22,
           };
         }
-        allRowsHeightRef.current += 40 + highestEventOrder * 22;
+        internalAllRowsHeight += 40 + highestEventOrder * 22;
 
         const rowStaticEvents =
           tick && staticEvents
@@ -148,8 +147,9 @@ const useProduceContent = ({
           </React.Fragment>
         );
       }),
-    [rows, events, tick, windowTime, cellWidth]
-  );
+      internalAllRowsHeight,
+    ];
+  }, [rows, events, tick, windowTime, cellWidth]);
 
   useIntersectionObserver({
     rowsContentRef,
@@ -159,9 +159,9 @@ const useProduceContent = ({
   useEffect(() => {
     if (rowsHeightContext) {
       rowsHeightContext.setRowsHeight(tempRowsHeightRef.current);
-      rowsHeightContext.setAllRowsHeight(allRowsHeightRef.current);
+      rowsHeightContext.setAllRowsHeight(internalAllRowsHeight);
     }
-  }, [content]);
+  }, [content, internalAllRowsHeight]);
 
   return content;
 };

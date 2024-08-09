@@ -38,3 +38,13 @@ export type ModifableElements = {
 };
 
 export type PartialRecord<K extends keyof any, T> = Partial<Record<K, T>>;
+
+export type TimelineType = {
+  rows: RowType[];
+  events: EventType[];
+  staticEvents?: EventType[];
+  onDrop?: (props: OnDropProps) => void;
+  startDate: Date;
+  endDate: Date;
+  additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
+};

@@ -1,12 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  EventType,
-  ModifableElements,
-  OnDropProps,
-  PartialRecord,
-  RowsHeightType,
-  RowType,
-} from "./types";
+import { EventType, RowsHeightType, TimelineType } from "./types";
 import "./style.css";
 import TimeBar from "./components/time-bar";
 import RowsHeader from "./components/rows-header";
@@ -25,15 +18,7 @@ const Timeline = ({
   startDate,
   endDate,
   additionalClassNames,
-}: {
-  rows: RowType[];
-  events: EventType[];
-  staticEvents?: EventType[];
-  onDrop?: (props: OnDropProps) => void;
-  startDate: Date;
-  endDate: Date;
-  additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
-}) => {
+}: TimelineType) => {
   const [windowTime, setWindowTime] = useState([
     new Date(
       startDate.getFullYear(),

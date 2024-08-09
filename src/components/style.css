@@ -1,0 +1,132 @@
+.content-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  .row-content:not(:last-child) {
+    border-bottom: 1px solid #e4dcdc;
+  }
+}
+
+.row-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100px;
+  transition: min-height 0.5s ease-in-out;
+  box-sizing: border-box;
+}
+
+.row-content {
+  position: relative;
+  width: 100%;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  overflow: hidden;
+  z-index: 0;
+  transition: min-height 0.5s ease-in-out;
+  box-sizing: border-box;
+}
+
+.event {
+  position: absolute;
+  height: 20px;
+  border: 1px solid black;
+  z-index: 1;
+  transition: top 0.5s ease-in-out;
+  box-sizing: border-box;
+  display: flex;
+  border-radius: 5px;
+  box-shadow: inset 0px 0px 5px gray;
+}
+
+.event-content {
+  width: 100%;
+  height: 100%;
+}
+
+.static-event {
+  position: absolute;
+  background-color: #e0e0e0;
+  z-index: 0;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  border-radius: 5px;
+}
+
+.time-bar {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 50px;
+  min-height: 50px;
+  border: 1px solid yellow;
+  background-color: rgb(39, 36, 36);
+  color: white;
+  box-sizing: border-box;
+}
+
+.empty-block {
+  width: 100px;
+  min-width: 100px;
+  border-right: 1px solid yellow;
+  box-sizing: border-box;
+}
+
+.time-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.day-row {
+  display: grid;
+  height: 50%;
+  width: auto;
+  border-bottom: 1px solid yellow;
+  div:not(:last-child) {
+    border-right: 1px solid yellow;
+  }
+}
+
+.hour-row {
+  display: grid;
+  height: 50%;
+  div:not(:last-child) {
+    border-right: 1px solid yellow;
+    box-sizing: border-box;
+  }
+  box-shadow: 0px 4px 20px black;
+}
+
+.not-clickable {
+  div {
+    pointer-events: none;
+  }
+}
+
+.line {
+  height: 100%;
+  width: 100%;
+  border-right: 1px solid #e4dcdc;
+  box-sizing: border-box;
+}
+
+.lines-canvas {
+  position: absolute;
+  top: 0;
+  display: grid;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.hide-last-line {
+  div:last-child {
+    border-right: none;
+  }
+}
+
+.row-hidden {
+  visibility: hidden;
+}

@@ -1,0 +1,40 @@
+export type RowType = {
+  id: string;
+  name: string;
+};
+
+export type RowsHeightType = {
+  minHeight: number;
+};
+
+export type EventPropsType = {
+  isLocked?: boolean;
+  content?: JSX.Element | string;
+  classNames?: string[];
+};
+
+export type EventType = {
+  id: string;
+  rowId: string;
+  startTime: number;
+  endTime: number;
+  props?: EventPropsType;
+};
+
+export type OnDropProps = {
+  eventId: string;
+  oldRowId: string;
+  newRowId: string;
+  startTime: number;
+  endTime: number;
+};
+
+export type ModifableElements = {
+  timeBar: string;
+  dayRow: string;
+  hourRow: string;
+  gridLine: string;
+  rowsHeader: string;
+};
+
+export type PartialRecord<K extends keyof any, T> = Partial<Record<K, T>>;

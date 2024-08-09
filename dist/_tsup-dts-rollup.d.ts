@@ -253,7 +253,7 @@ export declare type RowType = {
   name: string;
 };
 
-export declare const Timeline: ({
+declare const Timeline: ({
   rows,
   events,
   staticEvents,
@@ -262,6 +262,8 @@ export declare const Timeline: ({
   endDate,
   additionalClassNames,
 }: TimelineType) => React_2.JSX.Element;
+export { Timeline };
+export { Timeline as Timeline_alias_1 };
 
 export declare const TimelinePrimary: () => React_2.JSX.Element;
 
@@ -274,3 +276,5 @@ export declare type TimelineType = {
   endDate: Date;
   additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
 };
+
+export {};

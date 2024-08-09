@@ -30,11 +30,11 @@ const useProduceContent = ({
 }: ProduceContentType) => {
   const rowsHeightContext = useContext(RowsHeightContext);
 
-  let tempRowsHeight: Record<string, RowsHeightType> | null = null;
+  const tempRowsHeightRef = useRef<Record<string, RowsHeightType> | null>(null);
 
   const rowsContentRef = useRef<HTMLDivElement[]>([]);
 
-  let allRowsHeight = 0;
+  const allRowsHeightRef = useRef(0);
 
   const content = useMemo(
     () =>
@@ -92,16 +92,16 @@ const useProduceContent = ({
           highestEventOrder = eventOrder;
         }
 
-        if (tempRowsHeight === null) {
-          tempRowsHeight = {
+        if (tempRowsHeightRef.current === null) {
+          tempRowsHeightRef.current = {
             [row.id]: { minHeight: 40 + highestEventOrder * 22 },
           };
         } else {
-          tempRowsHeight[row.id] = {
+          tempRowsHeightRef.current[row.id] = {
             minHeight: 40 + highestEventOrder * 22,
           };
         }
-        allRowsHeight += 40 + highestEventOrder * 22;
+        allRowsHeightRef.current += 40 + highestEventOrder * 22;
 
         const rowStaticEvents =
           tick && staticEvents
@@ -158,8 +158,8 @@ const useProduceContent = ({
 
   useEffect(() => {
     if (rowsHeightContext) {
-      rowsHeightContext.setRowsHeight(tempRowsHeight);
-      rowsHeightContext.setAllRowsHeight(allRowsHeight);
+      rowsHeightContext.setRowsHeight(tempRowsHeightRef.current);
+      rowsHeightContext.setAllRowsHeight(allRowsHeightRef.current);
     }
   }, [content]);
 

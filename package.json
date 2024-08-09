@@ -1,6 +1,6 @@
 {
   "name": "awesome-timeline-react",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "awesome timeline for react applications",
   "scripts": {
     "test": "jest",

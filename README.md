@@ -16,7 +16,14 @@ npm run ladle
 
 ## Configuration
 
-First, import the `Timeline` component into your project. The following properties are available:
+First, import the `Timeline` component and css into your project.
+
+```sh
+import { Timeline } from "awesome-timeline-react";
+import "awesome-timeline-react/dist/index.css";
+```
+
+The following properties for Timeline component are available:
 
 - `rows` – an array of objects that define rows. The order within the array will be preserved in the Timeline.
 

@@ -10,7 +10,7 @@ import useResizeObserver from "./hooks/use-resize-observer";
 import { ExternalPropertiesContext } from "./contexts/external-properties-context";
 import sortEvents from "./helpers/sort-events";
 
-const Timeline = ({
+export const Timeline = ({
   rows,
   events,
   staticEvents,
@@ -152,5 +152,3 @@ const Timeline = ({
     </div>
   );
 };
-
-export default Timeline;

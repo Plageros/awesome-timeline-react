@@ -27,14 +27,16 @@ export declare const default_alias_1: React_2.ForwardRefExoticComponent<
   ContentType & React_2.RefAttributes<HTMLDivElement>
 >;
 
-export declare const default_alias_10: (dayIndex: number) => string;
+export declare const default_alias_10: (monthIndex: number) => string;
 
-export declare const default_alias_11: (
+export declare const default_alias_11: (dayIndex: number) => string;
+
+export declare const default_alias_12: (
   eventA: EventType,
   eventB: EventType
 ) => 1 | -1;
 
-export declare const default_alias_12: ({
+export declare const default_alias_13: ({
   windowTime,
   tick,
   contentWidth,
@@ -49,7 +51,7 @@ export declare const default_alias_12: ({
   hourBlocks: JSX.Element[];
 };
 
-export declare const default_alias_13: ({
+export declare const default_alias_14: ({
   windowTime,
   contentWidth,
 }: {
@@ -60,7 +62,7 @@ export declare const default_alias_13: ({
   blockWidth: number;
 };
 
-export declare const default_alias_14: ({
+export declare const default_alias_15: ({
   bodyRef,
   rowsContentRef,
 }: {
@@ -68,7 +70,7 @@ export declare const default_alias_14: ({
   rowsContentRef: React.MutableRefObject<HTMLDivElement[] | null>;
 }) => void;
 
-export declare const default_alias_15: ({
+export declare const default_alias_16: ({
   rows,
   windowTime,
   tick,
@@ -79,7 +81,7 @@ export declare const default_alias_15: ({
   bodyRef,
 }: ProduceContentType) => React_2.JSX.Element[];
 
-export declare const default_alias_16: ({
+export declare const default_alias_17: ({
   windowTime,
   setTick,
   setCellWidth,
@@ -138,6 +140,14 @@ export declare const default_alias_6: ({
 }) => React_2.JSX.Element;
 
 export declare const default_alias_7: ({
+  tick,
+  windowTime,
+}: {
+  tick: number | null;
+  windowTime: number[];
+}) => React_2.JSX.Element;
+
+export declare const default_alias_8: ({
   id,
   startPosition,
   width,
@@ -151,7 +161,7 @@ export declare const default_alias_7: ({
   height: CSSProperties["height"];
 }) => React_2.JSX.Element;
 
-export declare const default_alias_8: ({
+export declare const default_alias_9: ({
   windowTime,
   tick,
   contentWidth,
@@ -164,8 +174,6 @@ export declare const default_alias_8: ({
   scrollWidth: number;
   additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
 }) => React_2.JSX.Element;
-
-export declare const default_alias_9: (monthIndex: number) => string;
 
 export declare const DragStartedContext: Context<DragStartedContext_2>;
 
@@ -261,6 +269,7 @@ declare const Timeline: ({
   startDate,
   endDate,
   additionalClassNames,
+  showRTIndicator,
 }: TimelineType) => React_2.JSX.Element;
 export { Timeline };
 export { Timeline as Timeline_alias_1 };
@@ -275,6 +284,7 @@ export declare type TimelineType = {
   startDate: Date;
   endDate: Date;
   additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
+  showRTIndicator?: boolean;
 };
 
 export {};

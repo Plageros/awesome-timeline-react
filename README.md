@@ -2,7 +2,7 @@
 
 ## Introduction
 
-**Awesome Timeline React** is a component that developers can include in their projects. It provides a Gantt timeline for visualizing and managing events. With simple configuration, powerful performance, and customization options, it's an excellent choice for your project. The component is not published yet; it will be released as a beta version first. If you have any ideas for features or encounter any bugs, please email me at [jakub.plata@yahoo.pl](mailto:jakub.plata@yahoo.pl).
+**Awesome Timeline React** is a component that developers can include in their projects. It provides a Gantt timeline for visualizing and managing events. With simple configuration, powerful performance, and customization options, it's an excellent choice for your project. Current releases are pre-releases. If you have any ideas for features or encounter any bugs, please email me at [jakub.plata@yahoo.pl](mailto:jakub.plata@yahoo.pl).
 
 ![](https://raw.githubusercontent.com/Plageros/awesome-timeline-react/master/public/gifs/demo-overview.gif)
 
@@ -49,11 +49,14 @@ The following properties for Timeline component are available:
   - `endDate`: `number` (timestamp in seconds)
 
 - `additionalClassNames` – contains additional class names that will be included within elements:
+
   - `timeBar`: `string`
   - `dayRow`: `string`
   - `hourRow`: `string`
   - `line`: `string`
   - `rowsHeader`: `string`
+
+- `showRTIndicator` – property that controls wheter Real Time Indicator will be show (default as true)
 
 ## Awesome Features
 

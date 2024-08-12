@@ -9,6 +9,7 @@ import { DragStartedContext } from "./contexts/drag-started-context";
 import useResizeObserver from "./hooks/use-resize-observer";
 import { ExternalPropertiesContext } from "./contexts/external-properties-context";
 import sortEvents from "./helpers/sort-events";
+import RTIndicator from "./components/rt-indicator";
 
 export const Timeline = ({
   rows,
@@ -18,6 +19,7 @@ export const Timeline = ({
   startDate,
   endDate,
   additionalClassNames,
+  showRTIndicator = true,
 }: TimelineType) => {
   const [windowTime, setWindowTime] = useState([
     new Date(
@@ -105,6 +107,9 @@ export const Timeline = ({
 
   return (
     <div className="main-wrapper" ref={mainRef}>
+      {showRTIndicator && (
+        <RTIndicator tick={tick} windowTime={windowTime}></RTIndicator>
+      )}
       <TimeBar
         windowTime={windowTime}
         tick={tick}

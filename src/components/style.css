@@ -130,3 +130,23 @@
 .row-hidden {
   visibility: hidden;
 }
+
+.rt-line {
+  position: absolute;
+  height: calc(100% - 24px);
+  top: 24px;
+  width: 2px;
+  box-sizing: border-box;
+  border-right: dotted 2px red;
+}
+
+.rt-arrow {
+  position: absolute;
+  top: 0px;
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+
+  border-top: 26px solid red;
+}

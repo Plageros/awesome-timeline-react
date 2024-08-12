@@ -47,4 +47,5 @@ export type TimelineType = {
   startDate: Date;
   endDate: Date;
   additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
+  showRTIndicator?: boolean;
 };

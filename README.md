@@ -6,6 +6,12 @@
 
 ![](https://raw.githubusercontent.com/Plageros/awesome-timeline-react/master/public/gifs/demo-overview.gif)
 
+## Instalation
+
+```sh
+npm install awesome-react-timeline
+```
+
 ## Ladle
 
 To run ladle stories, type:
@@ -69,7 +75,7 @@ One of the awesome features (currently hidden from the interface) is adjusting t
 Here, we will store major features planned for future releases (from highest to lowest priority):
 
 1. Resize events
-2. Real time line
+2. ~~Real time line~~ - published in 0.1.7 version
 3. Customizable prompts after hovering over an event
 4. Customizable second row of the time bar
 5. Intersection observer with `display: none` property to further improve performance

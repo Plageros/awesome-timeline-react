@@ -49,7 +49,7 @@ __export(src_exports, {
 module.exports = __toCommonJS(src_exports);
 
 // src/timeline.tsx
-var import_react21 = __toESM(require("react"));
+var import_react22 = __toESM(require("react"));
 
 // src/components/time-bar.tsx
 var import_react4 = __toESM(require("react"));
@@ -355,7 +355,7 @@ var RowsHeader = ({
 var rows_header_default = RowsHeader;
 
 // src/components/content.tsx
-var import_react18 = __toESM(require("react"));
+var import_react19 = __toESM(require("react"));
 
 // src/components/lines-canvas.tsx
 var import_react8 = __toESM(require("react"));
@@ -394,8 +394,8 @@ var LinesCanvas = ({
 var lines_canvas_default = LinesCanvas;
 
 // src/hooks/use-produce-content.tsx
-var import_react16 = require("react");
-var import_react17 = __toESM(require("react"));
+var import_react17 = require("react");
+var import_react18 = __toESM(require("react"));
 
 // src/components/static-event.tsx
 var import_react10 = __toESM(require("react"));
@@ -1195,12 +1195,14 @@ var RowContent = (0, import_react13.forwardRef)((props, ref) => {
 var row_content_default = RowContent;
 
 // src/components/event.tsx
-var import_react14 = __toESM(require("react"));
+var import_react15 = __toESM(require("react"));
 
-// src/assets/grip-lines-vertical-solid.svg
-var React8 = __toESM(require("react"));
-var SvgGripLinesVerticalSolid = (props) => /* @__PURE__ */ React8.createElement("svg", __spreadValues({ xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 192 512" }, props), /* @__PURE__ */ React8.createElement("path", { d: "M64 64c0-17.7-14.3-32-32-32S0 46.3 0 64L0 448c0 17.7 14.3 32 32 32s32-14.3 32-32L64 64zm128 0c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 384c0 17.7 14.3 32 32 32s32-14.3 32-32l0-384z" }));
-var grip_lines_vertical_solid_default = SvgGripLinesVerticalSolid;
+// src/components/resize-icon.tsx
+var import_react14 = __toESM(require("react"));
+var ResizeIcon = () => {
+  return /* @__PURE__ */ import_react14.default.createElement("div", { style: { display: "flex", gap: "1px" } }, /* @__PURE__ */ import_react14.default.createElement("div", { className: "resize-bar" }), /* @__PURE__ */ import_react14.default.createElement("div", { className: "resize-bar" }));
+};
+var resize_icon_default = ResizeIcon;
 
 // src/components/event.tsx
 var Event = ({
@@ -1212,10 +1214,10 @@ var Event = ({
   setEvents,
   tick
 }) => {
-  const { setDragStarted } = (0, import_react14.useContext)(DragStartedContext);
-  const { onResize, eventsResize } = (0, import_react14.useContext)(ExternalPropertiesContext);
-  const initialPositionForResizeRef = (0, import_react14.useRef)(0);
-  const handleOnDragStart = (0, import_react14.useCallback)(
+  const { setDragStarted } = (0, import_react15.useContext)(DragStartedContext);
+  const { onResize, eventsResize } = (0, import_react15.useContext)(ExternalPropertiesContext);
+  const initialPositionForResizeRef = (0, import_react15.useRef)(0);
+  const handleOnDragStart = (0, import_react15.useCallback)(
     (event) => {
       event.stopPropagation();
       event.dataTransfer.setData("eventId", id);
@@ -1225,7 +1227,7 @@ var Event = ({
     },
     [setDragStarted]
   );
-  const handleOnDragEnd = (0, import_react14.useCallback)(
+  const handleOnDragEnd = (0, import_react15.useCallback)(
     (event) => {
       event.stopPropagation();
       setDragStarted(false);
@@ -1235,12 +1237,12 @@ var Event = ({
     [setDragStarted]
   );
   const classNames = (props == null ? void 0 : props.classNames) ? "event " + props.classNames.join(" ") : "event";
-  const [draggableEvent, setDraggableEvent] = (0, import_react14.useState)(true);
-  const [resizeOffset, setResizeOffset] = (0, import_react14.useState)(0);
-  const resizeOffsetRef = (0, import_react14.useRef)(0);
-  const [resizeStarted, setResizeStarted] = (0, import_react14.useState)(false);
-  const resizeDirectionRef = (0, import_react14.useRef)(null);
-  const handleDocumentOnMouseMoveResize = (0, import_react14.useCallback)(
+  const [draggableEvent, setDraggableEvent] = (0, import_react15.useState)(true);
+  const [resizeOffset, setResizeOffset] = (0, import_react15.useState)(0);
+  const resizeOffsetRef = (0, import_react15.useRef)(0);
+  const [resizeStarted, setResizeStarted] = (0, import_react15.useState)(false);
+  const resizeDirectionRef = (0, import_react15.useRef)(null);
+  const handleDocumentOnMouseMoveResize = (0, import_react15.useCallback)(
     (event) => {
       const offset = event.clientX - initialPositionForResizeRef.current;
       setResizeOffset(
@@ -1250,7 +1252,7 @@ var Event = ({
     },
     [setResizeOffset]
   );
-  const handleDocumentOnMouseUp = (0, import_react14.useCallback)(
+  const handleDocumentOnMouseUp = (0, import_react15.useCallback)(
     (event, resizeDirection) => {
       initialPositionForResizeRef.current = 0;
       setResizeStarted(false);
@@ -1299,7 +1301,7 @@ var Event = ({
       sort_events_default
     ]
   );
-  const handleOnMouseDownEventResizer = (0, import_react14.useCallback)(
+  const handleOnMouseDownEventResizer = (0, import_react15.useCallback)(
     (event, resizeDirection) => {
       event.stopPropagation();
       resizeDirectionRef.current = resizeDirection;
@@ -1318,7 +1320,7 @@ var Event = ({
     },
     [handleDocumentOnMouseMoveResize, handleDocumentOnMouseUp]
   );
-  const handleOnMouseMove = (0, import_react14.useCallback)(
+  const handleOnMouseMove = (0, import_react15.useCallback)(
     (event) => {
       if (!resizeStarted) {
         event.stopPropagation();
@@ -1326,7 +1328,7 @@ var Event = ({
     },
     [resizeStarted]
   );
-  return /* @__PURE__ */ import_react14.default.createElement(
+  return /* @__PURE__ */ import_react15.default.createElement(
     "div",
     {
       id: `event_${id}`,
@@ -1345,42 +1347,40 @@ var Event = ({
         cursor: (props == null ? void 0 : props.isLocked) ? "not-allowed" : "pointer"
       }
     },
-    /* @__PURE__ */ import_react14.default.createElement("div", { className: "event-content" }, !(props == null ? void 0 : props.isLocked) && (eventsResize || (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ import_react14.default.createElement(
-      "img",
+    /* @__PURE__ */ import_react15.default.createElement("div", { className: "event-content" }, !(props == null ? void 0 : props.isLocked) && (eventsResize || (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ import_react15.default.createElement(
+      "div",
       {
         className: "event-resize",
         style: resizeStarted ? { opacity: "100%" } : void 0,
-        src: grip_lines_vertical_solid_default,
-        alt: "resize-icon",
         draggable: false,
         onMouseEnter: () => setDraggableEvent(false),
         onMouseLeave: () => setDraggableEvent(true),
         onMouseDown: (event) => handleOnMouseDownEventResizer(event, "left")
-      }
-    ), (props == null ? void 0 : props.content) ? props.content : null, !(props == null ? void 0 : props.isLocked) && (eventsResize || (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ import_react14.default.createElement(
-      "img",
+      },
+      /* @__PURE__ */ import_react15.default.createElement(resize_icon_default, null)
+    ), (props == null ? void 0 : props.content) ? props.content : null, !(props == null ? void 0 : props.isLocked) && (eventsResize || (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ import_react15.default.createElement(
+      "div",
       {
         className: "event-resize",
         style: resizeStarted ? { opacity: "100%" } : void 0,
-        src: grip_lines_vertical_solid_default,
-        alt: "resize-icon",
         draggable: false,
         onMouseEnter: () => setDraggableEvent(false),
         onMouseLeave: () => setDraggableEvent(true),
         onMouseDown: (event) => handleOnMouseDownEventResizer(event, "right")
-      }
+      },
+      /* @__PURE__ */ import_react15.default.createElement(resize_icon_default, null)
     ))
   );
 };
 var event_default = Event;
 
 // src/hooks/use-intersection-observer.ts
-var import_react15 = require("react");
+var import_react16 = require("react");
 var useIntersectionObserver = ({
   bodyRef,
   rowsContentRef
 }) => {
-  const callback = (0, import_react15.useCallback)((entries) => {
+  const callback = (0, import_react16.useCallback)((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         entry.target.classList.remove("row-hidden");
@@ -1392,7 +1392,7 @@ var useIntersectionObserver = ({
   const observer = new IntersectionObserver(callback, {
     root: bodyRef.current
   });
-  (0, import_react15.useEffect)(() => {
+  (0, import_react16.useEffect)(() => {
     if (rowsContentRef.current) {
       rowsContentRef.current.forEach((row) => {
         observer.observe(row);
@@ -1414,10 +1414,10 @@ var useProduceContent = ({
   setEvents,
   bodyRef
 }) => {
-  const rowsHeightContext = (0, import_react16.useContext)(RowsHeightContext);
-  const tempRowsHeightRef = (0, import_react16.useRef)(null);
-  const rowsContentRef = (0, import_react16.useRef)([]);
-  const [content, internalAllRowsHeight] = (0, import_react16.useMemo)(() => {
+  const rowsHeightContext = (0, import_react17.useContext)(RowsHeightContext);
+  const tempRowsHeightRef = (0, import_react17.useRef)(null);
+  const rowsContentRef = (0, import_react17.useRef)([]);
+  const [content, internalAllRowsHeight] = (0, import_react17.useMemo)(() => {
     let internalAllRowsHeight2 = 0;
     return [
       rows.map((row, i) => {
@@ -1444,7 +1444,7 @@ var useProduceContent = ({
               eventOrder = tempEventOrder;
             }
             prevEvent[tempEventOrder] = event;
-            return /* @__PURE__ */ import_react17.default.createElement(
+            return /* @__PURE__ */ import_react18.default.createElement(
               event_default,
               {
                 key: `event_${event.id}`,
@@ -1474,7 +1474,7 @@ var useProduceContent = ({
         internalAllRowsHeight2 += 40 + highestEventOrder * 22;
         const rowStaticEvents = tick && staticEvents ? staticEvents.filter((event) => event.rowId === row.id).map((event) => {
           if (event.endTime >= windowTime[0] && event.startTime <= windowTime[1]) {
-            return /* @__PURE__ */ import_react17.default.createElement(
+            return /* @__PURE__ */ import_react18.default.createElement(
               static_event_default,
               {
                 key: `static_event_${event.id}`,
@@ -1487,7 +1487,7 @@ var useProduceContent = ({
             );
           }
         }) : null;
-        return /* @__PURE__ */ import_react17.default.createElement(import_react17.default.Fragment, { key: `row_content_${row.id}` }, /* @__PURE__ */ import_react17.default.createElement(
+        return /* @__PURE__ */ import_react18.default.createElement(import_react18.default.Fragment, { key: `row_content_${row.id}` }, /* @__PURE__ */ import_react18.default.createElement(
           row_content_default,
           {
             id: row.id,
@@ -1514,7 +1514,7 @@ var useProduceContent = ({
     rowsContentRef,
     bodyRef
   });
-  (0, import_react16.useEffect)(() => {
+  (0, import_react17.useEffect)(() => {
     if (rowsHeightContext) {
       rowsHeightContext.setRowsHeight(tempRowsHeightRef.current);
       rowsHeightContext.setAllRowsHeight(internalAllRowsHeight);
@@ -1525,7 +1525,7 @@ var useProduceContent = ({
 var use_produce_content_default = useProduceContent;
 
 // src/components/content.tsx
-var Content = (0, import_react18.forwardRef)(
+var Content = (0, import_react19.forwardRef)(
   ({
     rows,
     events,
@@ -1540,12 +1540,12 @@ var Content = (0, import_react18.forwardRef)(
     bodyRef,
     lineClassName
   }, ref) => {
-    const [mouseDown, setMouseDown] = (0, import_react18.useState)(false);
-    const startMovePosition = (0, import_react18.useRef)(null);
-    const [changeGrid, setChangeGrid] = (0, import_react18.useState)(false);
+    const [mouseDown, setMouseDown] = (0, import_react19.useState)(false);
+    const startMovePosition = (0, import_react19.useRef)(null);
+    const [changeGrid, setChangeGrid] = (0, import_react19.useState)(false);
     const { blockWidth } = use_get_block_properties_default({ windowTime, contentWidth });
-    const rowsHeightContext = (0, import_react18.useContext)(RowsHeightContext);
-    const handleOnMouseMove = (0, import_react18.useCallback)(
+    const rowsHeightContext = (0, import_react19.useContext)(RowsHeightContext);
+    const handleOnMouseMove = (0, import_react19.useCallback)(
       (event) => {
         event.preventDefault();
         if (!mouseDown) {
@@ -1571,7 +1571,7 @@ var Content = (0, import_react18.forwardRef)(
       },
       [blockWidth, setWindowTime, mouseDown]
     );
-    const handleOnMouseDown = (0, import_react18.useCallback)(
+    const handleOnMouseDown = (0, import_react19.useCallback)(
       (event) => {
         setMouseDown(true);
         if (event.button === 1) {
@@ -1583,10 +1583,10 @@ var Content = (0, import_react18.forwardRef)(
       },
       [setMouseDown]
     );
-    const handleOnMouseUp = (0, import_react18.useCallback)(() => {
+    const handleOnMouseUp = (0, import_react19.useCallback)(() => {
       setMouseDown(false);
     }, [setMouseDown]);
-    const handleOnMouseLeave = (0, import_react18.useCallback)(
+    const handleOnMouseLeave = (0, import_react19.useCallback)(
       () => setMouseDown(false),
       [setMouseDown]
     );
@@ -1600,7 +1600,7 @@ var Content = (0, import_react18.forwardRef)(
       setEvents,
       bodyRef
     });
-    const handleAuxClick = (0, import_react18.useCallback)(
+    const handleAuxClick = (0, import_react19.useCallback)(
       (event) => {
         event.preventDefault();
         if (event.button === 1) {
@@ -1609,7 +1609,7 @@ var Content = (0, import_react18.forwardRef)(
       },
       []
     );
-    const handleOnWheel = (0, import_react18.useCallback)(
+    const handleOnWheel = (0, import_react19.useCallback)(
       (event) => {
         const pixelsToCalculate = tick ? 900 / tick : 0;
         if (changeGrid) {
@@ -1624,12 +1624,12 @@ var Content = (0, import_react18.forwardRef)(
       },
       [changeGrid, cellWidth, tick]
     );
-    (0, import_react18.useEffect)(() => {
+    (0, import_react19.useEffect)(() => {
       if (bodyRef.current) {
         bodyRef.current.style.overflow = changeGrid ? "hidden" : "auto";
       }
     }, [changeGrid]);
-    return /* @__PURE__ */ import_react18.default.createElement(
+    return /* @__PURE__ */ import_react19.default.createElement(
       "div",
       {
         key: "content",
@@ -1646,7 +1646,7 @@ var Content = (0, import_react18.forwardRef)(
           height: rowsHeightContext == null ? void 0 : rowsHeightContext.allRowsHeight
         }
       },
-      /* @__PURE__ */ import_react18.default.createElement(
+      /* @__PURE__ */ import_react19.default.createElement(
         lines_canvas_default,
         {
           contentWidth,
@@ -1661,15 +1661,15 @@ var Content = (0, import_react18.forwardRef)(
 var content_default = Content;
 
 // src/hooks/use-resize-observer.ts
-var import_react19 = require("react");
+var import_react20 = require("react");
 var useResizeObserver = ({
   windowTime,
   setTick,
   setCellWidth,
   contentRef
 }) => {
-  const prevWidthRef = (0, import_react19.useRef)(0);
-  const resizeObserver = (0, import_react19.useMemo)(() => {
+  const prevWidthRef = (0, import_react20.useRef)(0);
+  const resizeObserver = (0, import_react20.useMemo)(() => {
     return new ResizeObserver((entries) => {
       var _a;
       for (const entry of entries) {
@@ -1684,7 +1684,7 @@ var useResizeObserver = ({
       }
     });
   }, [windowTime]);
-  (0, import_react19.useEffect)(() => {
+  (0, import_react20.useEffect)(() => {
     if (contentRef.current) {
       resizeObserver.observe(contentRef.current, { box: "border-box" });
     }
@@ -1694,15 +1694,15 @@ var useResizeObserver = ({
 var use_resize_observer_default = useResizeObserver;
 
 // src/components/rt-indicator.tsx
-var import_react20 = __toESM(require("react"));
+var import_react21 = __toESM(require("react"));
 var RTIndicator = ({
   tick,
   windowTime
 }) => {
-  const [currentTime, setCurrentTime] = (0, import_react20.useState)((/* @__PURE__ */ new Date()).getTime() / 1e3);
-  const [leftOffset, setLeftOffset] = (0, import_react20.useState)(0);
-  const intervalIdRef = (0, import_react20.useRef)(null);
-  (0, import_react20.useEffect)(() => {
+  const [currentTime, setCurrentTime] = (0, import_react21.useState)((/* @__PURE__ */ new Date()).getTime() / 1e3);
+  const [leftOffset, setLeftOffset] = (0, import_react21.useState)(0);
+  const intervalIdRef = (0, import_react21.useRef)(null);
+  (0, import_react21.useEffect)(() => {
     if (tick) {
       const leftOffsetTime = currentTime - windowTime[0];
       setLeftOffset(Math.round(leftOffsetTime / tick));
@@ -1715,7 +1715,7 @@ var RTIndicator = ({
       intervalIdRef.current = intervalId;
     }
   }, [tick, windowTime, currentTime]);
-  return /* @__PURE__ */ import_react20.default.createElement(import_react20.default.Fragment, null, windowTime[0] <= currentTime && currentTime <= windowTime[1] && /* @__PURE__ */ import_react20.default.createElement(import_react20.default.Fragment, null, /* @__PURE__ */ import_react20.default.createElement("div", { className: "rt-arrow", style: { left: 86 + leftOffset } }), /* @__PURE__ */ import_react20.default.createElement("div", { className: "rt-line", style: { left: 100 + leftOffset } })));
+  return /* @__PURE__ */ import_react21.default.createElement(import_react21.default.Fragment, null, windowTime[0] <= currentTime && currentTime <= windowTime[1] && /* @__PURE__ */ import_react21.default.createElement(import_react21.default.Fragment, null, /* @__PURE__ */ import_react21.default.createElement("div", { className: "rt-arrow", style: { left: 86 + leftOffset } }), /* @__PURE__ */ import_react21.default.createElement("div", { className: "rt-line", style: { left: 100 + leftOffset } })));
 };
 var rt_indicator_default = RTIndicator;
 
@@ -1732,7 +1732,7 @@ var Timeline = ({
   showRTIndicator = true,
   eventsResize = true
 }) => {
-  const [windowTime, setWindowTime] = (0, import_react21.useState)([
+  const [windowTime, setWindowTime] = (0, import_react22.useState)([
     new Date(
       startDate.getFullYear(),
       startDate.getMonth(),
@@ -1750,16 +1750,16 @@ var Timeline = ({
       0
     ).getTime() / 1e3
   ]);
-  const [cellWidth, setCellWidth] = (0, import_react21.useState)(0);
-  const [internalEvents, setInternalEvents] = (0, import_react21.useState)([]);
-  const contentRef = (0, import_react21.useRef)(null);
-  const mainRef = (0, import_react21.useRef)(null);
-  const bodyRef = (0, import_react21.useRef)(null);
-  const [tick, setTick] = (0, import_react21.useState)(null);
-  const [scrollWidth, setScrollWidth] = (0, import_react21.useState)(0);
-  const [rowsHeight, setRowsHeight] = (0, import_react21.useState)(null);
-  const [allRowsHeight, setAllRowsHeight] = (0, import_react21.useState)(0);
-  (0, import_react21.useEffect)(() => {
+  const [cellWidth, setCellWidth] = (0, import_react22.useState)(0);
+  const [internalEvents, setInternalEvents] = (0, import_react22.useState)([]);
+  const contentRef = (0, import_react22.useRef)(null);
+  const mainRef = (0, import_react22.useRef)(null);
+  const bodyRef = (0, import_react22.useRef)(null);
+  const [tick, setTick] = (0, import_react22.useState)(null);
+  const [scrollWidth, setScrollWidth] = (0, import_react22.useState)(0);
+  const [rowsHeight, setRowsHeight] = (0, import_react22.useState)(null);
+  const [allRowsHeight, setAllRowsHeight] = (0, import_react22.useState)(0);
+  (0, import_react22.useEffect)(() => {
     if (contentRef.current) {
       const windowDuration = windowTime[1] - windowTime[0];
       const numberOfHourBlocks = windowDuration / 3600;
@@ -1771,18 +1771,18 @@ var Timeline = ({
       );
     }
   }, []);
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     if (bodyRef.current) {
       setScrollWidth(
         bodyRef.current.getBoundingClientRect().width - bodyRef.current.scrollWidth
       );
     }
   }, []);
-  (0, import_react21.useEffect)(() => {
+  (0, import_react22.useEffect)(() => {
     setInternalEvents(events.sort(sort_events_default));
   }, [events]);
-  const [dragStarted, setDragStarted] = (0, import_react21.useState)(false);
-  (0, import_react21.useEffect)(() => {
+  const [dragStarted, setDragStarted] = (0, import_react22.useState)(false);
+  (0, import_react22.useEffect)(() => {
     let tempRowsHeight = null;
     rows.forEach((row) => {
       if (tempRowsHeight === null) {
@@ -1794,7 +1794,7 @@ var Timeline = ({
     setRowsHeight(tempRowsHeight);
   }, [rows]);
   use_resize_observer_default({ contentRef, setCellWidth, setTick, windowTime });
-  return /* @__PURE__ */ import_react21.default.createElement("div", { className: "main-wrapper", ref: mainRef }, showRTIndicator && /* @__PURE__ */ import_react21.default.createElement(rt_indicator_default, { tick, windowTime }), /* @__PURE__ */ import_react21.default.createElement(
+  return /* @__PURE__ */ import_react22.default.createElement("div", { className: "main-wrapper", ref: mainRef }, showRTIndicator && /* @__PURE__ */ import_react22.default.createElement(rt_indicator_default, { tick, windowTime }), /* @__PURE__ */ import_react22.default.createElement(
     time_bar_default,
     {
       windowTime,
@@ -1802,24 +1802,24 @@ var Timeline = ({
       contentWidth: contentRef.current ? contentRef.current.getBoundingClientRect().width : null,
       scrollWidth
     }
-  ), /* @__PURE__ */ import_react21.default.createElement("div", { className: "body-wrapper", ref: bodyRef }, /* @__PURE__ */ import_react21.default.createElement(
+  ), /* @__PURE__ */ import_react22.default.createElement("div", { className: "body-wrapper", ref: bodyRef }, /* @__PURE__ */ import_react22.default.createElement(
     RowsHeightContext.Provider,
     {
       value: { rowsHeight, setRowsHeight, allRowsHeight, setAllRowsHeight }
     },
-    /* @__PURE__ */ import_react21.default.createElement(
+    /* @__PURE__ */ import_react22.default.createElement(
       rows_header_default,
       {
         rows,
         className: additionalClassNames == null ? void 0 : additionalClassNames.rowsHeader
       }
     ),
-    /* @__PURE__ */ import_react21.default.createElement(DragStartedContext.Provider, { value: { dragStarted, setDragStarted } }, /* @__PURE__ */ import_react21.default.createElement(
+    /* @__PURE__ */ import_react22.default.createElement(DragStartedContext.Provider, { value: { dragStarted, setDragStarted } }, /* @__PURE__ */ import_react22.default.createElement(
       ExternalPropertiesContext.Provider,
       {
         value: { onDrop, onResize, eventsResize }
       },
-      /* @__PURE__ */ import_react21.default.createElement(
+      /* @__PURE__ */ import_react22.default.createElement(
         content_default,
         {
           events: internalEvents,

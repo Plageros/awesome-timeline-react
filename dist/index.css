@@ -95,10 +95,16 @@
 .event-content:hover .event-resize {
   opacity: 100%;
 }
+.resize-bar {
+  height: 10px;
+  border: 1px solid black;
+  width: 1px;
+  box-sizing: border-box;
+  border-radius: 3px;
+}
 .event-resize {
   opacity: 0%;
-  height: 10px;
-  margin: 5px;
+  margin: 4px;
   cursor: e-resize;
   transition: opacity 0.3s ease-in-out;
 }

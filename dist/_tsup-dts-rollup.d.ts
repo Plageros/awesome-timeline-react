@@ -27,16 +27,30 @@ export declare const default_alias_1: React_2.ForwardRefExoticComponent<
   ContentType & React_2.RefAttributes<HTMLDivElement>
 >;
 
-export declare const default_alias_10: (monthIndex: number) => string;
+export declare const default_alias_10: ({
+  windowTime,
+  tick,
+  contentWidth,
+  scrollWidth,
+  additionalClassNames,
+}: {
+  windowTime: number[];
+  tick: number | null;
+  contentWidth: number | null;
+  scrollWidth: number;
+  additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
+}) => React_2.JSX.Element;
 
-export declare const default_alias_11: (dayIndex: number) => string;
+export declare const default_alias_11: (monthIndex: number) => string;
 
-export declare const default_alias_12: (
+export declare const default_alias_12: (dayIndex: number) => string;
+
+export declare const default_alias_13: (
   eventA: EventType,
   eventB: EventType
 ) => 1 | -1;
 
-export declare const default_alias_13: ({
+export declare const default_alias_14: ({
   windowTime,
   tick,
   contentWidth,
@@ -51,7 +65,7 @@ export declare const default_alias_13: ({
   hourBlocks: JSX.Element[];
 };
 
-export declare const default_alias_14: ({
+export declare const default_alias_15: ({
   windowTime,
   contentWidth,
 }: {
@@ -62,7 +76,7 @@ export declare const default_alias_14: ({
   blockWidth: number;
 };
 
-export declare const default_alias_15: ({
+export declare const default_alias_16: ({
   bodyRef,
   rowsContentRef,
 }: {
@@ -70,7 +84,7 @@ export declare const default_alias_15: ({
   rowsContentRef: React.MutableRefObject<HTMLDivElement[] | null>;
 }) => void;
 
-export declare const default_alias_16: ({
+export declare const default_alias_17: ({
   rows,
   windowTime,
   tick,
@@ -81,7 +95,7 @@ export declare const default_alias_16: ({
   bodyRef,
 }: ProduceContentType) => React_2.JSX.Element[];
 
-export declare const default_alias_17: ({
+export declare const default_alias_18: ({
   windowTime,
   setTick,
   setCellWidth,
@@ -121,13 +135,15 @@ export declare const default_alias_3: ({
   lineClassName?: string;
 }) => React_2.JSX.Element;
 
-export declare const default_alias_4: React_2.ForwardRefExoticComponent<
+export declare const default_alias_4: () => React_2.JSX.Element;
+
+export declare const default_alias_5: React_2.ForwardRefExoticComponent<
   RowContentProps & {
     children?: React_2.ReactNode;
   } & React_2.RefAttributes<HTMLDivElement>
 >;
 
-export declare const default_alias_5: ({
+export declare const default_alias_6: ({
   name,
   id,
 }: {
@@ -135,7 +151,7 @@ export declare const default_alias_5: ({
   id: string;
 }) => React_2.JSX.Element;
 
-export declare const default_alias_6: ({
+export declare const default_alias_7: ({
   rows,
   className,
 }: {
@@ -143,7 +159,7 @@ export declare const default_alias_6: ({
   className?: string;
 }) => React_2.JSX.Element;
 
-export declare const default_alias_7: ({
+export declare const default_alias_8: ({
   tick,
   windowTime,
 }: {
@@ -151,7 +167,7 @@ export declare const default_alias_7: ({
   windowTime: number[];
 }) => React_2.JSX.Element;
 
-export declare const default_alias_8: ({
+export declare const default_alias_9: ({
   id,
   startPosition,
   width,
@@ -163,20 +179,6 @@ export declare const default_alias_8: ({
   width: CSSProperties["width"];
   top: CSSProperties["top"];
   height: CSSProperties["height"];
-}) => React_2.JSX.Element;
-
-export declare const default_alias_9: ({
-  windowTime,
-  tick,
-  contentWidth,
-  scrollWidth,
-  additionalClassNames,
-}: {
-  windowTime: number[];
-  tick: number | null;
-  contentWidth: number | null;
-  scrollWidth: number;
-  additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
 }) => React_2.JSX.Element;
 
 export declare const DragStartedContext: Context<DragStartedContext_2>;

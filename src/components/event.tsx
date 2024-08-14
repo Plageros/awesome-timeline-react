@@ -7,10 +7,11 @@ import React, {
 } from "react";
 import { DragStartedContext } from "../contexts/drag-started-context";
 import { EventPropsType, EventType } from "../types";
-import resizeIcon from "../assets/grip-lines-vertical-solid.svg";
+// import { ReactComponent as Resize Icon } from "../assets/grip-lines-vertical-solid.svg";
 import { produce } from "immer";
 import sortEvents from "../helpers/sort-events";
 import { ExternalPropertiesContext } from "../contexts/external-properties-context";
+import ResizeIcon from "./resize-icon";
 
 const Event = ({
   id,
@@ -135,7 +136,7 @@ const Event = ({
 
   const handleOnMouseDownEventResizer = useCallback(
     (
-      event: React.MouseEvent<HTMLImageElement>,
+      event: React.MouseEvent<HTMLDivElement>,
       resizeDirection: "left" | "right"
     ) => {
       event.stopPropagation();
@@ -191,33 +192,33 @@ const Event = ({
     >
       <div className="event-content">
         {!props?.isLocked && (eventsResize || props?.isResizable) && (
-          <img
+          <div
             className="event-resize"
             style={resizeStarted ? { opacity: "100%" } : undefined}
-            src={resizeIcon}
-            alt="resize-icon"
             draggable={false}
             onMouseEnter={() => setDraggableEvent(false)}
             onMouseLeave={() => setDraggableEvent(true)}
             onMouseDown={(event) =>
               handleOnMouseDownEventResizer(event, "left")
             }
-          ></img>
+          >
+            <ResizeIcon></ResizeIcon>
+          </div>
         )}
         {props?.content ? props.content : null}
         {!props?.isLocked && (eventsResize || props?.isResizable) && (
-          <img
+          <div
             className="event-resize"
             style={resizeStarted ? { opacity: "100%" } : undefined}
-            src={resizeIcon}
-            alt="resize-icon"
             draggable={false}
             onMouseEnter={() => setDraggableEvent(false)}
             onMouseLeave={() => setDraggableEvent(true)}
             onMouseDown={(event) =>
               handleOnMouseDownEventResizer(event, "right")
             }
-          ></img>
+          >
+            <ResizeIcon></ResizeIcon>
+          </div>
         )}
       </div>
     </div>

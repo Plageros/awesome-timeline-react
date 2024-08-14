@@ -1180,10 +1180,12 @@ import React9, {
   useState
 } from "react";
 
-// src/assets/grip-lines-vertical-solid.svg
-import * as React8 from "react";
-var SvgGripLinesVerticalSolid = (props) => /* @__PURE__ */ React8.createElement("svg", __spreadValues({ xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 192 512" }, props), /* @__PURE__ */ React8.createElement("path", { d: "M64 64c0-17.7-14.3-32-32-32S0 46.3 0 64L0 448c0 17.7 14.3 32 32 32s32-14.3 32-32L64 64zm128 0c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 384c0 17.7 14.3 32 32 32s32-14.3 32-32l0-384z" }));
-var grip_lines_vertical_solid_default = SvgGripLinesVerticalSolid;
+// src/components/resize-icon.tsx
+import React8 from "react";
+var ResizeIcon = () => {
+  return /* @__PURE__ */ React8.createElement("div", { style: { display: "flex", gap: "1px" } }, /* @__PURE__ */ React8.createElement("div", { className: "resize-bar" }), /* @__PURE__ */ React8.createElement("div", { className: "resize-bar" }));
+};
+var resize_icon_default = ResizeIcon;
 
 // src/components/event.tsx
 var Event = ({
@@ -1329,29 +1331,27 @@ var Event = ({
       }
     },
     /* @__PURE__ */ React9.createElement("div", { className: "event-content" }, !(props == null ? void 0 : props.isLocked) && (eventsResize || (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ React9.createElement(
-      "img",
+      "div",
       {
         className: "event-resize",
         style: resizeStarted ? { opacity: "100%" } : void 0,
-        src: grip_lines_vertical_solid_default,
-        alt: "resize-icon",
         draggable: false,
         onMouseEnter: () => setDraggableEvent(false),
         onMouseLeave: () => setDraggableEvent(true),
         onMouseDown: (event) => handleOnMouseDownEventResizer(event, "left")
-      }
+      },
+      /* @__PURE__ */ React9.createElement(resize_icon_default, null)
     ), (props == null ? void 0 : props.content) ? props.content : null, !(props == null ? void 0 : props.isLocked) && (eventsResize || (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ React9.createElement(
-      "img",
+      "div",
       {
         className: "event-resize",
         style: resizeStarted ? { opacity: "100%" } : void 0,
-        src: grip_lines_vertical_solid_default,
-        alt: "resize-icon",
         draggable: false,
         onMouseEnter: () => setDraggableEvent(false),
         onMouseLeave: () => setDraggableEvent(true),
         onMouseDown: (event) => handleOnMouseDownEventResizer(event, "right")
-      }
+      },
+      /* @__PURE__ */ React9.createElement(resize_icon_default, null)
     ))
   );
 };

@@ -1,6 +1,6 @@
 {
   "name": "awesome-timeline-react",
-  "version": "0.1.8",
+  "version": "0.1.10",
   "description": "awesome timeline for react applications",
   "scripts": {
     "test": "jest",
@@ -41,8 +41,7 @@
     "@types/react-dom": "^18.3.0",
     "@types/react-test-renderer": "^18.3.0",
     "babel-jest": "^29.7.0",
-    "esbuild": "^0.23.0",
-    "esbuild-plugin-svgr": "^2.1.0",
+    "esbuild": "^0.19.1",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.34.1",
     "globals": "^15.1.0",
@@ -57,6 +56,7 @@
     "typescript-eslint": "^7.8.0"
   },
   "peerDependencies": {
+    "esbuild": "^0.19.1",
     "react": "^18",
     "react-dom": "^18"
   }

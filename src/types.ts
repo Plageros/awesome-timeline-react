@@ -11,6 +11,7 @@ export type EventPropsType = {
   isLocked?: boolean;
   content?: JSX.Element | string;
   classNames?: string[];
+  isResizable?: boolean;
 };
 
 export type EventType = {
@@ -25,6 +26,12 @@ export type OnDropProps = {
   eventId: string;
   oldRowId: string;
   newRowId: string;
+  startTime: number;
+  endTime: number;
+};
+
+export type OnResizeProps = {
+  eventId: string;
   startTime: number;
   endTime: number;
 };
@@ -44,8 +51,10 @@ export type TimelineType = {
   events: EventType[];
   staticEvents?: EventType[];
   onDrop?: (props: OnDropProps) => void;
+  onResize?: (props: OnResizeProps) => void;
   startDate: Date;
   endDate: Date;
   additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
   showRTIndicator?: boolean;
+  eventsResize?: boolean;
 };

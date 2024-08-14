@@ -40,9 +40,10 @@ The following properties for Timeline component are available:
   - `startTime`: `number` (timestamp in seconds)
   - `endTime`: `number` (timestamp in seconds)
   - `props`:
-    - `isLocked`: `boolean` (defines if the event is locked, meaning it cannot be moved. Default is `false`)
+    - `isLocked`: `boolean` (defines if event is locked, meaning it cannot be moved. Default is `false`)
     - `content`: `JSX.Element | string` (customizable content for each event)
     - `classNames`: `string[]` (array of additional class names for customizing the event)
+    - `isResizable`: `boolean` (defines if event is resizable, overrides the default property `eventsResize`)
 
 - `staticEvents` – an array of objects that define static events for particular rows, meaning the events are not interactable by the user.
 
@@ -51,8 +52,14 @@ The following properties for Timeline component are available:
   - `eventId`: `string`
   - `oldRowId`: `string`
   - `newRowId`: `string`
-  - `startDate`: `number` (timestamp in seconds)
-  - `endDate`: `number` (timestamp in seconds)
+  - `startTime`: `number` (timestamp in seconds)
+  - `endTime`: `number` (timestamp in seconds)
+
+- `onResize` – an external callback after the resize event was done, that can be injected. The callback receives the following properties:
+
+  - `eventId`: `string`
+  - `startTime`: `number` (timestamp in seconds)
+  - `endTime`: `number` (timestamp in seconds)
 
 - `additionalClassNames` – contains additional class names that will be included within elements:
 
@@ -64,6 +71,8 @@ The following properties for Timeline component are available:
 
 - `showRTIndicator` – property that controls wheter Real Time Indicator will be show (default as true)
 
+- `eventsResize` - property that define if events are resizeable (default as true)
+
 ## Awesome Features
 
 One of the awesome features (currently hidden from the interface) is adjusting the granulation of the grid. To achieve this, click the wheel on the mouse. This will hide the scroll bar, and you can adjust the grid granulation by scrolling the wheel. Each scroll iteration adjusts the grid by ±15 minutes, depending on the scroll direction.
@@ -74,7 +83,7 @@ One of the awesome features (currently hidden from the interface) is adjusting t
 
 Here, we will store major features planned for future releases (from highest to lowest priority):
 
-1. Resize events
+1. ~~Resize events~~ - published in 0.1.8 version
 2. ~~Real time line~~ - published in 0.1.7 version
 3. Customizable prompts after hovering over an event
 4. Customizable second row of the time bar

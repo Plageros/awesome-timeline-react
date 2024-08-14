@@ -43,6 +43,20 @@
 .event-content {
   width: 100%;
   height: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.event-content:hover .event-resize {
+  opacity: 100%;
+}
+
+.event-resize {
+  opacity: 0%;
+  height: 10px;
+  margin: 5px;
+  cursor: e-resize;
+  transition: opacity 0.3s ease-in-out;
 }
 
 .static-event {

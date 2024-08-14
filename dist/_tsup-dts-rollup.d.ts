@@ -99,12 +99,16 @@ export declare const default_alias_2: ({
   width,
   top,
   props,
+  setEvents,
+  tick,
 }: {
   id: string;
-  startPosition: CSSProperties["left"];
-  width: CSSProperties["width"];
+  startPosition: number;
+  width: number;
   top: CSSProperties["top"];
   props?: EventPropsType;
+  setEvents: React_2.Dispatch<React_2.SetStateAction<EventType[]>>;
+  tick: number | null;
 }) => React_2.JSX.Element;
 
 export declare const default_alias_3: ({
@@ -186,6 +190,7 @@ export declare type EventPropsType = {
   isLocked?: boolean;
   content?: JSX.Element | string;
   classNames?: string[];
+  isResizable?: boolean;
 };
 
 export declare type EventType = {
@@ -200,6 +205,8 @@ export declare const ExternalPropertiesContext: Context<ExternalPropertiesType>;
 
 declare type ExternalPropertiesType = {
   onDrop?: (props: OnDropProps) => void;
+  onResize?: (props: OnResizeProps) => void;
+  eventsResize?: boolean;
 };
 
 export declare type ModifableElements = {
@@ -214,6 +221,12 @@ export declare type OnDropProps = {
   eventId: string;
   oldRowId: string;
   newRowId: string;
+  startTime: number;
+  endTime: number;
+};
+
+export declare type OnResizeProps = {
+  eventId: string;
   startTime: number;
   endTime: number;
 };
@@ -266,10 +279,12 @@ declare const Timeline: ({
   events,
   staticEvents,
   onDrop,
+  onResize,
   startDate,
   endDate,
   additionalClassNames,
   showRTIndicator,
+  eventsResize,
 }: TimelineType) => React_2.JSX.Element;
 export { Timeline };
 export { Timeline as Timeline_alias_1 };
@@ -281,10 +296,12 @@ export declare type TimelineType = {
   events: EventType[];
   staticEvents?: EventType[];
   onDrop?: (props: OnDropProps) => void;
+  onResize?: (props: OnResizeProps) => void;
   startDate: Date;
   endDate: Date;
   additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
   showRTIndicator?: boolean;
+  eventsResize?: boolean;
 };
 
 export {};

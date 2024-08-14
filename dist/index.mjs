@@ -1,10 +1,5 @@
-"use strict";
-var __create = Object.create;
 var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getOwnPropSymbols = Object.getOwnPropertySymbols;
-var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __propIsEnum = Object.prototype.propertyIsEnumerable;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
@@ -19,44 +14,16 @@ var __spreadValues = (a, b) => {
     }
   return a;
 };
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
-  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-  mod
-));
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
-// src/index.ts
-var src_exports = {};
-__export(src_exports, {
-  Timeline: () => Timeline
-});
-module.exports = __toCommonJS(src_exports);
 
 // src/timeline.tsx
-var import_react21 = __toESM(require("react"));
+import React13, { useEffect as useEffect6, useRef as useRef8, useState as useState5 } from "react";
 
 // src/components/time-bar.tsx
-var import_react4 = __toESM(require("react"));
+import React2, { useRef } from "react";
 
 // src/hooks/use-generate-blocks.tsx
-var import_react = __toESM(require("react"));
-var import_react2 = require("react");
+import React from "react";
+import { useMemo } from "react";
 
 // src/helpers/get-month-name.ts
 var getMonthName = (monthIndex) => {
@@ -144,7 +111,7 @@ var useGenerateBlocks = ({
   contentWidth,
   blockWidth
 }) => {
-  const { dayBlocks, hourBlocks } = (0, import_react2.useMemo)(() => {
+  const { dayBlocks, hourBlocks } = useMemo(() => {
     let timePoint = windowTime[0];
     const dayBlocks2 = [];
     const hourBlocks2 = [];
@@ -170,7 +137,7 @@ var useGenerateBlocks = ({
         const numBlocks2 = Math.round((dateWidth + widthLeft) / blockWidth);
         for (let i = 0; i < numBlocks2; i++) {
           hourBlocks2.push(
-            /* @__PURE__ */ import_react.default.createElement(
+            /* @__PURE__ */ React.createElement(
               "div",
               {
                 className: "hour-block",
@@ -181,7 +148,7 @@ var useGenerateBlocks = ({
           );
         }
         dayBlocks2.push(
-          /* @__PURE__ */ import_react.default.createElement(
+          /* @__PURE__ */ React.createElement(
             "div",
             {
               className: "day-block",
@@ -205,11 +172,11 @@ var useGenerateBlocks = ({
       const numBlocks = Math.round(dateWidth / blockWidth);
       for (let i = 24 - numBlocks; i < 24; i++) {
         hourBlocks2.push(
-          /* @__PURE__ */ import_react.default.createElement("div", { className: "hour-block", key: `${datePoint.getDate()}_hour_${i}` }, i < 10 ? `0${i}:00` : `${i}:00`)
+          /* @__PURE__ */ React.createElement("div", { className: "hour-block", key: `${datePoint.getDate()}_hour_${i}` }, i < 10 ? `0${i}:00` : `${i}:00`)
         );
       }
       dayBlocks2.push(
-        /* @__PURE__ */ import_react.default.createElement(
+        /* @__PURE__ */ React.createElement(
           "div",
           {
             className: "day-block",
@@ -240,12 +207,12 @@ var useGenerateBlocks = ({
 var use_generate_blocks_default = useGenerateBlocks;
 
 // src/hooks/use-get-block-properties.ts
-var import_react3 = require("react");
+import { useMemo as useMemo2 } from "react";
 var useGetBlockProperties = ({
   windowTime,
   contentWidth
 }) => {
-  const numberOfHourBlocks = (0, import_react3.useMemo)(
+  const numberOfHourBlocks = useMemo2(
     () => (windowTime[1] - windowTime[0]) / 3600,
     [windowTime]
   );
@@ -262,7 +229,7 @@ var TimeBar = ({
   scrollWidth,
   additionalClassNames
 }) => {
-  const timeContentRef = (0, import_react4.useRef)(null);
+  const timeContentRef = useRef(null);
   const { blockWidth } = use_get_block_properties_default({
     windowTime,
     contentWidth
@@ -276,14 +243,14 @@ var TimeBar = ({
   const timeBarClassNames = (additionalClassNames == null ? void 0 : additionalClassNames.timeBar) ? "time-bar " + additionalClassNames.timeBar : "time-bar";
   const dayRowClassNames = (additionalClassNames == null ? void 0 : additionalClassNames.dayRow) ? "day-row " + additionalClassNames.dayRow : "day-row";
   const hourRowClassNames = (additionalClassNames == null ? void 0 : additionalClassNames.hourRow) ? "hour-row " + additionalClassNames.hourRow : "hour-row";
-  return /* @__PURE__ */ import_react4.default.createElement("div", { className: timeBarClassNames }, /* @__PURE__ */ import_react4.default.createElement("div", { className: "empty-block" }), /* @__PURE__ */ import_react4.default.createElement(
+  return /* @__PURE__ */ React2.createElement("div", { className: timeBarClassNames }, /* @__PURE__ */ React2.createElement("div", { className: "empty-block" }), /* @__PURE__ */ React2.createElement(
     "div",
     {
       className: "time-content",
       ref: timeContentRef,
       style: { minWidth: contentWidth ? contentWidth : 0 }
     },
-    /* @__PURE__ */ import_react4.default.createElement(
+    /* @__PURE__ */ React2.createElement(
       "div",
       {
         className: dayRowClassNames,
@@ -293,7 +260,7 @@ var TimeBar = ({
       },
       dayBlocks.map((block) => block)
     ),
-    /* @__PURE__ */ import_react4.default.createElement(
+    /* @__PURE__ */ React2.createElement(
       "div",
       {
         className: hourRowClassNames,
@@ -303,7 +270,7 @@ var TimeBar = ({
       },
       hourBlocks.map((block) => block)
     )
-  ), scrollWidth ? /* @__PURE__ */ import_react4.default.createElement(
+  ), scrollWidth ? /* @__PURE__ */ React2.createElement(
     "div",
     {
       style: {
@@ -318,22 +285,22 @@ var TimeBar = ({
 var time_bar_default = TimeBar;
 
 // src/components/rows-header.tsx
-var import_react7 = __toESM(require("react"));
+import React4 from "react";
 
 // src/components/row-header.tsx
-var import_react6 = __toESM(require("react"));
+import React3, { useContext } from "react";
 
 // src/contexts/row-height-context.ts
-var import_react5 = require("react");
-var RowsHeightContext = (0, import_react5.createContext)(
+import { createContext } from "react";
+var RowsHeightContext = createContext(
   null
 );
 
 // src/components/row-header.tsx
 var RowHeader = ({ name, id }) => {
-  const rowsHeightContext = (0, import_react6.useContext)(RowsHeightContext);
+  const rowsHeightContext = useContext(RowsHeightContext);
   const minHeight = rowsHeightContext && rowsHeightContext.rowsHeight && rowsHeightContext.rowsHeight[id] ? rowsHeightContext.rowsHeight[id].minHeight : 40;
-  return /* @__PURE__ */ import_react6.default.createElement("div", { className: "row-header", style: { minHeight } }, name);
+  return /* @__PURE__ */ React3.createElement("div", { className: "row-header", style: { minHeight } }, name);
 };
 var row_header_default = RowHeader;
 
@@ -343,7 +310,7 @@ var RowsHeader = ({
   className
 }) => {
   const classNames = className ? "rows-header-wrapper " + className : "rows-header-wrapper";
-  return /* @__PURE__ */ import_react7.default.createElement("div", { className: classNames }, rows.map((row) => /* @__PURE__ */ import_react7.default.createElement(
+  return /* @__PURE__ */ React4.createElement("div", { className: classNames }, rows.map((row) => /* @__PURE__ */ React4.createElement(
     row_header_default,
     {
       key: `row_header_${row.id}`,
@@ -355,30 +322,37 @@ var RowsHeader = ({
 var rows_header_default = RowsHeader;
 
 // src/components/content.tsx
-var import_react18 = __toESM(require("react"));
+import React11, {
+  forwardRef as forwardRef2,
+  useCallback as useCallback5,
+  useContext as useContext6,
+  useEffect as useEffect3,
+  useRef as useRef5,
+  useState as useState3
+} from "react";
 
 // src/components/lines-canvas.tsx
-var import_react8 = __toESM(require("react"));
-var import_react9 = require("react");
+import React5 from "react";
+import { useMemo as useMemo3 } from "react";
 var LinesCanvas = ({
   contentWidth,
   cellWidth,
   lineClassName
 }) => {
-  const lines = (0, import_react9.useMemo)(() => {
+  const lines = useMemo3(() => {
     const lines2 = [];
     const classNames = lineClassName ? "line " + lineClassName : "line";
     if (contentWidth) {
       for (let i = cellWidth; i < contentWidth; i = i + cellWidth) {
-        lines2.push(/* @__PURE__ */ import_react8.default.createElement("div", { key: `line_${i}`, className: classNames }));
+        lines2.push(/* @__PURE__ */ React5.createElement("div", { key: `line_${i}`, className: classNames }));
       }
     }
     return lines2;
   }, [cellWidth, contentWidth]);
-  const minWidth = (0, import_react9.useMemo)(() => {
+  const minWidth = useMemo3(() => {
     return contentWidth ? contentWidth - lines.length * cellWidth : 0;
   }, [contentWidth, cellWidth, lines]);
-  return /* @__PURE__ */ import_react8.default.createElement(
+  return /* @__PURE__ */ React5.createElement(
     "div",
     {
       className: minWidth < 1 ? "lines-canvas hide-last-line" : "lines-canvas",
@@ -394,11 +368,11 @@ var LinesCanvas = ({
 var lines_canvas_default = LinesCanvas;
 
 // src/hooks/use-produce-content.tsx
-var import_react16 = require("react");
-var import_react17 = __toESM(require("react"));
+import { useContext as useContext5, useEffect as useEffect2, useMemo as useMemo5, useRef as useRef4 } from "react";
+import React10 from "react";
 
 // src/components/static-event.tsx
-var import_react10 = __toESM(require("react"));
+import React6 from "react";
 var StaticEvent = ({
   id,
   startPosition,
@@ -406,7 +380,7 @@ var StaticEvent = ({
   top,
   height
 }) => {
-  return /* @__PURE__ */ import_react10.default.createElement(
+  return /* @__PURE__ */ React6.createElement(
     "div",
     {
       id: `static_event_${id}`,
@@ -425,7 +399,11 @@ var StaticEvent = ({
 var static_event_default = StaticEvent;
 
 // src/components/row-content.tsx
-var import_react13 = __toESM(require("react"));
+import React7, {
+  forwardRef,
+  useCallback as useCallback2,
+  useContext as useContext3
+} from "react";
 
 // node_modules/immer/dist/immer.mjs
 var NOTHING = Symbol.for("immer-nothing");
@@ -1099,16 +1077,16 @@ var createDraft = immer.createDraft.bind(immer);
 var finishDraft = immer.finishDraft.bind(immer);
 
 // src/contexts/drag-started-context.ts
-var import_react11 = require("react");
-var DragStartedContext = (0, import_react11.createContext)({
+import { createContext as createContext2 } from "react";
+var DragStartedContext = createContext2({
   dragStarted: false,
   setDragStarted: () => {
   }
 });
 
 // src/contexts/external-properties-context.ts
-var import_react12 = require("react");
-var ExternalPropertiesContext = (0, import_react12.createContext)(
+import { createContext as createContext3 } from "react";
+var ExternalPropertiesContext = createContext3(
   {}
 );
 
@@ -1128,11 +1106,11 @@ var sortEvents = (eventA, eventB) => {
 var sort_events_default = sortEvents;
 
 // src/components/row-content.tsx
-var RowContent = (0, import_react13.forwardRef)((props, ref) => {
+var RowContent = forwardRef((props, ref) => {
   const { setEvents, tick, id, windowTime, cellWidth, children } = props;
-  const { dragStarted, setDragStarted } = (0, import_react13.useContext)(DragStartedContext);
-  const { onDrop } = (0, import_react13.useContext)(ExternalPropertiesContext);
-  const handleOnDrop = (0, import_react13.useCallback)(
+  const { dragStarted, setDragStarted } = useContext3(DragStartedContext);
+  const { onDrop } = useContext3(ExternalPropertiesContext);
+  const handleOnDrop = useCallback2(
     (event) => {
       event.preventDefault();
       const element = event.target;
@@ -1167,9 +1145,9 @@ var RowContent = (0, import_react13.forwardRef)((props, ref) => {
     },
     [setEvents, tick, windowTime, cellWidth]
   );
-  const rowsHeightContext = (0, import_react13.useContext)(RowsHeightContext);
+  const rowsHeightContext = useContext3(RowsHeightContext);
   const minHeight = rowsHeightContext && rowsHeightContext.rowsHeight && rowsHeightContext.rowsHeight[id] ? rowsHeightContext.rowsHeight[id].minHeight : 40;
-  return /* @__PURE__ */ import_react13.default.createElement(
+  return /* @__PURE__ */ React7.createElement(
     "div",
     {
       id: `row_${id}`,
@@ -1195,10 +1173,15 @@ var RowContent = (0, import_react13.forwardRef)((props, ref) => {
 var row_content_default = RowContent;
 
 // src/components/event.tsx
-var import_react14 = __toESM(require("react"));
+import React9, {
+  useCallback as useCallback3,
+  useContext as useContext4,
+  useRef as useRef2,
+  useState
+} from "react";
 
 // src/assets/grip-lines-vertical-solid.svg
-var React8 = __toESM(require("react"));
+import * as React8 from "react";
 var SvgGripLinesVerticalSolid = (props) => /* @__PURE__ */ React8.createElement("svg", __spreadValues({ xmlns: "http://www.w3.org/2000/svg", viewBox: "0 0 192 512" }, props), /* @__PURE__ */ React8.createElement("path", { d: "M64 64c0-17.7-14.3-32-32-32S0 46.3 0 64L0 448c0 17.7 14.3 32 32 32s32-14.3 32-32L64 64zm128 0c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 384c0 17.7 14.3 32 32 32s32-14.3 32-32l0-384z" }));
 var grip_lines_vertical_solid_default = SvgGripLinesVerticalSolid;
 
@@ -1212,10 +1195,10 @@ var Event = ({
   setEvents,
   tick
 }) => {
-  const { setDragStarted } = (0, import_react14.useContext)(DragStartedContext);
-  const { onResize, eventsResize } = (0, import_react14.useContext)(ExternalPropertiesContext);
-  const initialPositionForResizeRef = (0, import_react14.useRef)(0);
-  const handleOnDragStart = (0, import_react14.useCallback)(
+  const { setDragStarted } = useContext4(DragStartedContext);
+  const { onResize, eventsResize } = useContext4(ExternalPropertiesContext);
+  const initialPositionForResizeRef = useRef2(0);
+  const handleOnDragStart = useCallback3(
     (event) => {
       event.stopPropagation();
       event.dataTransfer.setData("eventId", id);
@@ -1225,7 +1208,7 @@ var Event = ({
     },
     [setDragStarted]
   );
-  const handleOnDragEnd = (0, import_react14.useCallback)(
+  const handleOnDragEnd = useCallback3(
     (event) => {
       event.stopPropagation();
       setDragStarted(false);
@@ -1235,12 +1218,12 @@ var Event = ({
     [setDragStarted]
   );
   const classNames = (props == null ? void 0 : props.classNames) ? "event " + props.classNames.join(" ") : "event";
-  const [draggableEvent, setDraggableEvent] = (0, import_react14.useState)(true);
-  const [resizeOffset, setResizeOffset] = (0, import_react14.useState)(0);
-  const resizeOffsetRef = (0, import_react14.useRef)(0);
-  const [resizeStarted, setResizeStarted] = (0, import_react14.useState)(false);
-  const resizeDirectionRef = (0, import_react14.useRef)(null);
-  const handleDocumentOnMouseMoveResize = (0, import_react14.useCallback)(
+  const [draggableEvent, setDraggableEvent] = useState(true);
+  const [resizeOffset, setResizeOffset] = useState(0);
+  const resizeOffsetRef = useRef2(0);
+  const [resizeStarted, setResizeStarted] = useState(false);
+  const resizeDirectionRef = useRef2(null);
+  const handleDocumentOnMouseMoveResize = useCallback3(
     (event) => {
       const offset = event.clientX - initialPositionForResizeRef.current;
       setResizeOffset(
@@ -1250,7 +1233,7 @@ var Event = ({
     },
     [setResizeOffset]
   );
-  const handleDocumentOnMouseUp = (0, import_react14.useCallback)(
+  const handleDocumentOnMouseUp = useCallback3(
     (event, resizeDirection) => {
       initialPositionForResizeRef.current = 0;
       setResizeStarted(false);
@@ -1299,7 +1282,7 @@ var Event = ({
       sort_events_default
     ]
   );
-  const handleOnMouseDownEventResizer = (0, import_react14.useCallback)(
+  const handleOnMouseDownEventResizer = useCallback3(
     (event, resizeDirection) => {
       event.stopPropagation();
       resizeDirectionRef.current = resizeDirection;
@@ -1318,7 +1301,7 @@ var Event = ({
     },
     [handleDocumentOnMouseMoveResize, handleDocumentOnMouseUp]
   );
-  const handleOnMouseMove = (0, import_react14.useCallback)(
+  const handleOnMouseMove = useCallback3(
     (event) => {
       if (!resizeStarted) {
         event.stopPropagation();
@@ -1326,7 +1309,7 @@ var Event = ({
     },
     [resizeStarted]
   );
-  return /* @__PURE__ */ import_react14.default.createElement(
+  return /* @__PURE__ */ React9.createElement(
     "div",
     {
       id: `event_${id}`,
@@ -1345,7 +1328,7 @@ var Event = ({
         cursor: (props == null ? void 0 : props.isLocked) ? "not-allowed" : "pointer"
       }
     },
-    /* @__PURE__ */ import_react14.default.createElement("div", { className: "event-content" }, !(props == null ? void 0 : props.isLocked) && (eventsResize || (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ import_react14.default.createElement(
+    /* @__PURE__ */ React9.createElement("div", { className: "event-content" }, !(props == null ? void 0 : props.isLocked) && (eventsResize || (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ React9.createElement(
       "img",
       {
         className: "event-resize",
@@ -1357,7 +1340,7 @@ var Event = ({
         onMouseLeave: () => setDraggableEvent(true),
         onMouseDown: (event) => handleOnMouseDownEventResizer(event, "left")
       }
-    ), (props == null ? void 0 : props.content) ? props.content : null, !(props == null ? void 0 : props.isLocked) && (eventsResize || (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ import_react14.default.createElement(
+    ), (props == null ? void 0 : props.content) ? props.content : null, !(props == null ? void 0 : props.isLocked) && (eventsResize || (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ React9.createElement(
       "img",
       {
         className: "event-resize",
@@ -1375,12 +1358,12 @@ var Event = ({
 var event_default = Event;
 
 // src/hooks/use-intersection-observer.ts
-var import_react15 = require("react");
+import { useCallback as useCallback4, useEffect } from "react";
 var useIntersectionObserver = ({
   bodyRef,
   rowsContentRef
 }) => {
-  const callback = (0, import_react15.useCallback)((entries) => {
+  const callback = useCallback4((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         entry.target.classList.remove("row-hidden");
@@ -1392,7 +1375,7 @@ var useIntersectionObserver = ({
   const observer = new IntersectionObserver(callback, {
     root: bodyRef.current
   });
-  (0, import_react15.useEffect)(() => {
+  useEffect(() => {
     if (rowsContentRef.current) {
       rowsContentRef.current.forEach((row) => {
         observer.observe(row);
@@ -1414,10 +1397,10 @@ var useProduceContent = ({
   setEvents,
   bodyRef
 }) => {
-  const rowsHeightContext = (0, import_react16.useContext)(RowsHeightContext);
-  const tempRowsHeightRef = (0, import_react16.useRef)(null);
-  const rowsContentRef = (0, import_react16.useRef)([]);
-  const [content, internalAllRowsHeight] = (0, import_react16.useMemo)(() => {
+  const rowsHeightContext = useContext5(RowsHeightContext);
+  const tempRowsHeightRef = useRef4(null);
+  const rowsContentRef = useRef4([]);
+  const [content, internalAllRowsHeight] = useMemo5(() => {
     let internalAllRowsHeight2 = 0;
     return [
       rows.map((row, i) => {
@@ -1444,7 +1427,7 @@ var useProduceContent = ({
               eventOrder = tempEventOrder;
             }
             prevEvent[tempEventOrder] = event;
-            return /* @__PURE__ */ import_react17.default.createElement(
+            return /* @__PURE__ */ React10.createElement(
               event_default,
               {
                 key: `event_${event.id}`,
@@ -1474,7 +1457,7 @@ var useProduceContent = ({
         internalAllRowsHeight2 += 40 + highestEventOrder * 22;
         const rowStaticEvents = tick && staticEvents ? staticEvents.filter((event) => event.rowId === row.id).map((event) => {
           if (event.endTime >= windowTime[0] && event.startTime <= windowTime[1]) {
-            return /* @__PURE__ */ import_react17.default.createElement(
+            return /* @__PURE__ */ React10.createElement(
               static_event_default,
               {
                 key: `static_event_${event.id}`,
@@ -1487,7 +1470,7 @@ var useProduceContent = ({
             );
           }
         }) : null;
-        return /* @__PURE__ */ import_react17.default.createElement(import_react17.default.Fragment, { key: `row_content_${row.id}` }, /* @__PURE__ */ import_react17.default.createElement(
+        return /* @__PURE__ */ React10.createElement(React10.Fragment, { key: `row_content_${row.id}` }, /* @__PURE__ */ React10.createElement(
           row_content_default,
           {
             id: row.id,
@@ -1514,7 +1497,7 @@ var useProduceContent = ({
     rowsContentRef,
     bodyRef
   });
-  (0, import_react16.useEffect)(() => {
+  useEffect2(() => {
     if (rowsHeightContext) {
       rowsHeightContext.setRowsHeight(tempRowsHeightRef.current);
       rowsHeightContext.setAllRowsHeight(internalAllRowsHeight);
@@ -1525,7 +1508,7 @@ var useProduceContent = ({
 var use_produce_content_default = useProduceContent;
 
 // src/components/content.tsx
-var Content = (0, import_react18.forwardRef)(
+var Content = forwardRef2(
   ({
     rows,
     events,
@@ -1540,12 +1523,12 @@ var Content = (0, import_react18.forwardRef)(
     bodyRef,
     lineClassName
   }, ref) => {
-    const [mouseDown, setMouseDown] = (0, import_react18.useState)(false);
-    const startMovePosition = (0, import_react18.useRef)(null);
-    const [changeGrid, setChangeGrid] = (0, import_react18.useState)(false);
+    const [mouseDown, setMouseDown] = useState3(false);
+    const startMovePosition = useRef5(null);
+    const [changeGrid, setChangeGrid] = useState3(false);
     const { blockWidth } = use_get_block_properties_default({ windowTime, contentWidth });
-    const rowsHeightContext = (0, import_react18.useContext)(RowsHeightContext);
-    const handleOnMouseMove = (0, import_react18.useCallback)(
+    const rowsHeightContext = useContext6(RowsHeightContext);
+    const handleOnMouseMove = useCallback5(
       (event) => {
         event.preventDefault();
         if (!mouseDown) {
@@ -1571,7 +1554,7 @@ var Content = (0, import_react18.forwardRef)(
       },
       [blockWidth, setWindowTime, mouseDown]
     );
-    const handleOnMouseDown = (0, import_react18.useCallback)(
+    const handleOnMouseDown = useCallback5(
       (event) => {
         setMouseDown(true);
         if (event.button === 1) {
@@ -1583,10 +1566,10 @@ var Content = (0, import_react18.forwardRef)(
       },
       [setMouseDown]
     );
-    const handleOnMouseUp = (0, import_react18.useCallback)(() => {
+    const handleOnMouseUp = useCallback5(() => {
       setMouseDown(false);
     }, [setMouseDown]);
-    const handleOnMouseLeave = (0, import_react18.useCallback)(
+    const handleOnMouseLeave = useCallback5(
       () => setMouseDown(false),
       [setMouseDown]
     );
@@ -1600,7 +1583,7 @@ var Content = (0, import_react18.forwardRef)(
       setEvents,
       bodyRef
     });
-    const handleAuxClick = (0, import_react18.useCallback)(
+    const handleAuxClick = useCallback5(
       (event) => {
         event.preventDefault();
         if (event.button === 1) {
@@ -1609,7 +1592,7 @@ var Content = (0, import_react18.forwardRef)(
       },
       []
     );
-    const handleOnWheel = (0, import_react18.useCallback)(
+    const handleOnWheel = useCallback5(
       (event) => {
         const pixelsToCalculate = tick ? 900 / tick : 0;
         if (changeGrid) {
@@ -1624,12 +1607,12 @@ var Content = (0, import_react18.forwardRef)(
       },
       [changeGrid, cellWidth, tick]
     );
-    (0, import_react18.useEffect)(() => {
+    useEffect3(() => {
       if (bodyRef.current) {
         bodyRef.current.style.overflow = changeGrid ? "hidden" : "auto";
       }
     }, [changeGrid]);
-    return /* @__PURE__ */ import_react18.default.createElement(
+    return /* @__PURE__ */ React11.createElement(
       "div",
       {
         key: "content",
@@ -1646,7 +1629,7 @@ var Content = (0, import_react18.forwardRef)(
           height: rowsHeightContext == null ? void 0 : rowsHeightContext.allRowsHeight
         }
       },
-      /* @__PURE__ */ import_react18.default.createElement(
+      /* @__PURE__ */ React11.createElement(
         lines_canvas_default,
         {
           contentWidth,
@@ -1661,15 +1644,15 @@ var Content = (0, import_react18.forwardRef)(
 var content_default = Content;
 
 // src/hooks/use-resize-observer.ts
-var import_react19 = require("react");
+import { useEffect as useEffect4, useMemo as useMemo6, useRef as useRef6 } from "react";
 var useResizeObserver = ({
   windowTime,
   setTick,
   setCellWidth,
   contentRef
 }) => {
-  const prevWidthRef = (0, import_react19.useRef)(0);
-  const resizeObserver = (0, import_react19.useMemo)(() => {
+  const prevWidthRef = useRef6(0);
+  const resizeObserver = useMemo6(() => {
     return new ResizeObserver((entries) => {
       var _a;
       for (const entry of entries) {
@@ -1684,7 +1667,7 @@ var useResizeObserver = ({
       }
     });
   }, [windowTime]);
-  (0, import_react19.useEffect)(() => {
+  useEffect4(() => {
     if (contentRef.current) {
       resizeObserver.observe(contentRef.current, { box: "border-box" });
     }
@@ -1694,15 +1677,15 @@ var useResizeObserver = ({
 var use_resize_observer_default = useResizeObserver;
 
 // src/components/rt-indicator.tsx
-var import_react20 = __toESM(require("react"));
+import React12, { useEffect as useEffect5, useRef as useRef7, useState as useState4 } from "react";
 var RTIndicator = ({
   tick,
   windowTime
 }) => {
-  const [currentTime, setCurrentTime] = (0, import_react20.useState)((/* @__PURE__ */ new Date()).getTime() / 1e3);
-  const [leftOffset, setLeftOffset] = (0, import_react20.useState)(0);
-  const intervalIdRef = (0, import_react20.useRef)(null);
-  (0, import_react20.useEffect)(() => {
+  const [currentTime, setCurrentTime] = useState4((/* @__PURE__ */ new Date()).getTime() / 1e3);
+  const [leftOffset, setLeftOffset] = useState4(0);
+  const intervalIdRef = useRef7(null);
+  useEffect5(() => {
     if (tick) {
       const leftOffsetTime = currentTime - windowTime[0];
       setLeftOffset(Math.round(leftOffsetTime / tick));
@@ -1715,7 +1698,7 @@ var RTIndicator = ({
       intervalIdRef.current = intervalId;
     }
   }, [tick, windowTime, currentTime]);
-  return /* @__PURE__ */ import_react20.default.createElement(import_react20.default.Fragment, null, windowTime[0] <= currentTime && currentTime <= windowTime[1] && /* @__PURE__ */ import_react20.default.createElement(import_react20.default.Fragment, null, /* @__PURE__ */ import_react20.default.createElement("div", { className: "rt-arrow", style: { left: 86 + leftOffset } }), /* @__PURE__ */ import_react20.default.createElement("div", { className: "rt-line", style: { left: 100 + leftOffset } })));
+  return /* @__PURE__ */ React12.createElement(React12.Fragment, null, windowTime[0] <= currentTime && currentTime <= windowTime[1] && /* @__PURE__ */ React12.createElement(React12.Fragment, null, /* @__PURE__ */ React12.createElement("div", { className: "rt-arrow", style: { left: 86 + leftOffset } }), /* @__PURE__ */ React12.createElement("div", { className: "rt-line", style: { left: 100 + leftOffset } })));
 };
 var rt_indicator_default = RTIndicator;
 
@@ -1732,7 +1715,7 @@ var Timeline = ({
   showRTIndicator = true,
   eventsResize = true
 }) => {
-  const [windowTime, setWindowTime] = (0, import_react21.useState)([
+  const [windowTime, setWindowTime] = useState5([
     new Date(
       startDate.getFullYear(),
       startDate.getMonth(),
@@ -1750,16 +1733,16 @@ var Timeline = ({
       0
     ).getTime() / 1e3
   ]);
-  const [cellWidth, setCellWidth] = (0, import_react21.useState)(0);
-  const [internalEvents, setInternalEvents] = (0, import_react21.useState)([]);
-  const contentRef = (0, import_react21.useRef)(null);
-  const mainRef = (0, import_react21.useRef)(null);
-  const bodyRef = (0, import_react21.useRef)(null);
-  const [tick, setTick] = (0, import_react21.useState)(null);
-  const [scrollWidth, setScrollWidth] = (0, import_react21.useState)(0);
-  const [rowsHeight, setRowsHeight] = (0, import_react21.useState)(null);
-  const [allRowsHeight, setAllRowsHeight] = (0, import_react21.useState)(0);
-  (0, import_react21.useEffect)(() => {
+  const [cellWidth, setCellWidth] = useState5(0);
+  const [internalEvents, setInternalEvents] = useState5([]);
+  const contentRef = useRef8(null);
+  const mainRef = useRef8(null);
+  const bodyRef = useRef8(null);
+  const [tick, setTick] = useState5(null);
+  const [scrollWidth, setScrollWidth] = useState5(0);
+  const [rowsHeight, setRowsHeight] = useState5(null);
+  const [allRowsHeight, setAllRowsHeight] = useState5(0);
+  useEffect6(() => {
     if (contentRef.current) {
       const windowDuration = windowTime[1] - windowTime[0];
       const numberOfHourBlocks = windowDuration / 3600;
@@ -1771,18 +1754,18 @@ var Timeline = ({
       );
     }
   }, []);
-  (0, import_react21.useEffect)(() => {
+  useEffect6(() => {
     if (bodyRef.current) {
       setScrollWidth(
         bodyRef.current.getBoundingClientRect().width - bodyRef.current.scrollWidth
       );
     }
   }, []);
-  (0, import_react21.useEffect)(() => {
+  useEffect6(() => {
     setInternalEvents(events.sort(sort_events_default));
   }, [events]);
-  const [dragStarted, setDragStarted] = (0, import_react21.useState)(false);
-  (0, import_react21.useEffect)(() => {
+  const [dragStarted, setDragStarted] = useState5(false);
+  useEffect6(() => {
     let tempRowsHeight = null;
     rows.forEach((row) => {
       if (tempRowsHeight === null) {
@@ -1794,7 +1777,7 @@ var Timeline = ({
     setRowsHeight(tempRowsHeight);
   }, [rows]);
   use_resize_observer_default({ contentRef, setCellWidth, setTick, windowTime });
-  return /* @__PURE__ */ import_react21.default.createElement("div", { className: "main-wrapper", ref: mainRef }, showRTIndicator && /* @__PURE__ */ import_react21.default.createElement(rt_indicator_default, { tick, windowTime }), /* @__PURE__ */ import_react21.default.createElement(
+  return /* @__PURE__ */ React13.createElement("div", { className: "main-wrapper", ref: mainRef }, showRTIndicator && /* @__PURE__ */ React13.createElement(rt_indicator_default, { tick, windowTime }), /* @__PURE__ */ React13.createElement(
     time_bar_default,
     {
       windowTime,
@@ -1802,24 +1785,24 @@ var Timeline = ({
       contentWidth: contentRef.current ? contentRef.current.getBoundingClientRect().width : null,
       scrollWidth
     }
-  ), /* @__PURE__ */ import_react21.default.createElement("div", { className: "body-wrapper", ref: bodyRef }, /* @__PURE__ */ import_react21.default.createElement(
+  ), /* @__PURE__ */ React13.createElement("div", { className: "body-wrapper", ref: bodyRef }, /* @__PURE__ */ React13.createElement(
     RowsHeightContext.Provider,
     {
       value: { rowsHeight, setRowsHeight, allRowsHeight, setAllRowsHeight }
     },
-    /* @__PURE__ */ import_react21.default.createElement(
+    /* @__PURE__ */ React13.createElement(
       rows_header_default,
       {
         rows,
         className: additionalClassNames == null ? void 0 : additionalClassNames.rowsHeader
       }
     ),
-    /* @__PURE__ */ import_react21.default.createElement(DragStartedContext.Provider, { value: { dragStarted, setDragStarted } }, /* @__PURE__ */ import_react21.default.createElement(
+    /* @__PURE__ */ React13.createElement(DragStartedContext.Provider, { value: { dragStarted, setDragStarted } }, /* @__PURE__ */ React13.createElement(
       ExternalPropertiesContext.Provider,
       {
         value: { onDrop, onResize, eventsResize }
       },
-      /* @__PURE__ */ import_react21.default.createElement(
+      /* @__PURE__ */ React13.createElement(
         content_default,
         {
           events: internalEvents,
@@ -1840,8 +1823,7 @@ var Timeline = ({
     ))
   )));
 };
-// Annotate the CommonJS export names for ESM import in node:
-0 && (module.exports = {
+export {
   Timeline
-});
-//# sourceMappingURL=index.js.map
+};
+//# sourceMappingURL=index.mjs.map

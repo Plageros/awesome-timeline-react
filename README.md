@@ -51,8 +51,14 @@ The following properties for Timeline component are available:
   - `eventId`: `string`
   - `oldRowId`: `string`
   - `newRowId`: `string`
-  - `startDate`: `number` (timestamp in seconds)
-  - `endDate`: `number` (timestamp in seconds)
+  - `startTime`: `number` (timestamp in seconds)
+  - `endTime`: `number` (timestamp in seconds)
+
+- `onResize` – an external callback after the resize event was done, that can be injected. The callback receives the following properties:
+
+  - `eventId`: `string`
+  - `startTime`: `number` (timestamp in seconds)
+  - `endTime`: `number` (timestamp in seconds)
 
 - `additionalClassNames` – contains additional class names that will be included within elements:
 
@@ -74,7 +80,7 @@ One of the awesome features (currently hidden from the interface) is adjusting t
 
 Here, we will store major features planned for future releases (from highest to lowest priority):
 
-1. Resize events
+1. ~~Resize events~~ - published in 0.1.8 version
 2. ~~Real time line~~ - published in 0.1.7 version
 3. Customizable prompts after hovering over an event
 4. Customizable second row of the time bar

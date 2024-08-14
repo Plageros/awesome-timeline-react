@@ -29,6 +29,12 @@ export type OnDropProps = {
   endTime: number;
 };
 
+export type OnResizeProps = {
+  eventId: string;
+  startTime: number;
+  endTime: number;
+};
+
 export type ModifableElements = {
   timeBar: string;
   dayRow: string;
@@ -44,6 +50,7 @@ export type TimelineType = {
   events: EventType[];
   staticEvents?: EventType[];
   onDrop?: (props: OnDropProps) => void;
+  onResize?: (props: OnResizeProps) => void;
   startDate: Date;
   endDate: Date;
   additionalClassNames?: PartialRecord<keyof ModifableElements, string>;

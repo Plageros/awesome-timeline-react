@@ -16,6 +16,7 @@ export const Timeline = ({
   events,
   staticEvents,
   onDrop,
+  onResize,
   startDate,
   endDate,
   additionalClassNames,
@@ -130,7 +131,7 @@ export const Timeline = ({
             className={additionalClassNames?.rowsHeader}
           />
           <DragStartedContext.Provider value={{ dragStarted, setDragStarted }}>
-            <ExternalPropertiesContext.Provider value={{ onDrop }}>
+            <ExternalPropertiesContext.Provider value={{ onDrop, onResize }}>
               <Content
                 events={internalEvents}
                 staticEvents={staticEvents}

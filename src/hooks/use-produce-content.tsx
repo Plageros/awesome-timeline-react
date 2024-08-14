@@ -81,6 +81,8 @@ const useProduceContent = ({
                       width={(event.endTime - event.startTime) / tick}
                       top={10 + 22 * tempEventOrder}
                       props={event.props}
+                      setEvents={setEvents}
+                      tick={tick}
                     ></Event>
                   );
                 }

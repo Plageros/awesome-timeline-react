@@ -1,6 +1,7 @@
 {
   "include": ["./src/**/*"],
   "exclude": ["./node_modules"],
+  "files": ["globals.d.ts"],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 

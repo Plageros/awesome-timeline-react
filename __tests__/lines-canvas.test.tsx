@@ -8,7 +8,7 @@ describe("Test lines canvas component", () => {
       <LinesCanvas cellWidth={10} contentWidth={1000} />
     );
     let tree = component.toJSON();
-    expect(tree.children.length).toEqual(99);
+    if (!Array.isArray(tree)) expect(tree?.children?.length).toEqual(99);
   });
 
   test("Check proper class names", () => {
@@ -16,6 +16,7 @@ describe("Test lines canvas component", () => {
       <LinesCanvas cellWidth={10} contentWidth={990.5} />
     );
     let tree = component.toJSON();
-    expect(tree.props.className).toBe("lines-canvas hide-last-line");
+    if (!Array.isArray(tree))
+      expect(tree?.props.className).toBe("lines-canvas hide-last-line");
   });
 });

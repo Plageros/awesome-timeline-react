@@ -16,7 +16,11 @@ describe("Test time bar component", () => {
       />
     );
     let tree = component.toJSON();
-    expect(tree.children[1].children[0].children.length).toEqual(4);
-    expect(tree.children[1].children[1].children.length).toEqual(72);
+    if (!Array.isArray(tree))
+      //@ts-ignore
+      expect(tree?.children[1].children[0].children.length).toEqual(4);
+    if (!Array.isArray(tree))
+      //@ts-ignore
+      expect(tree?.children[1].children[1].children.length).toEqual(72);
   });
 });

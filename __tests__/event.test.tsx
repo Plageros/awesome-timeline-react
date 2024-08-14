@@ -15,12 +15,19 @@ describe("Test event component", () => {
           isLocked: true,
           content: "some content",
         }}
+        setEvents={() => {}}
+        tick={100}
       />
     );
     let tree = component.toJSON();
     expect(tree).toMatchSnapshot();
-    expect(tree.props.className).toBe("event test-class another-test-class");
-    expect(tree.props.draggable).toBeFalsy();
-    expect(tree.children[0].children[0]).toBe("some content");
+    if (!Array.isArray(tree)) {
+      expect(tree?.props.className).toBe("event test-class another-test-class");
+      expect(tree?.props.draggable).toBeFalsy();
+
+      if (tree?.children)
+        //@ts-ignore
+        expect(tree?.children[0].children[0]).toBe("some content");
+    }
   });
 });

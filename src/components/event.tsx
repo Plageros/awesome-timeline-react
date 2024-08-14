@@ -31,7 +31,7 @@ const Event = ({
 }) => {
   const { setDragStarted } = useContext(DragStartedContext);
 
-  const { onResize } = useContext(ExternalPropertiesContext);
+  const { onResize, eventsResize } = useContext(ExternalPropertiesContext);
 
   const initialPositionForResizeRef = useRef(0);
 
@@ -190,7 +190,7 @@ const Event = ({
       }}
     >
       <div className="event-content">
-        {!props?.isLocked && (
+        {!props?.isLocked && (eventsResize || props?.isResizable) && (
           <img
             className="event-resize"
             style={resizeStarted ? { opacity: "100%" } : undefined}
@@ -205,7 +205,7 @@ const Event = ({
           ></img>
         )}
         {props?.content ? props.content : null}
-        {!props?.isLocked && (
+        {!props?.isLocked && (eventsResize || props?.isResizable) && (
           <img
             className="event-resize"
             style={resizeStarted ? { opacity: "100%" } : undefined}

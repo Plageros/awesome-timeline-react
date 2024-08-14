@@ -40,9 +40,10 @@ The following properties for Timeline component are available:
   - `startTime`: `number` (timestamp in seconds)
   - `endTime`: `number` (timestamp in seconds)
   - `props`:
-    - `isLocked`: `boolean` (defines if the event is locked, meaning it cannot be moved. Default is `false`)
+    - `isLocked`: `boolean` (defines if event is locked, meaning it cannot be moved. Default is `false`)
     - `content`: `JSX.Element | string` (customizable content for each event)
     - `classNames`: `string[]` (array of additional class names for customizing the event)
+    - `isResizable`: `boolean` (defines if event is resizable, overrides the default property `eventsResize`)
 
 - `staticEvents` – an array of objects that define static events for particular rows, meaning the events are not interactable by the user.
 
@@ -69,6 +70,8 @@ The following properties for Timeline component are available:
   - `rowsHeader`: `string`
 
 - `showRTIndicator` – property that controls wheter Real Time Indicator will be show (default as true)
+
+- `eventsResize` - property that define if events are resizeable (default as true)
 
 ## Awesome Features
 

@@ -11,6 +11,7 @@ export type EventPropsType = {
   isLocked?: boolean;
   content?: JSX.Element | string;
   classNames?: string[];
+  isResizable?: boolean;
 };
 
 export type EventType = {
@@ -55,4 +56,5 @@ export type TimelineType = {
   endDate: Date;
   additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
   showRTIndicator?: boolean;
+  eventsResize?: boolean;
 };

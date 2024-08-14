@@ -21,6 +21,7 @@ export const Timeline = ({
   endDate,
   additionalClassNames,
   showRTIndicator = true,
+  eventsResize = true,
 }: TimelineType) => {
   const [windowTime, setWindowTime] = useState([
     new Date(
@@ -131,7 +132,9 @@ export const Timeline = ({
             className={additionalClassNames?.rowsHeader}
           />
           <DragStartedContext.Provider value={{ dragStarted, setDragStarted }}>
-            <ExternalPropertiesContext.Provider value={{ onDrop, onResize }}>
+            <ExternalPropertiesContext.Provider
+              value={{ onDrop, onResize, eventsResize }}
+            >
               <Content
                 events={internalEvents}
                 staticEvents={staticEvents}

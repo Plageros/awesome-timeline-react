@@ -1267,7 +1267,6 @@ var Event = ({
         produce((draft) => {
           const event2 = draft.find((event3) => event3.id === id);
           if (event2 && tick) {
-            console.log(resizeOffsetRef.current);
             if (resizeDirection === "left") {
               const newStartTime = Math.round(
                 event2.startTime + resizeOffsetRef.current * tick

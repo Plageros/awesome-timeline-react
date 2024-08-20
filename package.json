@@ -1,6 +1,6 @@
 {
   "name": "awesome-timeline-react",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "awesome timeline for react applications",
   "scripts": {
     "test": "jest",
@@ -56,7 +56,6 @@
     "typescript-eslint": "^7.8.0"
   },
   "peerDependencies": {
-    "esbuild": "^0.19.1",
     "react": "^18",
     "react-dom": "^18"
   }

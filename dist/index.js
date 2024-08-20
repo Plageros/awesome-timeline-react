@@ -1245,9 +1245,8 @@ var Event = ({
   const handleDocumentOnMouseMoveResize = (0, import_react15.useCallback)(
     (event) => {
       const offset = event.clientX - initialPositionForResizeRef.current;
-      setResizeOffset(
-        resizeDirectionRef.current === "left" ? offset * -1 : offset
-      );
+      let internalResizeOffset = resizeDirectionRef.current === "left" ? offset * -1 : offset;
+      setResizeOffset(internalResizeOffset);
       resizeOffsetRef.current = offset;
     },
     [setResizeOffset]
@@ -1268,16 +1267,21 @@ var Event = ({
         produce((draft) => {
           const event2 = draft.find((event3) => event3.id === id);
           if (event2 && tick) {
+            console.log(resizeOffsetRef.current);
             if (resizeDirection === "left") {
               const newStartTime = Math.round(
                 event2.startTime + resizeOffsetRef.current * tick
               );
-              event2.startTime = newStartTime;
+              if (event2.endTime - newStartTime > 0) {
+                event2.startTime = newStartTime;
+              }
             } else {
               const newEndTime = Math.round(
                 event2.endTime + resizeOffsetRef.current * tick
               );
-              event2.endTime = newEndTime;
+              if (newEndTime - event2.startTime > 0) {
+                event2.endTime = newEndTime;
+              }
             }
             if (onResize) {
               onResize({
@@ -1347,7 +1351,7 @@ var Event = ({
         cursor: (props == null ? void 0 : props.isLocked) ? "not-allowed" : "pointer"
       }
     },
-    /* @__PURE__ */ import_react15.default.createElement("div", { className: "event-content" }, !(props == null ? void 0 : props.isLocked) && (eventsResize || (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ import_react15.default.createElement(
+    !(props == null ? void 0 : props.isLocked) && (eventsResize && ((props == null ? void 0 : props.isResizable) === true || (props == null ? void 0 : props.isResizable) === void 0) || !eventsResize && (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ import_react15.default.createElement(
       "div",
       {
         className: "event-resize",
@@ -1358,7 +1362,9 @@ var Event = ({
         onMouseDown: (event) => handleOnMouseDownEventResizer(event, "left")
       },
       /* @__PURE__ */ import_react15.default.createElement(resize_icon_default, null)
-    ), (props == null ? void 0 : props.content) ? props.content : null, !(props == null ? void 0 : props.isLocked) && (eventsResize || (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ import_react15.default.createElement(
+    ),
+    /* @__PURE__ */ import_react15.default.createElement("div", { className: "event-content" }, (props == null ? void 0 : props.content) ? props.content : null),
+    !(props == null ? void 0 : props.isLocked) && (eventsResize && ((props == null ? void 0 : props.isResizable) === true || (props == null ? void 0 : props.isResizable) === void 0) || !eventsResize && (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ import_react15.default.createElement(
       "div",
       {
         className: "event-resize",
@@ -1369,7 +1375,7 @@ var Event = ({
         onMouseDown: (event) => handleOnMouseDownEventResizer(event, "right")
       },
       /* @__PURE__ */ import_react15.default.createElement(resize_icon_default, null)
-    ))
+    )
   );
 };
 var event_default = Event;

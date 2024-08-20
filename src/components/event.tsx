@@ -75,9 +75,9 @@ const Event = ({
   const handleDocumentOnMouseMoveResize = useCallback(
     (event: MouseEvent) => {
       const offset = event.clientX - initialPositionForResizeRef.current;
-      setResizeOffset(
-        resizeDirectionRef.current === "left" ? offset * -1 : offset
-      );
+      let internalResizeOffset =
+        resizeDirectionRef.current === "left" ? offset * -1 : offset;
+      setResizeOffset(internalResizeOffset);
       resizeOffsetRef.current = offset;
     },
     [setResizeOffset]
@@ -99,17 +99,22 @@ const Event = ({
         produce((draft) => {
           const event = draft.find((event) => event.id === id);
           if (event && tick) {
+            console.log(resizeOffsetRef.current);
+
             if (resizeDirection === "left") {
               const newStartTime = Math.round(
                 event.startTime + resizeOffsetRef.current * tick
               );
-
-              event.startTime = newStartTime;
+              if (event.endTime - newStartTime > 0) {
+                event.startTime = newStartTime;
+              }
             } else {
               const newEndTime = Math.round(
                 event.endTime + resizeOffsetRef.current * tick
               );
-              event.endTime = newEndTime;
+              if (newEndTime - event.startTime > 0) {
+                event.endTime = newEndTime;
+              }
             }
             if (onResize) {
               onResize({
@@ -190,8 +195,10 @@ const Event = ({
         cursor: props?.isLocked ? "not-allowed" : "pointer",
       }}
     >
-      <div className="event-content">
-        {!props?.isLocked && (eventsResize || props?.isResizable) && (
+      {!props?.isLocked &&
+        ((eventsResize &&
+          (props?.isResizable === true || props?.isResizable === undefined)) ||
+          (!eventsResize && props?.isResizable)) && (
           <div
             className="event-resize"
             style={resizeStarted ? { opacity: "100%" } : undefined}
@@ -205,8 +212,13 @@ const Event = ({
             <ResizeIcon></ResizeIcon>
           </div>
         )}
+      <div className="event-content">
         {props?.content ? props.content : null}
-        {!props?.isLocked && (eventsResize || props?.isResizable) && (
+      </div>
+      {!props?.isLocked &&
+        ((eventsResize &&
+          (props?.isResizable === true || props?.isResizable === undefined)) ||
+          (!eventsResize && props?.isResizable)) && (
           <div
             className="event-resize"
             style={resizeStarted ? { opacity: "100%" } : undefined}
@@ -220,7 +232,6 @@ const Event = ({
             <ResizeIcon></ResizeIcon>
           </div>
         )}
-      </div>
     </div>
   );
 };

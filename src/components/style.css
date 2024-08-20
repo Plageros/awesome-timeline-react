@@ -36,18 +36,21 @@
   transition: top 0.5s ease-in-out;
   box-sizing: border-box;
   display: flex;
+  justify-content: space-between;
   border-radius: 5px;
   box-shadow: inset 0px 0px 5px gray;
 }
 
 .event-content {
-  width: 100%;
+  position: absolute;
+  margin-inline: 13px;
+  width: calc(100% - 26px);
   height: 100%;
   display: flex;
-  justify-content: space-between;
+  overflow: hidden;
 }
 
-.event-content:hover .event-resize {
+.event:hover .event-resize {
   opacity: 100%;
 }
 
@@ -64,6 +67,7 @@
   margin: 4px;
   cursor: e-resize;
   transition: opacity 0.3s ease-in-out;
+  flex-shrink: 1;
 }
 
 .static-event {

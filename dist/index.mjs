@@ -16,7 +16,7 @@ var __spreadValues = (a, b) => {
 };
 
 // src/timeline.tsx
-import React13, { useEffect as useEffect6, useRef as useRef8, useState as useState5 } from "react";
+import React14, { useEffect as useEffect6, useMemo as useMemo7, useRef as useRef9, useState as useState6 } from "react";
 
 // src/components/time-bar.tsx
 import React2, { useRef } from "react";
@@ -1158,13 +1158,6 @@ var RowContent = forwardRef((props, ref) => {
       "data-index": id,
       style: {
         minHeight
-        //   background: `linear-gradient(to left, white, white 1px, transparent 0, transparent 100%), repeating-linear-gradient(
-        //   to left,
-        //   #aaaaaa,
-        //   #aaaaaa 1px,
-        //   transparent 0px,
-        //   transparent ${cellWidth}px
-        // )`,
       }
     },
     children
@@ -1189,24 +1182,29 @@ var resize_icon_default = ResizeIcon;
 
 // src/components/event.tsx
 var Event = ({
-  id,
+  eventData,
   startPosition,
   width,
   top,
-  props,
   setEvents,
   tick
 }) => {
+  var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
   const { setDragStarted } = useContext4(DragStartedContext);
-  const { onResize, eventsResize } = useContext4(ExternalPropertiesContext);
+  const { onResize, eventsResize, eventPromptRef } = useContext4(
+    ExternalPropertiesContext
+  );
   const initialPositionForResizeRef = useRef2(0);
   const handleOnDragStart = useCallback3(
     (event) => {
       event.stopPropagation();
-      event.dataTransfer.setData("eventId", id);
+      event.dataTransfer.setData("eventId", eventData.id);
       setTimeout(() => setDragStarted(true), 0);
       const target = event.target;
       target.style.opacity = "50%";
+      if (eventPromptRef == null ? void 0 : eventPromptRef.current) {
+        eventPromptRef.current.setDisplay("none");
+      }
     },
     [setDragStarted]
   );
@@ -1219,7 +1217,7 @@ var Event = ({
     },
     [setDragStarted]
   );
-  const classNames = (props == null ? void 0 : props.classNames) ? "event " + props.classNames.join(" ") : "event";
+  const classNames = ((_a = eventData.props) == null ? void 0 : _a.classNames) ? "event " + eventData.props.classNames.join(" ") : "event";
   const [draggableEvent, setDraggableEvent] = useState(true);
   const [resizeOffset, setResizeOffset] = useState(0);
   const resizeOffsetRef = useRef2(0);
@@ -1248,7 +1246,7 @@ var Event = ({
       }
       setEvents(
         produce((draft) => {
-          const event2 = draft.find((event3) => event3.id === id);
+          const event2 = draft.find((event3) => event3.id === eventData.id);
           if (event2 && tick) {
             if (resizeDirection === "left") {
               const newStartTime = Math.round(
@@ -1314,26 +1312,52 @@ var Event = ({
     },
     [resizeStarted]
   );
+  const handleOnMouseOver = useCallback3(
+    (event) => {
+      var _a2, _b2;
+      event.stopPropagation();
+      if (((_a2 = eventData.props) == null ? void 0 : _a2.showPrompt) || ((_b2 = eventData.props) == null ? void 0 : _b2.showPrompt) === void 0) {
+        const target = event.target;
+        if (eventPromptRef == null ? void 0 : eventPromptRef.current) {
+          eventPromptRef.current.setDisplay("block");
+          eventPromptRef.current.setRight(
+            `calc(100% - ${target.getBoundingClientRect().left}px + 60px)`
+          );
+          eventPromptRef.current.setBottom(
+            `calc(100% - ${target.getBoundingClientRect().top}px + 60px)`
+          );
+          eventPromptRef.current.setEvent(eventData);
+        }
+      }
+    },
+    [eventData]
+  );
+  const handleOnMouseOut = useCallback3(() => {
+    if (eventPromptRef == null ? void 0 : eventPromptRef.current) {
+      eventPromptRef.current.setDisplay("none");
+    }
+  }, []);
   return /* @__PURE__ */ React9.createElement(
     "div",
     {
-      id: `event_${id}`,
-      key: `event_${id}`,
+      id: `event_${eventData.id}`,
+      key: `event_${eventData.id}`,
       className: classNames,
-      draggable: (props == null ? void 0 : props.isLocked) ? false : draggableEvent,
+      draggable: ((_b = eventData.props) == null ? void 0 : _b.isLocked) ? false : draggableEvent,
       onDragStart: handleOnDragStart,
       onDragEnd: handleOnDragEnd,
       onMouseDown: (event) => event.stopPropagation(),
       onMouseMove: handleOnMouseMove,
+      onMouseOut: handleOnMouseOut,
       onDrop: (event) => event.stopPropagation(),
       style: {
         left: resizeDirectionRef.current === "left" ? startPosition - resizeOffset : startPosition,
         width: width + resizeOffset,
         top,
-        cursor: (props == null ? void 0 : props.isLocked) ? "not-allowed" : "pointer"
+        cursor: ((_c = eventData.props) == null ? void 0 : _c.isLocked) ? "not-allowed" : "pointer"
       }
     },
-    !(props == null ? void 0 : props.isLocked) && (eventsResize && ((props == null ? void 0 : props.isResizable) === true || (props == null ? void 0 : props.isResizable) === void 0) || !eventsResize && (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ React9.createElement(
+    !((_d = eventData.props) == null ? void 0 : _d.isLocked) && (eventsResize && (((_e = eventData.props) == null ? void 0 : _e.isResizable) === true || ((_f = eventData.props) == null ? void 0 : _f.isResizable) === void 0) || !eventsResize && ((_g = eventData.props) == null ? void 0 : _g.isResizable)) && /* @__PURE__ */ React9.createElement(
       "div",
       {
         className: "event-resize",
@@ -1341,12 +1365,13 @@ var Event = ({
         draggable: false,
         onMouseEnter: () => setDraggableEvent(false),
         onMouseLeave: () => setDraggableEvent(true),
-        onMouseDown: (event) => handleOnMouseDownEventResizer(event, "left")
+        onMouseDown: (event) => handleOnMouseDownEventResizer(event, "left"),
+        onMouseOver: (event) => event.stopPropagation()
       },
       /* @__PURE__ */ React9.createElement(resize_icon_default, null)
     ),
-    /* @__PURE__ */ React9.createElement("div", { className: "event-content" }, (props == null ? void 0 : props.content) ? props.content : null),
-    !(props == null ? void 0 : props.isLocked) && (eventsResize && ((props == null ? void 0 : props.isResizable) === true || (props == null ? void 0 : props.isResizable) === void 0) || !eventsResize && (props == null ? void 0 : props.isResizable)) && /* @__PURE__ */ React9.createElement(
+    /* @__PURE__ */ React9.createElement("div", { className: "event-content", onMouseOver: handleOnMouseOver }, ((_h = eventData.props) == null ? void 0 : _h.content) ? eventData.props.content : null),
+    !((_i = eventData.props) == null ? void 0 : _i.isLocked) && (eventsResize && (((_j = eventData.props) == null ? void 0 : _j.isResizable) === true || ((_k = eventData.props) == null ? void 0 : _k.isResizable) === void 0) || !eventsResize && ((_l = eventData.props) == null ? void 0 : _l.isResizable)) && /* @__PURE__ */ React9.createElement(
       "div",
       {
         className: "event-resize",
@@ -1354,7 +1379,8 @@ var Event = ({
         draggable: false,
         onMouseEnter: () => setDraggableEvent(false),
         onMouseLeave: () => setDraggableEvent(true),
-        onMouseDown: (event) => handleOnMouseDownEventResizer(event, "right")
+        onMouseDown: (event) => handleOnMouseDownEventResizer(event, "right"),
+        onMouseOver: (event) => event.stopPropagation()
       },
       /* @__PURE__ */ React9.createElement(resize_icon_default, null)
     )
@@ -1436,11 +1462,10 @@ var useProduceContent = ({
               event_default,
               {
                 key: `event_${event.id}`,
-                id: event.id,
+                eventData: event,
                 startPosition: (event.startTime - windowTime[0]) / tick,
                 width: (event.endTime - event.startTime) / tick,
                 top: 10 + 22 * tempEventOrder,
-                props: event.props,
                 setEvents,
                 tick
               }
@@ -1707,6 +1732,44 @@ var RTIndicator = ({
 };
 var rt_indicator_default = RTIndicator;
 
+// src/components/event-prompt.tsx
+import React13, {
+  forwardRef as forwardRef3,
+  useImperativeHandle,
+  useRef as useRef8,
+  useState as useState5
+} from "react";
+var EventPrompt = forwardRef3(
+  ({ template }, ref) => {
+    const eventRef = useRef8(null);
+    const [hoveredEvent, setHoveredEvent] = useState5();
+    useImperativeHandle(ref, () => {
+      return {
+        setDisplay(value) {
+          if (eventRef.current) {
+            eventRef.current.style.display = value;
+          }
+        },
+        setRight(value) {
+          if (eventRef.current) {
+            eventRef.current.style.right = value;
+          }
+        },
+        setBottom(value) {
+          if (eventRef.current) {
+            eventRef.current.style.bottom = value;
+          }
+        },
+        setEvent(event) {
+          setHoveredEvent(event);
+        }
+      };
+    });
+    return /* @__PURE__ */ React13.createElement("div", { className: "event-prompt", ref: eventRef }, template && hoveredEvent && template(hoveredEvent));
+  }
+);
+var event_prompt_default = EventPrompt;
+
 // src/timeline.tsx
 var Timeline = ({
   rows,
@@ -1718,9 +1781,11 @@ var Timeline = ({
   endDate,
   additionalClassNames,
   showRTIndicator = true,
-  eventsResize = true
+  eventsResize = true,
+  eventPromptTemplate,
+  showEventPrompt = true
 }) => {
-  const [windowTime, setWindowTime] = useState5([
+  const [windowTime, setWindowTime] = useState6([
     new Date(
       startDate.getFullYear(),
       startDate.getMonth(),
@@ -1738,15 +1803,16 @@ var Timeline = ({
       0
     ).getTime() / 1e3
   ]);
-  const [cellWidth, setCellWidth] = useState5(0);
-  const [internalEvents, setInternalEvents] = useState5([]);
-  const contentRef = useRef8(null);
-  const mainRef = useRef8(null);
-  const bodyRef = useRef8(null);
-  const [tick, setTick] = useState5(null);
-  const [scrollWidth, setScrollWidth] = useState5(0);
-  const [rowsHeight, setRowsHeight] = useState5(null);
-  const [allRowsHeight, setAllRowsHeight] = useState5(0);
+  const [cellWidth, setCellWidth] = useState6(0);
+  const [internalEvents, setInternalEvents] = useState6([]);
+  const contentRef = useRef9(null);
+  const mainRef = useRef9(null);
+  const bodyRef = useRef9(null);
+  const [tick, setTick] = useState6(null);
+  const [scrollWidth, setScrollWidth] = useState6(0);
+  const [rowsHeight, setRowsHeight] = useState6(null);
+  const [allRowsHeight, setAllRowsHeight] = useState6(0);
+  const eventPromptRef = useRef9(null);
   useEffect6(() => {
     if (contentRef.current) {
       const windowDuration = windowTime[1] - windowTime[0];
@@ -1769,7 +1835,7 @@ var Timeline = ({
   useEffect6(() => {
     setInternalEvents(events.sort(sort_events_default));
   }, [events]);
-  const [dragStarted, setDragStarted] = useState5(false);
+  const [dragStarted, setDragStarted] = useState6(false);
   useEffect6(() => {
     let tempRowsHeight = null;
     rows.forEach((row) => {
@@ -1782,7 +1848,17 @@ var Timeline = ({
     setRowsHeight(tempRowsHeight);
   }, [rows]);
   use_resize_observer_default({ contentRef, setCellWidth, setTick, windowTime });
-  return /* @__PURE__ */ React13.createElement("div", { className: "main-wrapper", ref: mainRef }, showRTIndicator && /* @__PURE__ */ React13.createElement(rt_indicator_default, { tick, windowTime }), /* @__PURE__ */ React13.createElement(
+  const eventPrompt = useMemo7(
+    () => /* @__PURE__ */ React14.createElement(
+      event_prompt_default,
+      {
+        ref: eventPromptRef,
+        template: eventPromptTemplate
+      }
+    ),
+    [eventPromptTemplate]
+  );
+  return /* @__PURE__ */ React14.createElement("div", { className: "main-wrapper", ref: mainRef }, showRTIndicator && /* @__PURE__ */ React14.createElement(rt_indicator_default, { tick, windowTime }), /* @__PURE__ */ React14.createElement(
     time_bar_default,
     {
       windowTime,
@@ -1790,24 +1866,24 @@ var Timeline = ({
       contentWidth: contentRef.current ? contentRef.current.getBoundingClientRect().width : null,
       scrollWidth
     }
-  ), /* @__PURE__ */ React13.createElement("div", { className: "body-wrapper", ref: bodyRef }, /* @__PURE__ */ React13.createElement(
+  ), /* @__PURE__ */ React14.createElement("div", { className: "body-wrapper", ref: bodyRef }, /* @__PURE__ */ React14.createElement(
     RowsHeightContext.Provider,
     {
       value: { rowsHeight, setRowsHeight, allRowsHeight, setAllRowsHeight }
     },
-    /* @__PURE__ */ React13.createElement(
+    /* @__PURE__ */ React14.createElement(
       rows_header_default,
       {
         rows,
         className: additionalClassNames == null ? void 0 : additionalClassNames.rowsHeader
       }
     ),
-    /* @__PURE__ */ React13.createElement(DragStartedContext.Provider, { value: { dragStarted, setDragStarted } }, /* @__PURE__ */ React13.createElement(
+    /* @__PURE__ */ React14.createElement(DragStartedContext.Provider, { value: { dragStarted, setDragStarted } }, /* @__PURE__ */ React14.createElement(
       ExternalPropertiesContext.Provider,
       {
-        value: { onDrop, onResize, eventsResize }
+        value: { onDrop, onResize, eventsResize, eventPromptRef }
       },
-      /* @__PURE__ */ React13.createElement(
+      /* @__PURE__ */ React14.createElement(
         content_default,
         {
           events: internalEvents,
@@ -1824,7 +1900,8 @@ var Timeline = ({
           bodyRef,
           lineClassName: additionalClassNames == null ? void 0 : additionalClassNames.gridLine
         }
-      )
+      ),
+      showEventPrompt && eventPrompt
     ))
   )));
 };

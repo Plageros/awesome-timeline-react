@@ -98,6 +98,10 @@
 .event:hover .event-resize {
   opacity: 100%;
 }
+.event-prompt {
+  position: absolute;
+  display: none;
+}
 .resize-bar {
   height: 10px;
   border: 1px solid black;

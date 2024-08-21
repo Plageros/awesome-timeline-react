@@ -28,6 +28,20 @@ export declare const default_alias_1: React_2.ForwardRefExoticComponent<
 >;
 
 export declare const default_alias_10: ({
+  id,
+  startPosition,
+  width,
+  top,
+  height,
+}: {
+  id: string;
+  startPosition: CSSProperties["left"];
+  width: CSSProperties["width"];
+  top: CSSProperties["top"];
+  height: CSSProperties["height"];
+}) => React_2.JSX.Element;
+
+export declare const default_alias_11: ({
   windowTime,
   tick,
   contentWidth,
@@ -41,16 +55,16 @@ export declare const default_alias_10: ({
   additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
 }) => React_2.JSX.Element;
 
-export declare const default_alias_11: (monthIndex: number) => string;
+export declare const default_alias_12: (monthIndex: number) => string;
 
-export declare const default_alias_12: (dayIndex: number) => string;
+export declare const default_alias_13: (dayIndex: number) => string;
 
-export declare const default_alias_13: (
+export declare const default_alias_14: (
   eventA: EventType,
   eventB: EventType
 ) => 1 | -1;
 
-export declare const default_alias_14: ({
+export declare const default_alias_15: ({
   windowTime,
   tick,
   contentWidth,
@@ -65,7 +79,7 @@ export declare const default_alias_14: ({
   hourBlocks: JSX.Element[];
 };
 
-export declare const default_alias_15: ({
+export declare const default_alias_16: ({
   windowTime,
   contentWidth,
 }: {
@@ -76,7 +90,7 @@ export declare const default_alias_15: ({
   blockWidth: number;
 };
 
-export declare const default_alias_16: ({
+export declare const default_alias_17: ({
   bodyRef,
   rowsContentRef,
 }: {
@@ -84,7 +98,7 @@ export declare const default_alias_16: ({
   rowsContentRef: React.MutableRefObject<HTMLDivElement[] | null>;
 }) => void;
 
-export declare const default_alias_17: ({
+export declare const default_alias_18: ({
   rows,
   windowTime,
   tick,
@@ -95,7 +109,7 @@ export declare const default_alias_17: ({
   bodyRef,
 }: ProduceContentType) => React_2.JSX.Element[];
 
-export declare const default_alias_18: ({
+export declare const default_alias_19: ({
   windowTime,
   setTick,
   setCellWidth,
@@ -107,25 +121,27 @@ export declare const default_alias_18: ({
   contentRef: React.MutableRefObject<HTMLDivElement | null>;
 }) => void;
 
-export declare const default_alias_2: ({
-  id,
+export declare const default_alias_2: React_2.ForwardRefExoticComponent<
+  EventPromptType & React_2.RefAttributes<EventPromptActionsType>
+>;
+
+export declare const default_alias_3: ({
+  eventData,
   startPosition,
   width,
   top,
-  props,
   setEvents,
   tick,
 }: {
-  id: string;
+  eventData: EventType;
   startPosition: number;
   width: number;
   top: CSSProperties["top"];
-  props?: EventPropsType;
   setEvents: React_2.Dispatch<React_2.SetStateAction<EventType[]>>;
   tick: number | null;
 }) => React_2.JSX.Element;
 
-export declare const default_alias_3: ({
+export declare const default_alias_4: ({
   contentWidth,
   cellWidth,
   lineClassName,
@@ -135,15 +151,15 @@ export declare const default_alias_3: ({
   lineClassName?: string;
 }) => React_2.JSX.Element;
 
-export declare const default_alias_4: () => React_2.JSX.Element;
+export declare const default_alias_5: () => React_2.JSX.Element;
 
-export declare const default_alias_5: React_2.ForwardRefExoticComponent<
+export declare const default_alias_6: React_2.ForwardRefExoticComponent<
   RowContentProps & {
     children?: React_2.ReactNode;
   } & React_2.RefAttributes<HTMLDivElement>
 >;
 
-export declare const default_alias_6: ({
+export declare const default_alias_7: ({
   name,
   id,
 }: {
@@ -151,7 +167,7 @@ export declare const default_alias_6: ({
   id: string;
 }) => React_2.JSX.Element;
 
-export declare const default_alias_7: ({
+export declare const default_alias_8: ({
   rows,
   className,
 }: {
@@ -159,26 +175,12 @@ export declare const default_alias_7: ({
   className?: string;
 }) => React_2.JSX.Element;
 
-export declare const default_alias_8: ({
+export declare const default_alias_9: ({
   tick,
   windowTime,
 }: {
   tick: number | null;
   windowTime: number[];
-}) => React_2.JSX.Element;
-
-export declare const default_alias_9: ({
-  id,
-  startPosition,
-  width,
-  top,
-  height,
-}: {
-  id: string;
-  startPosition: CSSProperties["left"];
-  width: CSSProperties["width"];
-  top: CSSProperties["top"];
-  height: CSSProperties["height"];
 }) => React_2.JSX.Element;
 
 export declare const DragStartedContext: Context<DragStartedContext_2>;
@@ -188,11 +190,24 @@ declare type DragStartedContext_2 = {
   setDragStarted: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+export declare type EventPromptActionsType = {
+  setDisplay: (value: string) => void;
+  setRight: (value: string) => void;
+  setBottom: (value: string) => void;
+  setEvent: (event: EventType) => void;
+};
+
+declare type EventPromptType = {
+  template?: (metadata?: any) => JSX.Element;
+};
+
 export declare type EventPropsType = {
   isLocked?: boolean;
   content?: JSX.Element | string;
   classNames?: string[];
   isResizable?: boolean;
+  showPrompt?: boolean;
+  metadata?: any;
 };
 
 export declare type EventType = {
@@ -209,6 +224,7 @@ declare type ExternalPropertiesType = {
   onDrop?: (props: OnDropProps) => void;
   onResize?: (props: OnResizeProps) => void;
   eventsResize?: boolean;
+  eventPromptRef?: React.MutableRefObject<EventPromptActionsType | null>;
 };
 
 export declare type ModifableElements = {
@@ -287,6 +303,8 @@ declare const Timeline: ({
   additionalClassNames,
   showRTIndicator,
   eventsResize,
+  eventPromptTemplate,
+  showEventPrompt,
 }: TimelineType) => React_2.JSX.Element;
 export { Timeline };
 export { Timeline as Timeline_alias_1 };
@@ -304,6 +322,8 @@ export declare type TimelineType = {
   additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
   showRTIndicator?: boolean;
   eventsResize?: boolean;
+  eventPromptTemplate?: (event: EventType) => JSX.Element;
+  showEventPrompt?: boolean;
 };
 
 export {};

@@ -1,5 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
-import { EventType, RowsHeightType, TimelineType } from "./types";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  EventPromptActionsType,
+  EventType,
+  RowsHeightType,
+  TimelineType,
+} from "./types";
 import "./style.css";
 import TimeBar from "./components/time-bar";
 import RowsHeader from "./components/rows-header";
@@ -10,6 +15,7 @@ import useResizeObserver from "./hooks/use-resize-observer";
 import { ExternalPropertiesContext } from "./contexts/external-properties-context";
 import sortEvents from "./helpers/sort-events";
 import RTIndicator from "./components/rt-indicator";
+import EventPrompt from "./components/event-prompt";
 
 export const Timeline = ({
   rows,
@@ -22,6 +28,8 @@ export const Timeline = ({
   additionalClassNames,
   showRTIndicator = true,
   eventsResize = true,
+  eventPromptTemplate,
+  showEventPrompt = true,
 }: TimelineType) => {
   const [windowTime, setWindowTime] = useState([
     new Date(
@@ -65,6 +73,8 @@ export const Timeline = ({
 
   const [allRowsHeight, setAllRowsHeight] = useState<number>(0);
 
+  const eventPromptRef = useRef<EventPromptActionsType | null>(null);
+
   useEffect(() => {
     if (contentRef.current) {
       const windowDuration = windowTime[1] - windowTime[0];
@@ -107,6 +117,16 @@ export const Timeline = ({
 
   useResizeObserver({ contentRef, setCellWidth, setTick, windowTime });
 
+  const eventPrompt = useMemo(
+    () => (
+      <EventPrompt
+        ref={eventPromptRef}
+        template={eventPromptTemplate}
+      ></EventPrompt>
+    ),
+    [eventPromptTemplate]
+  );
+
   return (
     <div className="main-wrapper" ref={mainRef}>
       {showRTIndicator && (
@@ -133,7 +153,7 @@ export const Timeline = ({
           />
           <DragStartedContext.Provider value={{ dragStarted, setDragStarted }}>
             <ExternalPropertiesContext.Provider
-              value={{ onDrop, onResize, eventsResize }}
+              value={{ onDrop, onResize, eventsResize, eventPromptRef }}
             >
               <Content
                 events={internalEvents}
@@ -154,6 +174,7 @@ export const Timeline = ({
                 bodyRef={bodyRef}
                 lineClassName={additionalClassNames?.gridLine}
               />
+              {showEventPrompt && eventPrompt}
             </ExternalPropertiesContext.Provider>
           </DragStartedContext.Provider>
         </RowsHeightContext.Provider>

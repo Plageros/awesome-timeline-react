@@ -76,11 +76,10 @@ const useProduceContent = ({
                   return (
                     <Event
                       key={`event_${event.id}`}
-                      id={event.id}
+                      eventData={event}
                       startPosition={(event.startTime - windowTime[0]) / tick}
                       width={(event.endTime - event.startTime) / tick}
                       top={10 + 22 * tempEventOrder}
-                      props={event.props}
                       setEvents={setEvents}
                       tick={tick}
                     ></Event>

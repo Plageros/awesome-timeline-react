@@ -89,13 +89,6 @@ const RowContent = forwardRef<
       data-index={id}
       style={{
         minHeight: minHeight,
-        //   background: `linear-gradient(to left, white, white 1px, transparent 0, transparent 100%), repeating-linear-gradient(
-        //   to left,
-        //   #aaaaaa,
-        //   #aaaaaa 1px,
-        //   transparent 0px,
-        //   transparent ${cellWidth}px
-        // )`,
       }}
     >
       {children}

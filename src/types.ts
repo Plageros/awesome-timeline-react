@@ -12,6 +12,8 @@ export type EventPropsType = {
   content?: JSX.Element | string;
   classNames?: string[];
   isResizable?: boolean;
+  showPrompt?: boolean;
+  metadata?: any;
 };
 
 export type EventType = {
@@ -57,4 +59,13 @@ export type TimelineType = {
   additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
   showRTIndicator?: boolean;
   eventsResize?: boolean;
+  eventPromptTemplate?: (event: EventType) => JSX.Element;
+  showEventPrompt?: boolean;
+};
+
+export type EventPromptActionsType = {
+  setDisplay: (value: string) => void;
+  setRight: (value: string) => void;
+  setBottom: (value: string) => void;
+  setEvent: (event: EventType) => void;
 };

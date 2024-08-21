@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { Timeline } from "./timeline";
+import { EventType } from "./types";
 export default {
   title: "Timeline",
 };
@@ -16,6 +17,7 @@ export const TimelinePrimary = () => {
         endTime: (new Date(2024, 4, 28, 3, 0, 0).getTime() + 3000000) / 1000,
         props: {
           isLocked: true,
+          showPrompt: false,
         },
       },
       {
@@ -25,6 +27,10 @@ export const TimelinePrimary = () => {
         endTime: (new Date(2024, 4, 27, 0, 0, 0).getTime() + 5000000) / 1000,
         props: {
           content: "cosik",
+          metadata: {
+            title: "cosik",
+            jakisprops: "value",
+          },
         },
       },
       {
@@ -32,9 +38,52 @@ export const TimelinePrimary = () => {
         rowId: `${i}`,
         startTime: new Date(2024, 4, 27, 0, 30, 0).getTime() / 1000,
         endTime: (new Date(2024, 4, 27, 0, 30, 0).getTime() + 5000000) / 1000,
+        props: {
+          showPrompt: false,
+        },
       }
     );
   }
+
+  const promptTemplate = useCallback((event: EventType) => {
+    const props = event.props;
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          padding: "5px",
+          backgroundColor: "white",
+          borderRadius: "5px",
+          border: "1px solid black",
+          boxShadow: "0px 0px 10px 3px",
+        }}
+      >
+        <div
+          style={{
+            fontWeight: "bold",
+            paddingBottom: "5px",
+            borderBottom: "1px solid black",
+          }}
+        >
+          {props?.metadata && props.metadata.title}
+        </div>
+
+        <>
+          <div style={{ display: "flex", gap: "3px", marginTop: "5px" }}>
+            <div>Start time:</div>
+            <div>
+              {new Date(event.startTime * 1000).toLocaleString("pl-PL")}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: "3px" }}>
+            <div>End time:</div>
+            <div>{new Date(event.endTime * 1000).toLocaleString("pl-PL")}</div>
+          </div>
+        </>
+      </div>
+    );
+  }, []);
 
   return (
     <Timeline
@@ -42,6 +91,7 @@ export const TimelinePrimary = () => {
       events={events}
       startDate={new Date(2024, 4, 27, 23)}
       endDate={new Date(2024, 4, 28, 23)}
+      eventPromptTemplate={promptTemplate}
       staticEvents={[
         {
           id: "1",

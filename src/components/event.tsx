@@ -14,36 +14,39 @@ import { ExternalPropertiesContext } from "../contexts/external-properties-conte
 import ResizeIcon from "./resize-icon";
 
 const Event = ({
-  id,
+  eventData,
   startPosition,
   width,
   top,
-  props,
   setEvents,
   tick,
 }: {
-  id: string;
+  eventData: EventType;
   startPosition: number;
   width: number;
   top: CSSProperties["top"];
-  props?: EventPropsType;
   setEvents: React.Dispatch<React.SetStateAction<EventType[]>>;
   tick: number | null;
 }) => {
   const { setDragStarted } = useContext(DragStartedContext);
 
-  const { onResize, eventsResize } = useContext(ExternalPropertiesContext);
+  const { onResize, eventsResize, eventPromptRef } = useContext(
+    ExternalPropertiesContext
+  );
 
   const initialPositionForResizeRef = useRef(0);
 
   const handleOnDragStart = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.stopPropagation();
-      event.dataTransfer.setData("eventId", id);
+      event.dataTransfer.setData("eventId", eventData.id);
 
       setTimeout(() => setDragStarted(true), 0);
       const target = event.target as HTMLElement;
       target.style.opacity = "50%";
+      if (eventPromptRef?.current) {
+        eventPromptRef.current.setDisplay("none");
+      }
     },
     [setDragStarted]
   );
@@ -58,8 +61,8 @@ const Event = ({
     [setDragStarted]
   );
 
-  const classNames = props?.classNames
-    ? "event " + props.classNames.join(" ")
+  const classNames = eventData.props?.classNames
+    ? "event " + eventData.props.classNames.join(" ")
     : "event";
 
   const [draggableEvent, setDraggableEvent] = useState(true);
@@ -97,7 +100,7 @@ const Event = ({
       }
       setEvents(
         produce((draft) => {
-          const event = draft.find((event) => event.id === id);
+          const event = draft.find((event) => event.id === eventData.id);
           if (event && tick) {
             if (resizeDirection === "left") {
               const newStartTime = Math.round(
@@ -172,16 +175,46 @@ const Event = ({
     [resizeStarted]
   );
 
+  const handleOnMouseOver = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      event.stopPropagation();
+      if (
+        eventData.props?.showPrompt ||
+        eventData.props?.showPrompt === undefined
+      ) {
+        const target = event.target as HTMLElement;
+        if (eventPromptRef?.current) {
+          eventPromptRef.current.setDisplay("block");
+          eventPromptRef.current.setRight(
+            `calc(100% - ${target.getBoundingClientRect().left}px + 60px)`
+          );
+          eventPromptRef.current.setBottom(
+            `calc(100% - ${target.getBoundingClientRect().top}px + 60px)`
+          );
+          eventPromptRef.current.setEvent(eventData);
+        }
+      }
+    },
+    [eventData]
+  );
+
+  const handleOnMouseOut = useCallback(() => {
+    if (eventPromptRef?.current) {
+      eventPromptRef.current.setDisplay("none");
+    }
+  }, []);
+
   return (
     <div
-      id={`event_${id}`}
-      key={`event_${id}`}
+      id={`event_${eventData.id}`}
+      key={`event_${eventData.id}`}
       className={classNames}
-      draggable={props?.isLocked ? false : draggableEvent}
+      draggable={eventData.props?.isLocked ? false : draggableEvent}
       onDragStart={handleOnDragStart}
       onDragEnd={handleOnDragEnd}
       onMouseDown={(event) => event.stopPropagation()}
       onMouseMove={handleOnMouseMove}
+      onMouseOut={handleOnMouseOut}
       onDrop={(event) => event.stopPropagation()}
       style={{
         left:
@@ -190,13 +223,14 @@ const Event = ({
             : startPosition,
         width: width + resizeOffset,
         top: top,
-        cursor: props?.isLocked ? "not-allowed" : "pointer",
+        cursor: eventData.props?.isLocked ? "not-allowed" : "pointer",
       }}
     >
-      {!props?.isLocked &&
+      {!eventData.props?.isLocked &&
         ((eventsResize &&
-          (props?.isResizable === true || props?.isResizable === undefined)) ||
-          (!eventsResize && props?.isResizable)) && (
+          (eventData.props?.isResizable === true ||
+            eventData.props?.isResizable === undefined)) ||
+          (!eventsResize && eventData.props?.isResizable)) && (
           <div
             className="event-resize"
             style={resizeStarted ? { opacity: "100%" } : undefined}
@@ -206,17 +240,19 @@ const Event = ({
             onMouseDown={(event) =>
               handleOnMouseDownEventResizer(event, "left")
             }
+            onMouseOver={(event) => event.stopPropagation()}
           >
             <ResizeIcon></ResizeIcon>
           </div>
         )}
-      <div className="event-content">
-        {props?.content ? props.content : null}
+      <div className="event-content" onMouseOver={handleOnMouseOver}>
+        {eventData.props?.content ? eventData.props.content : null}
       </div>
-      {!props?.isLocked &&
+      {!eventData.props?.isLocked &&
         ((eventsResize &&
-          (props?.isResizable === true || props?.isResizable === undefined)) ||
-          (!eventsResize && props?.isResizable)) && (
+          (eventData.props?.isResizable === true ||
+            eventData.props?.isResizable === undefined)) ||
+          (!eventsResize && eventData.props?.isResizable)) && (
           <div
             className="event-resize"
             style={resizeStarted ? { opacity: "100%" } : undefined}
@@ -226,6 +262,7 @@ const Event = ({
             onMouseDown={(event) =>
               handleOnMouseDownEventResizer(event, "right")
             }
+            onMouseOver={(event) => event.stopPropagation()}
           >
             <ResizeIcon></ResizeIcon>
           </div>

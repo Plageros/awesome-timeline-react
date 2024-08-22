@@ -198,7 +198,7 @@ export declare type EventPromptActionsType = {
 };
 
 declare type EventPromptType = {
-  template?: (metadata?: any) => JSX.Element;
+  template?: (event: EventType) => JSX.Element;
 };
 
 export declare type EventPropsType = {

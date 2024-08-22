@@ -7,13 +7,14 @@ import React, {
 import { EventPromptActionsType, EventType } from "../types";
 
 type EventPromptType = {
-  template?: (metadata?: any) => JSX.Element;
+  template?: (event: EventType) => JSX.Element;
 };
 
 const EventPrompt = forwardRef<EventPromptActionsType, EventPromptType>(
   ({ template }, ref) => {
     const eventRef = useRef<HTMLDivElement | null>(null);
     const [hoveredEvent, setHoveredEvent] = useState<EventType>();
+
     useImperativeHandle(ref, () => {
       return {
         setDisplay(value: string) {
@@ -36,6 +37,7 @@ const EventPrompt = forwardRef<EventPromptActionsType, EventPromptType>(
         },
       };
     });
+
     return (
       <div className="event-prompt" ref={eventRef}>
         {template && hoveredEvent && template(hoveredEvent)}

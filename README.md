@@ -45,7 +45,7 @@ The following properties for Timeline component are available:
     - `classNames`: `string[]` (array of additional class names for customizing the event)
     - `isResizable`: `boolean` (defines if event is resizable, overrides the default property `eventsResize`)
     - `showPrompt`: `boolean` (defines if prompt will be shown after hover. Works only if `showEventPrompt` is set as true)
-    - `metadata`: `any` (some data that can be passed thru and then read in event prompt function)
+    - `metadata`: `any` (some data that can be used by event prompt template)
 
 - `staticEvents` – an array of objects that define static events for particular rows, meaning the events are not interactable by the user.
 

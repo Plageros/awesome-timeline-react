@@ -16,6 +16,7 @@ import { ExternalPropertiesContext } from "./contexts/external-properties-contex
 import sortEvents from "./helpers/sort-events";
 import RTIndicator from "./components/rt-indicator";
 import EventPrompt from "./components/event-prompt";
+import getDenominator from "./helpers/get-denominator";
 
 export const Timeline = ({
   rows,
@@ -30,6 +31,7 @@ export const Timeline = ({
   eventsResize = true,
   eventPromptTemplate,
   showEventPrompt = true,
+  timeBarPattern = "hour",
 }: TimelineType) => {
   const [windowTime, setWindowTime] = useState([
     new Date(
@@ -78,12 +80,12 @@ export const Timeline = ({
   useEffect(() => {
     if (contentRef.current) {
       const windowDuration = windowTime[1] - windowTime[0];
-      const numberOfHourBlocks = windowDuration / 3600;
+      const numberOfBlocks = windowDuration / getDenominator(timeBarPattern);
       setTick(
         windowDuration / contentRef.current.getBoundingClientRect().width
       );
       setCellWidth(
-        contentRef.current.getBoundingClientRect().width / numberOfHourBlocks
+        contentRef.current.getBoundingClientRect().width / numberOfBlocks
       );
     }
   }, []);
@@ -141,6 +143,7 @@ export const Timeline = ({
             : null
         }
         scrollWidth={scrollWidth}
+        timeBarPattern={timeBarPattern}
       />
 
       <div className="body-wrapper" ref={bodyRef}>
@@ -173,6 +176,7 @@ export const Timeline = ({
                 }
                 bodyRef={bodyRef}
                 lineClassName={additionalClassNames?.gridLine}
+                timeBarPattern={timeBarPattern}
               />
               {showEventPrompt && eventPrompt}
             </ExternalPropertiesContext.Provider>

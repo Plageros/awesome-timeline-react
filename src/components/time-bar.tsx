@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import useGenerateBlocks from "../hooks/use-generate-blocks";
 import useGetBlockProperties from "../hooks/use-get-block-properties";
-import { PartialRecord, ModifableElements } from "../types";
+import { PartialRecord, ModifableElements, TimeBarPatternType } from "../types";
 
 const TimeBar = ({
   windowTime,
@@ -9,18 +9,21 @@ const TimeBar = ({
   contentWidth,
   scrollWidth,
   additionalClassNames,
+  timeBarPattern,
 }: {
   windowTime: number[];
   tick: number | null;
   contentWidth: number | null;
   scrollWidth: number;
   additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
+  timeBarPattern: TimeBarPatternType;
 }) => {
   const timeContentRef = useRef<HTMLDivElement | null>(null);
 
   const { blockWidth } = useGetBlockProperties({
     windowTime,
     contentWidth,
+    timeBarPattern,
   });
 
   const { dayBlocks, hourBlocks } = useGenerateBlocks({

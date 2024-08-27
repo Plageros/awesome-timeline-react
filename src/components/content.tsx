@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { EventType, RowType } from "../types";
+import { EventType, RowType, TimeBarPatternType } from "../types";
 import LinesCanvas from "./lines-canvas";
 import useProduceContent from "../hooks/use-produce-content";
 import useGetBlockProperties from "../hooks/use-get-block-properties";
@@ -25,6 +25,7 @@ type ContentType = {
   setCellWidth: React.Dispatch<React.SetStateAction<number>>;
   bodyRef: React.MutableRefObject<HTMLDivElement | null>;
   lineClassName?: string;
+  timeBarPattern: TimeBarPatternType;
 };
 
 const Content = forwardRef<HTMLDivElement, ContentType>(
@@ -42,6 +43,7 @@ const Content = forwardRef<HTMLDivElement, ContentType>(
       setCellWidth,
       bodyRef,
       lineClassName,
+      timeBarPattern,
     },
     ref
   ) => {
@@ -50,7 +52,11 @@ const Content = forwardRef<HTMLDivElement, ContentType>(
 
     const [changeGrid, setChangeGrid] = useState(false);
 
-    const { blockWidth } = useGetBlockProperties({ windowTime, contentWidth });
+    const { blockWidth } = useGetBlockProperties({
+      windowTime,
+      contentWidth,
+      timeBarPattern,
+    });
 
     const rowsHeightContext = useContext(RowsHeightContext);
 

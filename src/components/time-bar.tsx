@@ -26,11 +26,12 @@ const TimeBar = ({
     timeBarPattern,
   });
 
-  const { dayBlocks, hourBlocks } = useGenerateBlocks({
+  const { primaryRow, secondaryRow } = useGenerateBlocks({
     windowTime,
     tick,
     contentWidth,
     blockWidth,
+    timeBarPattern
   });
 
   const timeBarClassNames = additionalClassNames?.timeBar
@@ -58,7 +59,7 @@ const TimeBar = ({
             gridTemplateColumns: `repeat(auto-fill, minmax(${blockWidth}px, 1fr))`,
           }}
         >
-          {dayBlocks.map((block) => block)}
+          {primaryRow.map((block) => block)}
         </div>
         <div
           className={hourRowClassNames}
@@ -66,7 +67,7 @@ const TimeBar = ({
             gridTemplateColumns: `repeat(auto-fill, minmax(${blockWidth}px, 1fr))`,
           }}
         >
-          {hourBlocks.map((block) => block)}
+          {secondaryRow.map((block) => block)}
         </div>
       </div>
       {scrollWidth ? (

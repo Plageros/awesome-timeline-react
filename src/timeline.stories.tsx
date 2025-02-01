@@ -89,8 +89,9 @@ export const TimelinePrimary = () => {
     <Timeline
       rows={rows}
       events={events}
-      startDate={new Date(2024, 4, 27, 23)}
+      startDate={new Date(2024, 3, 27, 23)}
       endDate={new Date(2024, 4, 28, 23)}
+      timeBarPattern="day"
       eventPromptTemplate={promptTemplate}
       staticEvents={[
         {

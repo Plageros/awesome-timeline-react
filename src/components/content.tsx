@@ -28,6 +28,13 @@ type ContentType = {
   timeBarPattern: TimeBarPatternType;
 };
 
+// those values need to be review and adjusted
+const offsetForWheel = {
+  "hour": 900,
+  "day": 4 * 3600,
+  "week": 25200
+}
+
 const Content = forwardRef<HTMLDivElement, ContentType>(
   (
     {
@@ -141,7 +148,7 @@ const Content = forwardRef<HTMLDivElement, ContentType>(
 
     const handleOnWheel = useCallback(
       (event: React.WheelEvent<HTMLDivElement>) => {
-        const pixelsToCalculate = tick ? 900 / tick : 0;
+        const pixelsToCalculate = tick ? offsetForWheel[timeBarPattern] / tick : 0;
         if (changeGrid) {
           setCellWidth((cellWidth) => {
             const newCellWidth =
@@ -151,7 +158,7 @@ const Content = forwardRef<HTMLDivElement, ContentType>(
 
             if (
               newCellWidth < pixelsToCalculate ||
-              newCellWidth > pixelsToCalculate * 12
+              newCellWidth > pixelsToCalculate * 12 //this 12 value is a magiic number. it should be calculated
             ) {
               return cellWidth;
             }

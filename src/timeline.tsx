@@ -117,7 +117,7 @@ export const Timeline = ({
     setRowsHeight(tempRowsHeight);
   }, [rows]);
 
-  useResizeObserver({ contentRef, setCellWidth, setTick, windowTime });
+  useResizeObserver({ contentRef, setCellWidth, setTick, windowTime, timeBarPattern });
 
   const eventPrompt = useMemo(
     () => (

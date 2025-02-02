@@ -48,7 +48,7 @@ export type ModifableElements = {
 
 export type PartialRecord<K extends keyof any, T> = Partial<Record<K, T>>;
 
-export type TimeBarPatternType = "hour" | "day" | "week";
+export type TimeBarPatternType = "hour" | "day"
 
 export type TimelineType = {
   rows: RowType[];

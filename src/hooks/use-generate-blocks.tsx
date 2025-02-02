@@ -8,14 +8,12 @@ function daysInMonth (month:number, year:number) {
   return new Date(year, month, 0).getDate();
 }
 
-const seconaryRowContentWrapper = (index: number, timeBarPattern: TimeBarPatternType) => {
+const seconaryRowContentWrapper = (index: number, timeBarPattern: TimeBarPatternType, startDay: number, globalIndex: number) => {
   switch (timeBarPattern) {
     case "hour":
       return index < 10 ? `0${index}:00` : `${index}:00`;
-    case "day": 
-      return index;
-    case "week":
-      return 4
+    case "day":
+      return `${index + 1} ${getWeekDayName((startDay + globalIndex) % 7)}`;
     default:
       return index < 10 ? `0${index}:00` : `${index}:00`;
   }
@@ -26,8 +24,7 @@ const primaryRowContentWrapper = (datePoint: Date, timeBarPattern: TimeBarPatter
     case "hour":
       return `${getWeekDayName(datePoint.getDay())} ${datePoint.getDate()}
       ${getMonthName(datePoint.getMonth())}`
-    case "day": 
-    case "week":
+    case "day":
       return `${getMonthName(datePoint.getMonth())}`;
     default:
       return `${getWeekDayName(datePoint.getDay())} ${datePoint.getDate()}
@@ -41,8 +38,6 @@ const secondaryRowBlocksMapper = (timeBarPattern: TimeBarPatternType, datePoint:
       return 24;
     case "day": 
       return daysInMonth(datePoint.getMonth() + 1, datePoint.getFullYear())
-    case "week":
-      return 4
     default:
       return 24
   }
@@ -60,8 +55,7 @@ const generateEndDatePoint = (datePoint: Date, timeBarPattern: TimeBarPatternTyp
         59
       )
     case "day":
-    case "week":
-        return new Date(
+      return new Date(
         datePoint.getFullYear(),
         datePoint.getMonth(),
         daysInMonth(datePoint.getMonth() + 1, datePoint.getFullYear()),
@@ -103,8 +97,9 @@ const useGenerateBlocks = ({
     }
 
     let widthLeft = contentWidth;
-
     let prevNumBlocks = 1;
+    const startPoint = new Date(timePoint * 1000);
+    let globalIndex =  0
 
     while (1) {
       let datePoint = new Date(timePoint * 1000);
@@ -115,6 +110,7 @@ const useGenerateBlocks = ({
       widthLeft -= dateWidth;
 
       if (Math.round(widthLeft) < 0) {
+        
         const numBlocks = Math.round((dateWidth + widthLeft) / blockWidth);
 
         for (let i = 0; i < numBlocks; i++) {
@@ -123,9 +119,10 @@ const useGenerateBlocks = ({
               className="hour-block"
               key={`${datePoint.getDate()}_${timeBarPattern}_${i}`}
             >
-              {seconaryRowContentWrapper(i, timeBarPattern)}
+              {seconaryRowContentWrapper(i, timeBarPattern, startPoint.getDay(), globalIndex)}
             </div>
           );
+          globalIndex++
         }
 
         primaryRow.push(
@@ -147,35 +144,39 @@ const useGenerateBlocks = ({
 
       const numBlocks = Math.round(dateWidth / blockWidth);
 
-      for (let i = secondaryRowBlocksMapper(timeBarPattern, datePoint) - numBlocks; i < secondaryRowBlocksMapper(timeBarPattern, datePoint); i++) {
-        secondaryRow.push(
-          <div className="hour-block" key={`${datePoint.getDate()}_${timeBarPattern}_${i}`}>
-            {seconaryRowContentWrapper(i, timeBarPattern)}
+      if (numBlocks > 0) {
+        for (let i = secondaryRowBlocksMapper(timeBarPattern, datePoint) - numBlocks; i < secondaryRowBlocksMapper(timeBarPattern, datePoint); i++) {
+          secondaryRow.push(
+            <div className="hour-block" key={`${datePoint.getDate()}_${timeBarPattern}_${i}`}>
+              {seconaryRowContentWrapper(i, timeBarPattern, startPoint.getDay(), globalIndex)}
+            </div>
+          );
+          globalIndex++
+        }
+  
+        primaryRow.push(
+          <div
+            className="day-block"
+            key={`${datePoint.getDate()} ${datePoint.getMonth()}`}
+            style={{
+              gridColumn: `${prevNumBlocks} / ${prevNumBlocks + numBlocks}`,
+              // width: dateWidth,
+              // minWidth: dateWidth,
+            }}
+          >
+            {primaryRowContentWrapper(datePoint, timeBarPattern)}
           </div>
         );
+        prevNumBlocks += numBlocks;
       }
-
-      primaryRow.push(
-        <div
-          className="day-block"
-          key={`${datePoint.getDate()} ${datePoint.getMonth()}`}
-          style={{
-            gridColumn: `${prevNumBlocks} / ${prevNumBlocks + numBlocks}`,
-            // width: dateWidth,
-            // minWidth: dateWidth,
-          }}
-        >
-          {primaryRowContentWrapper(datePoint, timeBarPattern)}
-        </div>
-      );
-      prevNumBlocks += numBlocks;
+     
       if (Math.round(widthLeft) <= 0) {
         break;
       }
       timePoint = (endDatePoint.getTime() + 1000) / 1000;
     }
 
-    return {  primaryRow,  secondaryRow };
+    return { primaryRow,  secondaryRow };
   }, [tick, windowTime, contentWidth]);
   return { primaryRow, secondaryRow };
 };

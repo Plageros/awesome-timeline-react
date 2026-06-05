@@ -1,1 +1,21 @@
 export * from "./timeline";
+export type {
+  RowType,
+  EventType,
+  EventPropsType,
+  EventStyle,
+  EventState,
+  DrawEventFn,
+  Theme,
+  ResolvedTheme,
+  Rect,
+  OnDropProps,
+  OnResizeProps,
+  OnEventClickProps,
+  OnEventHoverProps,
+  PanZoomConfig,
+  EventPatch,
+  TimelineHandle,
+  TimelineProps,
+  TimelineType,
+} from "./types";

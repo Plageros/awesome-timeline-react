@@ -1,6 +1,6 @@
 {
   "name": "awesome-timeline-react",
-  "version": "0.1.15",
+  "version": "0.2.0",
   "description": "awesome timeline for react applications",
   "scripts": {
     "test": "jest",
@@ -58,5 +58,8 @@
   "peerDependencies": {
     "react": "^18",
     "react-dom": "^18"
+  },
+  "dependencies": {
+    "@floating-ui/dom": "^1.7.6"
   }
 }

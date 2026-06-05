@@ -1,39 +1,17 @@
-.content-wrapper {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  .row-content:not(:last-child) {
-    border-bottom: 1px solid #e4dcdc;
-  }
-}
-
 .row-header {
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100px;
-  transition: min-height 0.5s ease-in-out;
   box-sizing: border-box;
 }
 
-.row-content {
-  position: relative;
-  width: 100%;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  overflow: hidden;
-  z-index: 0;
-  transition: min-height 0.5s ease-in-out;
-  box-sizing: border-box;
-}
-
+/* base look of an event pill — used by the drag ghost */
 .event {
   position: absolute;
   height: 20px;
   border: 1px solid black;
   z-index: 1;
-  transition: top 0.5s ease-in-out;
   box-sizing: border-box;
   display: flex;
   justify-content: space-between;
@@ -41,46 +19,10 @@
   box-shadow: inset 0px 0px 5px gray;
 }
 
-.event-content {
-  position: absolute;
-  margin-inline: 13px;
-  width: calc(100% - 26px);
-  height: 100%;
-  display: flex;
-  overflow: hidden;
-}
-
-.event:hover .event-resize {
-  opacity: 100%;
-}
-
 .event-prompt {
   position: absolute;
   display: none;
-}
-.resize-bar {
-  height: 10px;
-  border: 1px solid black;
-  width: 1px;
-  box-sizing: border-box;
-  border-radius: 3px;
-}
-
-.event-resize {
-  opacity: 0%;
-  margin: 4px;
-  cursor: e-resize;
-  transition: opacity 0.3s ease-in-out;
-  flex-shrink: 1;
-}
-
-.static-event {
-  position: absolute;
-  background-color: #e0e0e0;
-  z-index: 0;
-  border: 1px solid transparent;
-  box-sizing: border-box;
-  border-radius: 5px;
+  z-index: 3;
 }
 
 .time-bar {
@@ -102,64 +44,6 @@
   box-sizing: border-box;
 }
 
-.time-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.day-row {
-  display: grid;
-  height: 50%;
-  width: auto;
-  border-bottom: 1px solid yellow;
-  div:not(:last-child) {
-    border-right: 1px solid yellow;
-  }
-}
-
-.hour-row {
-  display: grid;
-  height: 50%;
-  div:not(:last-child) {
-    border-right: 1px solid yellow;
-    box-sizing: border-box;
-  }
-  box-shadow: 0px 4px 20px black;
-}
-
-.not-clickable {
-  div {
-    pointer-events: none;
-  }
-}
-
-.line {
-  height: 100%;
-  width: 100%;
-  border-right: 1px solid #e4dcdc;
-  box-sizing: border-box;
-}
-
-.lines-canvas {
-  position: absolute;
-  top: 0;
-  display: grid;
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-}
-
-.hide-last-line {
-  div:last-child {
-    border-right: none;
-  }
-}
-
-.row-hidden {
-  visibility: hidden;
-}
-
 .rt-line {
   position: absolute;
   height: calc(100% - 24px);
@@ -178,4 +62,60 @@
   border-right: 15px solid transparent;
 
   border-top: 26px solid red;
+}
+
+.canvas-time-bar {
+  height: 100%;
+  /* replicates the legacy .hour-row drop shadow onto the content below */
+  box-shadow: 0px 4px 20px black;
+}
+
+.canvas-rows-header {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.canvas-row-header {
+  position: absolute;
+  width: 100%;
+  box-sizing: border-box;
+  /* transition is set inline from the `animations` prop */
+}
+
+.canvas-content-column {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  /* the body-wrapper is a flex row; without this the column is stretched to
+     the viewport height, the scroll spacer overflows it, and the sticky
+     canvas has no room to stick */
+  align-self: flex-start;
+}
+
+.canvas-sticky {
+  position: sticky;
+  top: 0;
+  height: 0;
+  overflow: visible;
+  z-index: 1;
+}
+
+.canvas-sticky canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.canvas-sticky canvas:last-of-type {
+  cursor: grab;
+  touch-action: none;
+}
+
+.canvas-drag-ghost {
+  display: none;
+  height: 20px;
+  opacity: 50%;
+  background-color: white;
+  pointer-events: none;
+  z-index: 2;
 }

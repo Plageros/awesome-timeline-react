@@ -1,0 +1,38 @@
+name: Publish to npm
+
+# Trusted Publishing (OIDC): no npm token is stored. npm verifies the GitHub Actions identity,
+# so this workflow must be registered as a Trusted Publisher on the package's npm settings page.
+#
+# Triggers:
+#   - workflow_dispatch: publish whatever version is in package.json on the chosen ref (use this
+#     to publish 0.2.0 now, since its tag was pushed before this workflow existed).
+#   - push tags matching *.*.* : future releases publish automatically when you push a version tag.
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "*.*.*"
+
+permissions:
+  contents: read
+  id-token: write # required for npm Trusted Publishing (OIDC)
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: "https://registry.npmjs.org"
+
+      # Trusted Publishing requires npm >= 11.5.1
+      - run: npm install -g npm@latest
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm publish

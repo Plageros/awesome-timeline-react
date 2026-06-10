@@ -6,7 +6,12 @@ import { EventType } from "../types";
  * identical snap/guard semantics.
  */
 
-/** Drop: same cell-snap as row-content.tsx handleOnDrop. */
+/**
+ * Drop: snap the dropped start to the nearest grid cell boundary. Cells are
+ * anchored to absolute time (multiples of the cell duration), matching the
+ * vertical grid lines (`drawGridLines`) — so a dropped event lands on a line
+ * regardless of how the window has been panned.
+ */
 export const computeDropTimes = ({
   pointerX,
   cellWidth,
@@ -20,9 +25,9 @@ export const computeDropTimes = ({
   windowStart: number;
   duration: number; // event duration in seconds
 }): { startTime: number; endTime: number } => {
-  const closestCell = Math.round(pointerX / cellWidth);
-  const newPosition = cellWidth * closestCell;
-  const startTime = windowStart + newPosition * tick;
+  const cellTime = cellWidth * tick; // seconds per grid cell
+  const pointerTime = windowStart + pointerX * tick;
+  const startTime = Math.round(pointerTime / cellTime) * cellTime;
   return { startTime, endTime: startTime + duration };
 };
 
@@ -75,4 +80,47 @@ export const stepCellWidth = (
     return cellWidth;
   }
   return next;
+};
+
+export type ZoomLimits = { minWindowSeconds: number; maxWindowSeconds: number };
+
+/**
+ * Time-frame zoom: returns a new visible window (+ derived tick and cellWidth)
+ * for scaling the visible duration by `factor` (newDuration = oldDuration *
+ * factor; <1 zooms in, >1 zooms out), anchored so the timestamp under
+ * `anchorX` (px from the content's left edge) stays under that pixel.
+ *
+ * `tick` is recomputed from the new (integer-rounded) window; `cellWidth` is
+ * then derived from the *actual* new tick so time-per-cell (`cellWidth * tick`)
+ * — i.e. the grid cell duration the grid lines snap to — is preserved exactly.
+ * Rescaling cellWidth by the unrounded factor instead would let rounding drift
+ * the cell duration off the hour over many zooms, so the grid lines would creep
+ * out of step with the time-bar blocks. The new duration is clamped to the
+ * limits; the anchor still holds after clamping.
+ */
+export const computeZoom = (
+  windowTime: [number, number],
+  tick: number,
+  cellWidth: number,
+  anchorX: number,
+  factor: number,
+  contentWidth: number,
+  { minWindowSeconds, maxWindowSeconds }: ZoomLimits
+): { windowTime: [number, number]; tick: number; cellWidth: number } => {
+  const [start, end] = windowTime;
+  const oldDuration = end - start;
+  const newDuration = Math.min(
+    Math.max(oldDuration * factor, minWindowSeconds),
+    maxWindowSeconds
+  );
+  const cellTime = cellWidth * tick; // seconds per grid cell — kept invariant
+  const tAnchor = start + anchorX * tick;
+  const newStart = Math.round(tAnchor - (anchorX / contentWidth) * newDuration);
+  const newEnd = newStart + Math.round(newDuration);
+  const newTick = (newEnd - newStart) / contentWidth;
+  return {
+    windowTime: [newStart, newEnd],
+    tick: newTick,
+    cellWidth: cellTime / newTick,
+  };
 };

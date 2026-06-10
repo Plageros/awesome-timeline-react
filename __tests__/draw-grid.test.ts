@@ -29,8 +29,8 @@ const makeCtx = () => {
 describe("drawGridLines", () => {
   test("draws one vertical line per cell, excluding the edges", () => {
     const ctx = makeCtx();
-    // 1000 / 100 = 10 cells -> 9 inner lines
-    drawGridLines(ctx, { width: 1000, height: 4, cellWidth: 100 });
+    // cellTime = 100*1 = 100; windowStart 0 -> boundaries at 100..900
+    drawGridLines(ctx, { width: 1000, height: 4, cellWidth: 100, windowStart: 0, tick: 1 });
     const moves = ctx.calls.filter((c) => c.method === "moveTo");
     expect(moves).toHaveLength(9);
     expect(moves[0].args[0]).toBe(99.5); // crisp 1px line at x=100
@@ -39,17 +39,24 @@ describe("drawGridLines", () => {
 
   test("skips a line within 1px of the right edge (hide-last-line)", () => {
     const ctx = makeCtx();
-    // lines at 100..900; the one at 999.5 (i=999.6...) — width 999.6/100:
-    // last multiple is 900; 999.6-900 > 1 so nothing skipped here. Use an
-    // exact-fit width instead: 900 -> lines at 100..800, NOT at 900 (edge).
-    drawGridLines(ctx, { width: 900, height: 4, cellWidth: 100 });
+    // exact-fit width 900 -> lines at 100..800, NOT at 900 (right edge)
+    drawGridLines(ctx, { width: 900, height: 4, cellWidth: 100, windowStart: 0, tick: 1 });
     const moves = ctx.calls.filter((c) => c.method === "moveTo");
     expect(moves).toHaveLength(8);
   });
 
+  test("anchors lines to absolute boundaries, so they shift with the window", () => {
+    const ctx = makeCtx();
+    // windowStart 30 (panned off a boundary): boundaries at 100,200.. -> x=70,170..
+    drawGridLines(ctx, { width: 250, height: 4, cellWidth: 100, windowStart: 30, tick: 1 });
+    const moves = ctx.calls.filter((c) => c.method === "moveTo");
+    // boundaries 100,200 -> x=70,170 (300 -> x=270 >= width 250)
+    expect(moves.map((m) => m.args[0])).toEqual([69.5, 169.5]);
+  });
+
   test("no-ops on zero cellWidth", () => {
     const ctx = makeCtx();
-    drawGridLines(ctx, { width: 1000, height: 4, cellWidth: 0 });
+    drawGridLines(ctx, { width: 1000, height: 4, cellWidth: 0, windowStart: 0, tick: 1 });
     expect(ctx.calls.filter((c) => c.method === "moveTo")).toHaveLength(0);
   });
 });
@@ -71,8 +78,8 @@ describe("drawTimeBar", () => {
       width: 1000,
       height: 48,
       font: "16px sans-serif",
-      dayBlocks,
-      hourBlocks,
+      topBlocks: dayBlocks,
+      bottomBlocks: hourBlocks,
     });
     const texts = ctx.calls
       .filter((c) => c.method === "fillText")
@@ -88,8 +95,8 @@ describe("drawTimeBar", () => {
       width: 1000,
       height: 48,
       font: "16px sans-serif",
-      dayBlocks,
-      hourBlocks,
+      topBlocks: dayBlocks,
+      bottomBlocks: hourBlocks,
     });
     // 1 day-row bottom border + (2-1) day separators + (10-1) hour separators
     const moves = ctx.calls.filter((c) => c.method === "moveTo");

@@ -3,12 +3,7 @@ import { SceneStore } from "./scene";
 import { Rect, rectContains } from "./types";
 import { cullToWindow } from "./culling";
 import { timeToWidth, timeToX } from "./coords";
-import {
-  EVENT_BAR_HEIGHT,
-  LANE_TOP_OFFSET,
-  laneTop,
-  staticEventHeight,
-} from "./lanes";
+import { laneTop, staticEventHeight } from "./lanes";
 
 export type HitTarget = {
   kind: "event" | "static";
@@ -39,6 +34,7 @@ export const hitTest = (
   y: number
 ): HitTarget | null => {
   const { windowStart, windowEnd, tick, scrollTop } = view;
+  const geometry = scene.getGeometry();
   const yContent = y + scrollTop;
 
   let rowTop = 0;
@@ -65,9 +61,9 @@ export const hitTest = (
     const event = events[i];
     const rect: Rect = {
       x: timeToX(event.startTime, windowStart, tick),
-      y: rowY + laneTop(lanes.laneOf.get(event.id) as number),
+      y: rowY + laneTop(lanes.laneOf.get(event.id) as number, geometry),
       width: timeToWidth(event.startTime, event.endTime, tick),
-      height: EVENT_BAR_HEIGHT,
+      height: geometry.barHeight,
     };
     if (rectContains(rect, x, y)) {
       return { kind: "event", event, rowId, rect };
@@ -83,9 +79,9 @@ export const hitTest = (
     const event = statics[i];
     const rect: Rect = {
       x: timeToX(event.startTime, windowStart, tick),
-      y: rowY + LANE_TOP_OFFSET,
+      y: rowY + geometry.laneTopOffset,
       width: timeToWidth(event.startTime, event.endTime, tick),
-      height: staticEventHeight(lanes.highestLane),
+      height: staticEventHeight(lanes.highestLane, geometry),
     };
     if (rectContains(rect, x, y)) {
       return { kind: "static", event, rowId, rect };

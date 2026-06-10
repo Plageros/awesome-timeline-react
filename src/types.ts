@@ -38,9 +38,9 @@ export type DrawEventFn = (
 ) => void | false;
 
 /**
- * Color/font tokens for everything drawn to canvas. Defaults mirror the
- * pre-0.2.0 stylesheet. (Bar geometry — heights, lane spacing, radius — is
- * not yet themeable.)
+ * Color/font/geometry tokens for everything drawn to canvas. Defaults mirror
+ * the pre-0.2.0 stylesheet. Bar geometry (height, lane spacing, row padding,
+ * radius) is themeable since 0.2.x — see `core/geometry.ts`.
  */
 export type Theme = {
   eventFill?: string;
@@ -52,6 +52,14 @@ export type Theme = {
   timeBarTextColor?: string;
   /** canvas text font; defaults to the canvas element's computed font */
   font?: string;
+  /** event bar height in px (default 20) */
+  barHeight?: number;
+  /** gap between stacked lanes in px; laneHeight = barHeight + laneGap (default 2) */
+  laneGap?: number;
+  /** vertical padding above/below the bars within a row in px (default 10) */
+  rowPaddingY?: number;
+  /** event bar corner radius in px (default 5) */
+  barRadius?: number;
 };
 
 export type ResolvedTheme = Required<Omit<Theme, "font">> &
@@ -119,14 +127,45 @@ export type AnimationConfig =
       fadeMs?: number;
     };
 
+/** Calendar unit for a time-bar row, or a fixed step in seconds. */
+export type TimeBarUnit = "hour" | "day" | "week" | "month";
+
+export type TimeBarRowConfig = {
+  /** the unit each block spans (default: "day" for the top row, "hour" for
+   *  the bottom row), or a fixed step like `{ stepSeconds: 8 * 3600 }`. */
+  unit?: TimeBarUnit | { stepSeconds: number };
+  /** label for a block; receives the block's start and end. Defaults mirror
+   *  the built-in day ("Mon 1 Jan") and hour ("HH:00") labels. */
+  format?: (blockStart: Date, blockEnd: Date) => string;
+};
+
+/** Per-row configuration for the two-row time bar. */
+export type TimeBarConfig = {
+  topRow?: TimeBarRowConfig; // default { unit: "day" }
+  bottomRow?: TimeBarRowConfig; // default { unit: "hour" }
+};
+
 export type PanZoomConfig = {
   /** drag the empty background to pan the time window (default true) */
   panOnDragBackground?: boolean;
-  /** ctrl/cmd + wheel changes grid granularity (default true) */
+  /** ctrl/cmd + wheel (and trackpad pinch) zooms the visible time frame,
+   *  anchored at the cursor (default true). Since 0.2.x this is time-frame
+   *  zoom — grid granularity now lives on middle-click+wheel only. */
   ctrlWheelZoom?: boolean;
-  /** middle-click toggles wheel-granularity mode (default true) */
+  /** two-finger pinch zooms the time frame on touch devices (default true) */
+  pinchZoom?: boolean;
+  /** ctrl/cmd + drag on the background zooms the time frame: drag right to zoom
+   *  in, left to zoom out (default true) */
+  dragZoom?: boolean;
+  /** smallest visible window in seconds the zoom will go to (default 900 = 15 min) */
+  minWindowSeconds?: number;
+  /** largest visible window in seconds the zoom will go to (default 30 days) */
+  maxWindowSeconds?: number;
+  /** multiplier applied to the window per wheel notch (default 1.15) */
+  zoomWheelFactor?: number;
+  /** middle-click toggles wheel grid-granularity mode (default true) */
   middleClickGranularity?: boolean;
-  /** seconds per granularity step (default 900 = 15 min) */
+  /** seconds per grid-granularity step (default 900 = 15 min) */
   zoomStepSeconds?: number;
 };
 
@@ -191,6 +230,8 @@ export type TimelineProps = {
   showEventPrompt?: boolean;
   eventPromptTemplate?: (event: EventType) => JSX.Element;
   panZoom?: PanZoomConfig;
+  /** configure each row's unit/label in the two-row time bar */
+  timeBar?: TimeBarConfig;
   /** layout animations: true (default), false to disable, or durations */
   animations?: AnimationConfig;
 };

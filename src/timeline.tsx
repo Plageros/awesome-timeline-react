@@ -25,6 +25,7 @@ import CanvasBoard from "./components/canvas-board";
 import { SceneStore } from "./core/scene";
 import { TimelineRenderer } from "./canvas/renderer";
 import { resolveTheme } from "./canvas/theme";
+import { geometryFromTheme } from "./core/geometry";
 
 export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
   (
@@ -46,6 +47,7 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
       eventPromptTemplate,
       showEventPrompt = true,
       panZoom,
+      timeBar,
       animations = true,
     },
     handleRef
@@ -163,6 +165,16 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
 
     const resolvedTheme = useMemo(() => resolveTheme(theme), [theme]);
 
+    // Push themeable bar geometry into the scene (single source of truth for
+    // row heights / lane offsets, read by the renderer and hit-testing).
+    const geometry = useMemo(
+      () => geometryFromTheme(resolvedTheme),
+      [resolvedTheme]
+    );
+    useEffect(() => {
+      scene.setGeometry(geometry);
+    }, [scene, geometry]);
+
     const resolvedAnimations = useMemo(() => {
       if (animations === false) return { layoutMs: 0, fadeMs: 0 };
       if (animations === true) {
@@ -202,6 +214,7 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
           }
           scrollWidth={scrollWidth}
           theme={resolvedTheme}
+          timeBar={timeBar}
         />
 
         <div className="body-wrapper" ref={bodyRef}>
@@ -219,6 +232,7 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
             rowsHeaderClassName={additionalClassNames?.rowsHeader}
             setWindowTime={setWindowTime}
             setCellWidth={setCellWidth}
+            setTick={setTick}
             onDrop={onDrop}
             onResize={onResize}
             onEventClick={onEventClick}

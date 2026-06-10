@@ -1,6 +1,7 @@
 import { EventPatch, EventType, RowType } from "../types";
 import sortEvents from "../helpers/sort-events";
 import { assignLanes, LaneResult, rowMinHeight } from "./lanes";
+import { Geometry, DEFAULT_GEOMETRY } from "./geometry";
 
 export type { EventPatch };
 
@@ -44,7 +45,20 @@ export class SceneStore {
   private rowOrder: string[] = [];
   private eventRow = new Map<string, string>();
   private listeners = new Set<() => void>();
+  // Themeable vertical layout. Lanes are geometry-free (pure time logic), so a
+  // geometry change only affects heights/offsets — the cached lanes stay valid
+  // and we just bump to trigger a redraw.
+  private geometry: Geometry = DEFAULT_GEOMETRY;
   version = 0;
+
+  setGeometry(geometry: Geometry) {
+    this.geometry = geometry;
+    this.bump();
+  }
+
+  getGeometry(): Geometry {
+    return this.geometry;
+  }
 
   setRows(rows: RowType[]) {
     const next = new Map<string, RowIndex>();
@@ -166,7 +180,10 @@ export class SceneStore {
   }
 
   getRowHeight(rowId: string, windowStart: number, windowEnd: number): number {
-    return rowMinHeight(this.getLanes(rowId, windowStart, windowEnd).highestLane);
+    return rowMinHeight(
+      this.getLanes(rowId, windowStart, windowEnd).highestLane,
+      this.geometry
+    );
   }
 
   /**

@@ -1,9 +1,8 @@
 import React, { useEffect, useRef } from "react";
-import useGetBlockProperties from "../hooks/use-get-block-properties";
-import { generateTimeBlocks } from "../core/time-blocks";
+import { generateUnitBlocks } from "../core/time-blocks";
 import { sizeCanvas } from "../canvas/dpr";
 import { drawTimeBar } from "../canvas/draw-grid";
-import { ResolvedTheme } from "../types";
+import { ResolvedTheme, TimeBarConfig } from "../types";
 
 // .time-bar is 50px with a 1px border on each side
 const TIME_BAR_INNER_HEIGHT = 48;
@@ -14,19 +13,19 @@ const CanvasTimeBar = ({
   contentWidth,
   scrollWidth,
   theme,
+  timeBar,
 }: {
   windowTime: number[];
   tick: number | null;
   contentWidth: number | null;
   scrollWidth: number;
   theme?: ResolvedTheme;
+  timeBar?: TimeBarConfig;
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const { blockWidth } = useGetBlockProperties({
-    windowTime,
-    contentWidth,
-  });
+  const topRow = timeBar?.topRow ?? { unit: "day" as const };
+  const bottomRow = timeBar?.bottomRow ?? { unit: "hour" as const };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -37,22 +36,26 @@ const CanvasTimeBar = ({
       TIME_BAR_INNER_HEIGHT,
       window.devicePixelRatio
     );
-    if (ctx) {
-      drawTimeBar(ctx, {
-        width: contentWidth,
-        height: TIME_BAR_INNER_HEIGHT,
-        font: theme?.font ?? getComputedStyle(canvas).font,
-        borderColor: theme?.timeBarBorder,
-        textColor: theme?.timeBarTextColor,
-        ...generateTimeBlocks({
-          windowStart: windowTime[0],
-          tick,
-          contentWidth,
-          blockWidth,
-        }),
-      });
-    }
-  }, [windowTime, tick, contentWidth, blockWidth, theme]);
+    if (!ctx) return;
+    const [windowStart, windowEnd] = windowTime;
+    drawTimeBar(ctx, {
+      width: contentWidth,
+      height: TIME_BAR_INNER_HEIGHT,
+      font: theme?.font ?? getComputedStyle(canvas).font,
+      borderColor: theme?.timeBarBorder,
+      textColor: theme?.timeBarTextColor,
+      topBlocks: generateUnitBlocks({ ...topRow, windowStart, windowEnd, tick }),
+      bottomBlocks: generateUnitBlocks({
+        ...bottomRow,
+        windowStart,
+        windowEnd,
+        tick,
+      }),
+    });
+    // topRow/bottomRow are derived from `timeBar`; depend on it directly so a
+    // new config object re-renders the bar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [windowTime, tick, contentWidth, theme, timeBar]);
 
   return (
     <div className="time-bar">

@@ -128,6 +128,8 @@ export class TimelineRenderer {
           width: this.view.width,
           height: this.view.height,
           cellWidth: this.view.cellWidth,
+          windowStart: this.view.windowTime[0],
+          tick: this.view.tick,
           color: this.view.theme.gridColor,
         });
         drawRowDividers(ctx, this.view, this.scene, this.animator);

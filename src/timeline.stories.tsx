@@ -307,3 +307,123 @@ export const TimelinePrimary = () => {
     </div>
   );
 };
+
+/**
+ * Themeable bar geometry: chunky 32px bars with a 6px lane gap, wide row
+ * padding, and a larger corner radius. Verifies stacking, hit-testing
+ * (hover/resize zones), drag-ghost height, and header alignment all follow the
+ * geometry. Compare with TimelineCanvas (default 20px bars).
+ */
+export const TimelineThemed = () => {
+  const rows: { id: string; name: string }[] = [];
+  const events: EventType[] = [];
+  for (let i = 1; i < 60; i++) {
+    rows.push({ name: `${i}`, id: `${i}` });
+    events.push(
+      {
+        id: `a_${i}`,
+        rowId: `${i}`,
+        startTime: new Date(2024, 4, 28, 3, 0, 0).getTime() / 1000,
+        endTime: new Date(2024, 4, 28, 7, 0, 0).getTime() / 1000,
+        props: { label: "chunky" },
+      },
+      // overlaps the first -> forces a second lane to show lane spacing
+      {
+        id: `b_${i}`,
+        rowId: `${i}`,
+        startTime: new Date(2024, 4, 28, 5, 0, 0).getTime() / 1000,
+        endTime: new Date(2024, 4, 28, 9, 0, 0).getTime() / 1000,
+        props: { label: "stacked", style: { fill: "#d6e4ff" } },
+      }
+    );
+  }
+  return (
+    <div style={{ height: "90vh" }}>
+      <Timeline
+        rows={rows}
+        events={events}
+        startDate={new Date(2024, 4, 27, 23)}
+        endDate={new Date(2024, 4, 28, 23)}
+        theme={{
+          barHeight: 32,
+          laneGap: 6,
+          rowPaddingY: 14,
+          barRadius: 10,
+          eventFill: "#fff7e6",
+          eventStroke: "#d48806",
+        }}
+      />
+    </div>
+  );
+};
+
+/**
+ * A small, sub-day window (~6h). With a window narrower than a day the time
+ * bar must still track the hour labels to the actual time as you pan — pan the
+ * background and watch the hour labels advance continuously (rather than
+ * staying pinned and then jumping by a whole day near midnight).
+ */
+export const TimelineNarrowWindow = () => {
+  const d = (h: number, m = 0) =>
+    new Date(2024, 4, 27, h, m, 0).getTime() / 1000;
+  const rows = [
+    { id: "r1", name: "Resource A" },
+    { id: "r2", name: "Resource B" },
+    { id: "r3", name: "Resource C" },
+  ];
+  const events: EventType[] = [
+    { id: "e1", rowId: "r1", startTime: d(1), endTime: d(2), props: { label: "Task 1" } },
+    { id: "e2", rowId: "r1", startTime: d(2), endTime: d(3), props: { label: "Task 2" } },
+    { id: "e3", rowId: "r2", startTime: d(2), endTime: d(3, 30), props: { label: "Task 3" } },
+    { id: "e4", rowId: "r2", startTime: d(3, 30), endTime: d(4, 30), props: { label: "Task 4" } },
+    { id: "e5", rowId: "r3", startTime: d(3), endTime: d(5), props: { label: "Task 5" } },
+  ];
+  return (
+    <div style={{ height: "60vh" }}>
+      <Timeline
+        rows={rows}
+        events={events}
+        startDate={new Date(2024, 4, 27, 0)}
+        endDate={new Date(2024, 4, 27, 6)}
+      />
+    </div>
+  );
+};
+
+/**
+ * Configurable time-bar rows: a day row over 8-hour "shift" blocks instead of
+ * hours. The bottom row uses `{ stepSeconds: 8 * 3600 }` with a custom
+ * `format`. Grid lines and drop snapping stay on the hour grid, independent of
+ * the time-bar rows.
+ */
+export const TimelineShiftBar = () => {
+  const d = (day: number, h: number) =>
+    new Date(2024, 4, day, h, 0, 0).getTime() / 1000;
+  const rows = [
+    { id: "r1", name: "Resource A" },
+    { id: "r2", name: "Resource B" },
+  ];
+  const events: EventType[] = [
+    { id: "e1", rowId: "r1", startTime: d(27, 2), endTime: d(27, 9), props: { label: "Task 1" } },
+    { id: "e2", rowId: "r1", startTime: d(27, 12), endTime: d(27, 20), props: { label: "Task 2" } },
+    { id: "e3", rowId: "r2", startTime: d(27, 6), endTime: d(27, 16), props: { label: "Task 3" } },
+    { id: "e4", rowId: "r2", startTime: d(28, 1), endTime: d(28, 10), props: { label: "Task 4" } },
+  ];
+  return (
+    <div style={{ height: "60vh" }}>
+      <Timeline
+        rows={rows}
+        events={events}
+        startDate={new Date(2024, 4, 27, 0)}
+        endDate={new Date(2024, 4, 29, 0)}
+        timeBar={{
+          topRow: { unit: "day" },
+          bottomRow: {
+            unit: { stepSeconds: 8 * 3600 },
+            format: (start) => `Shift ${Math.floor(start.getHours() / 8) + 1}`,
+          },
+        }}
+      />
+    </div>
+  );
+};

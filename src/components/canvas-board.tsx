@@ -36,6 +36,7 @@ type CanvasBoardProps = {
   rowsHeaderClassName?: string;
   setWindowTime: React.Dispatch<React.SetStateAction<number[]>>;
   setCellWidth: React.Dispatch<React.SetStateAction<number>>;
+  setTick: React.Dispatch<React.SetStateAction<number | null>>;
   onDrop?: (props: OnDropProps) => void;
   onResize?: (props: OnResizeProps) => void;
   onEventClick?: (props: OnEventClickProps) => void;
@@ -70,6 +71,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       rowsHeaderClassName,
       setWindowTime,
       setCellWidth,
+      setTick,
       onDrop,
       onResize,
       onEventClick,
@@ -175,6 +177,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       handlePointerMove,
       handlePointerUp,
       handlePointerLeave,
+      handlePointerCancel,
       handleAuxClick,
     } = useCanvasInteractions({
       scene,
@@ -185,6 +188,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       eventPromptRef,
       setWindowTime,
       setCellWidth,
+      setTick,
       onDrop,
       onResize,
       onEventClick,
@@ -245,9 +249,14 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
               onPointerLeave={handlePointerLeave}
+              onPointerCancel={handlePointerCancel}
               onAuxClick={handleAuxClick}
             ></canvas>
-            <div ref={ghostRef} className="event canvas-drag-ghost"></div>
+            <div
+              ref={ghostRef}
+              className="event canvas-drag-ghost"
+              style={{ height: scene.getGeometry().barHeight }}
+            ></div>
           </div>
           <div
             className="canvas-scroll-spacer"

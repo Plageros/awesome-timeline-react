@@ -10,6 +10,10 @@ export const DEFAULT_THEME: ResolvedTheme = {
   timeBarBorder: "yellow",
   timeBarTextColor: "white",
   font: undefined,
+  barHeight: 20,
+  laneGap: 2,
+  rowPaddingY: 10,
+  barRadius: 5,
 };
 
 export const resolveTheme = (theme?: Theme): ResolvedTheme => ({

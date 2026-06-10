@@ -1,20 +1,21 @@
 import { EventType } from "../types";
 import { intersectsWindow } from "./coords";
+import { Geometry, DEFAULT_GEOMETRY } from "./geometry";
 
-// Vertical layout constants (px). Will become Theme defaults in 0.2.0.
-export const LANE_HEIGHT = 22;
-export const LANE_TOP_OFFSET = 10;
-export const ROW_BASE_HEIGHT = 40;
-export const STATIC_EVENT_BASE_HEIGHT = 20;
-export const EVENT_BAR_HEIGHT = 20; // .event height in the legacy CSS
+// Vertical layout is a function of the (themeable) Geometry. The geometry
+// argument defaults to DEFAULT_GEOMETRY so callers using the legacy constants
+// — and the golden tests — keep their exact pre-0.2.x numbers.
 
-export const laneTop = (lane: number) => LANE_TOP_OFFSET + LANE_HEIGHT * lane;
+export const laneTop = (lane: number, g: Geometry = DEFAULT_GEOMETRY) =>
+  g.laneTopOffset + g.laneHeight * lane;
 
-export const rowMinHeight = (highestLane: number) =>
-  ROW_BASE_HEIGHT + highestLane * LANE_HEIGHT;
+export const rowMinHeight = (highestLane: number, g: Geometry = DEFAULT_GEOMETRY) =>
+  g.rowBaseHeight + highestLane * g.laneHeight;
 
-export const staticEventHeight = (highestLane: number) =>
-  STATIC_EVENT_BASE_HEIGHT + highestLane * LANE_HEIGHT;
+export const staticEventHeight = (
+  highestLane: number,
+  g: Geometry = DEFAULT_GEOMETRY
+) => g.staticEventBaseHeight + highestLane * g.laneHeight;
 
 export type LaneResult = {
   // eventId -> lane index, only for events intersecting the window

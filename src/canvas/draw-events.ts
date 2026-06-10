@@ -1,19 +1,13 @@
 import { SceneStore } from "../core/scene";
 import { cullToWindow } from "../core/culling";
 import { timeToWidth, timeToX } from "../core/coords";
-import {
-  EVENT_BAR_HEIGHT,
-  LANE_TOP_OFFSET,
-  laneTop,
-  staticEventHeight,
-} from "../core/lanes";
+import { laneTop, staticEventHeight } from "../core/lanes";
 import { EventState, EventType } from "../types";
 import type { Rect } from "../core/types";
 import type { RendererView } from "./renderer";
 import { canResizeEvent } from "../core/interactions";
 import { LayoutAnimator } from "./animator";
 
-export const EVENT_RADIUS = 5;
 const EVENT_TEXT_INSET = 13; // legacy .event-content margin-inline
 // legacy .event-resize / .resize-bar geometry
 const HANDLE_INSET = 4;
@@ -117,7 +111,8 @@ const defaultDrawEvent = (
   event: EventType,
   rect: Rect,
   view: RendererView,
-  font: string
+  font: string,
+  barRadius: number
 ) => {
   const theme = view.theme;
   const style = event.props?.style;
@@ -132,7 +127,7 @@ const defaultDrawEvent = (
     rect.y + 0.5,
     rect.width - 1,
     rect.height - 1,
-    style?.borderRadius ?? EVENT_RADIUS
+    style?.borderRadius ?? barRadius
   );
   ctx.fill();
   ctx.stroke();
@@ -170,6 +165,7 @@ export const drawEvents = (
   if (view.tick === null) return;
   const [windowStart, windowEnd] = view.windowTime;
   const tick = view.tick;
+  const geometry = scene.getGeometry();
 
   ctx.font = view.theme.font ?? font;
   ctx.textBaseline = "middle";
@@ -200,10 +196,10 @@ export const drawEvents = (
       roundedRect(
         ctx,
         x,
-        rowY + LANE_TOP_OFFSET,
+        rowY + geometry.laneTopOffset,
         width,
-        staticEventHeight(lanes.highestLane),
-        EVENT_RADIUS
+        staticEventHeight(lanes.highestLane, geometry),
+        geometry.barRadius
       );
       ctx.fill();
     }
@@ -224,7 +220,7 @@ export const drawEvents = (
         rowY +
         animator.eventTop(
           event.id,
-          laneTop(lanes.laneOf.get(event.id) as number)
+          laneTop(lanes.laneOf.get(event.id) as number, geometry)
         );
 
       const resize = view.resizePreview;
@@ -239,7 +235,7 @@ export const drawEvents = (
         }
       }
 
-      const rect: Rect = { x, y, width, height: EVENT_BAR_HEIGHT };
+      const rect: Rect = { x, y, width, height: geometry.barHeight };
       const state: EventState = {
         hovered: view.hoveredEventId === event.id,
         dragging: view.draggedEventId === event.id,
@@ -255,7 +251,7 @@ export const drawEvents = (
         custom !== undefined &&
         custom(ctx, event, rect, state, view.theme) !== false;
       if (!drawn) {
-        defaultDrawEvent(ctx, event, rect, view, font);
+        defaultDrawEvent(ctx, event, rect, view, font, geometry.barRadius);
       }
 
       if (canResizeEvent(event, view.eventsResize)) {

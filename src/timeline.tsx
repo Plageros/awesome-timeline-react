@@ -98,11 +98,19 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
     }
     const scene = sceneRef.current;
 
+    // A `rows`/`events` reference change is a full scene reset. The animator's
+    // per-row tweens are keyed by rowId and would otherwise survive the swap,
+    // leaving the canvas drawing a row at the previous dataset's (stale) height
+    // while the DOM header already shows the new one — most visibly on rows
+    // whose height differs between datasets. Drop the tweens so every row is a
+    // "first sighting" and renders at its true height instantly.
     useEffect(() => {
       scene.setRows(rows);
+      rendererRef.current?.animator.reset();
     }, [scene, rows]);
     useEffect(() => {
       scene.setEvents([...events].sort(sortEvents));
+      rendererRef.current?.animator.reset();
     }, [scene, events]);
     useEffect(() => {
       scene.setStaticEvents(staticEvents ? [...staticEvents] : []);

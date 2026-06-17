@@ -4,6 +4,18 @@
   align-items: center;
   width: 100px;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* The label wraps to as many lines as it needs; the row height is grown to
+   fit it (see SceneStore.setLabelMinHeights) so wrapped labels stay vertically
+   centered instead of overflowing into the next row. */
+.row-header-label {
+  width: 100%;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* base look of an event pill — used by the drag ghost */
@@ -98,6 +110,12 @@
   height: 0;
   overflow: visible;
   z-index: 1;
+  /* Isolate the sticky's internal layout. The viewport-sized canvases live
+     inside it (absolutely positioned); without containment their height leaks
+     into the content-sized body-wrapper's size, leaving it taller than its
+     rows after a re-stack (a stale gap below the last row). `layout` keeps the
+     canvases visible (unlike overflow:hidden) while stopping the leak. */
+  contain: layout;
 }
 
 .canvas-sticky canvas {

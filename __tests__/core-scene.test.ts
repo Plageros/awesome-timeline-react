@@ -109,6 +109,35 @@ describe("SceneStore", () => {
     expect(totalHeight).toBe(102);
   });
 
+  test("label min height grows a row beyond its lane height", () => {
+    // r1 has a 2-lane stack -> lane height 62; r2 is empty -> lane height 40
+    const store = makeStore([ev("a", "r1", 0, 100), ev("b", "r1", 50, 150)]);
+    // a tall wrapped label on r2, a short one on r1 (below its lane height)
+    store.setLabelMinHeights(
+      new Map([
+        ["r1", 30],
+        ["r2", 90],
+      ])
+    );
+    // r1: max(62, 30) = 62 (lanes win); r2: max(40, 90) = 90 (label wins)
+    expect(store.getRowHeight("r1", 0, 1000)).toBe(62);
+    expect(store.getRowHeight("r2", 0, 1000)).toBe(90);
+    const { offsetOf, totalHeight } = store.getRowOffsets(0, 1000);
+    expect(offsetOf.get("r2")).toBe(62);
+    expect(totalHeight).toBe(152);
+  });
+
+  test("setLabelMinHeights only bumps version when a value changes", () => {
+    const store = makeStore();
+    const before = store.version;
+    store.setLabelMinHeights(new Map([["r1", 50]]));
+    const afterChange = store.version;
+    expect(afterChange).toBeGreaterThan(before);
+    // identical map -> no bump
+    store.setLabelMinHeights(new Map([["r1", 50]]));
+    expect(store.version).toBe(afterChange);
+  });
+
   test("setRows keeps existing row events and drops removed rows' events", () => {
     const store = makeStore([ev("a", "r1", 0, 10), ev("b", "r2", 0, 10)]);
     store.setRows([{ id: "r1", name: "Row 1 renamed" }]);

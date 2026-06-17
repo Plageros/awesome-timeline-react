@@ -427,3 +427,45 @@ export const TimelineShiftBar = () => {
     </div>
   );
 };
+
+/**
+ * Long row labels: names that exceed the 100px header width wrap to multiple
+ * lines, stay centered, and grow the row height (and its canvas dividers) to
+ * fit instead of overflowing into the neighbouring row. Mixes short, multi-word,
+ * and a single unbroken token (forced to break-word) so the per-row height
+ * adapts to whichever label is tallest.
+ */
+export const TimelineLongRowLabels = () => {
+  const d = (h: number, m = 0) =>
+    new Date(2024, 4, 27, h, m, 0).getTime() / 1000;
+  const rows = [
+    { id: "r1", name: "Short" },
+    {
+      id: "r2",
+      name: "Assembly Line 4 — Hydraulic Press Station (North Wing)",
+    },
+    { id: "r3", name: "CNC Mill" },
+    {
+      id: "r4",
+      name: "Supercalifragilisticexpialidocious-Machine-Identifier-0042",
+    },
+    { id: "r5", name: "Quality Control & Final Inspection Bay" },
+  ];
+  const events: EventType[] = [
+    { id: "e1", rowId: "r1", startTime: d(1), endTime: d(3), props: { label: "Job A" } },
+    { id: "e2", rowId: "r2", startTime: d(2), endTime: d(4, 30), props: { label: "Job B" } },
+    { id: "e3", rowId: "r3", startTime: d(1, 30), endTime: d(3), props: { label: "Job C" } },
+    { id: "e4", rowId: "r4", startTime: d(3), endTime: d(5), props: { label: "Job D" } },
+    { id: "e5", rowId: "r5", startTime: d(2, 30), endTime: d(5, 30), props: { label: "Job E" } },
+  ];
+  return (
+    <div style={{ height: "60vh" }}>
+      <Timeline
+        rows={rows}
+        events={events}
+        startDate={new Date(2024, 4, 27, 0)}
+        endDate={new Date(2024, 4, 27, 8)}
+      />
+    </div>
+  );
+};

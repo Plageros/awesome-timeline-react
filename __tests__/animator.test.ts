@@ -14,28 +14,28 @@ describe("LayoutAnimator", () => {
   test("first sighting renders at target instantly, no animation", () => {
     const animator = new LayoutAnimator();
     animator.beginFrame(1000);
-    expect(animator.rowHeight("r1", 40)).toBe(40);
+    expect(animator.eventTop("e1", 40)).toBe(40);
     expect(animator.isAnimating()).toBe(false);
   });
 
   test("a changed target tweens over the layout duration and settles", () => {
     const animator = new LayoutAnimator();
     animator.beginFrame(1000);
-    animator.rowHeight("r1", 40);
+    animator.eventTop("e1", 40);
 
     animator.beginFrame(2000);
-    const atStart = animator.rowHeight("r1", 84); // retarget
+    const atStart = animator.eventTop("e1", 84); // retarget
     expect(atStart).toBe(40); // t=0
     expect(animator.isAnimating()).toBe(true);
 
     animator.beginFrame(2100); // halfway through 200ms
-    const mid = animator.rowHeight("r1", 84);
+    const mid = animator.eventTop("e1", 84);
     expect(mid).toBeGreaterThan(40);
     expect(mid).toBeLessThan(84);
     expect(mid).toBeCloseTo(62, 0); // smoothstep(0.5) = 0.5
 
     animator.beginFrame(2250); // past the end
-    expect(animator.rowHeight("r1", 84)).toBe(84);
+    expect(animator.eventTop("e1", 84)).toBe(84);
     expect(animator.isAnimating()).toBe(false);
   });
 
@@ -73,10 +73,10 @@ describe("LayoutAnimator", () => {
     const animator = new LayoutAnimator();
     animator.setDurations(0, 0);
     animator.beginFrame(0);
-    animator.rowHeight("r1", 40);
+    animator.eventTop("e1", 40);
     animator.handleAlpha("e1", 0);
     animator.beginFrame(10);
-    expect(animator.rowHeight("r1", 84)).toBe(84);
+    expect(animator.eventTop("e1", 84)).toBe(84);
     expect(animator.handleAlpha("e1", 1)).toBe(1);
     expect(animator.isAnimating()).toBe(false);
   });
@@ -104,12 +104,37 @@ describe("LayoutAnimator", () => {
   test("reset drops all tweens", () => {
     const animator = new LayoutAnimator();
     animator.beginFrame(0);
-    animator.rowHeight("r1", 40);
+    animator.eventTop("e1", 40);
     animator.beginFrame(10);
-    animator.rowHeight("r1", 80);
+    animator.eventTop("e1", 80);
     animator.reset();
     expect(animator.isAnimating()).toBe(false);
     animator.beginFrame(20);
-    expect(animator.rowHeight("r1", 80)).toBe(80); // fresh sighting
+    expect(animator.eventTop("e1", 80)).toBe(80); // fresh sighting
+  });
+
+  // Regression: switching datasets resets the scene but must also reset the
+  // animator, otherwise an event caught mid-tween keeps its stale baseline and
+  // the canvas draws it at the wrong position until the tween finishes — which
+  // it may never do if the board is hidden.
+  test("reset makes an event with a changed target render instantly", () => {
+    const animator = new LayoutAnimator();
+    // dataset A: event settles at lane offset 120
+    animator.beginFrame(0);
+    animator.eventTop("e1", 120);
+    // position changes -> tween starts (default 200ms duration)
+    animator.beginFrame(100);
+    animator.eventTop("e1", 40);
+    // mid-flight (halfway through the tween) it reads an intermediate value
+    animator.beginFrame(200);
+    const midTween = animator.eventTop("e1", 40);
+    expect(midTween).toBeGreaterThan(40);
+    expect(midTween).toBeLessThan(120);
+    // dataset B swap: reset, then the new dataset's position for that event
+    animator.reset();
+    animator.beginFrame(250);
+    // no tween from the stale 120 baseline — lands on target immediately
+    expect(animator.eventTop("e1", 60)).toBe(60);
+    expect(animator.isAnimating()).toBe(false);
   });
 });

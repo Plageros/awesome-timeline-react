@@ -13,10 +13,11 @@ type Tween = {
 const ease = (t: number) => t * t * (3 - 2 * t);
 
 /**
- * Replaces the CSS transitions the DOM renderer got for free:
- * row heights and event tops tween when stacking changes, and resize
- * handles fade in/out. Values are queried per frame; while any tween is
- * live the renderer keeps scheduling frames.
+ * Replaces the CSS transitions the DOM renderer got for free: event tops
+ * tween when stacking changes, and resize handles fade in/out. (Row heights
+ * apply instantly so the canvas rows stay locked to the DOM headers, which
+ * also snap.) Values are queried per frame; while any tween is live the
+ * renderer keeps scheduling frames.
  *
  * Durations are configurable via the Timeline `animations` prop; a duration
  * of 0 disables that animation (values jump straight to target).
@@ -28,7 +29,6 @@ const ease = (t: number) => t * t * (3 - 2 * t);
  * perpetually, desyncing the layers.
  */
 export class LayoutAnimator {
-  private rowHeights = new Map<string, Tween>();
   private eventTops = new Map<string, Tween>();
   private handleAlphas = new Map<string, Tween>();
   private now = 0;
@@ -43,10 +43,6 @@ export class LayoutAnimator {
 
   beginFrame(now: number) {
     this.now = now;
-  }
-
-  rowHeight(rowId: string, target: number): number {
-    return this.value(this.rowHeights, rowId, target, this.layoutDuration);
   }
 
   eventTop(eventId: string, target: number): number {
@@ -73,7 +69,6 @@ export class LayoutAnimator {
 
   /** Drop all state, e.g. when the scene is reset wholesale. */
   reset() {
-    this.rowHeights.clear();
     this.eventTops.clear();
     this.handleAlphas.clear();
     this.activeUntil = 0;

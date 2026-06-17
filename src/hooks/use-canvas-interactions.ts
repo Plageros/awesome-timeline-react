@@ -274,12 +274,28 @@ const useCanvasInteractions = ({
     ) => {
       const ghost = ghostRef.current;
       if (!ghost) return;
+      const rawLeft = state.hit.rect.x + (clientX - state.startClientX);
+      const rawTop = state.hit.rect.y + (clientY - state.startClientY);
+      // Clamp the preview pill to the visible viewport. It's absolutely
+      // positioned inside the scrolling body, so letting it run past the edge
+      // (dragging left/up or below/right of the visible range) would inflate
+      // the scroll area and flash scrollbars. The drop still uses the real
+      // pointer position, so only the preview stops at the edge.
+      const view = rendererRef.current?.getView();
+      const ghostWidth = state.hit.rect.width;
+      const ghostHeight = state.hit.rect.height;
+      const left = view
+        ? Math.max(0, Math.min(rawLeft, Math.max(0, view.width - ghostWidth)))
+        : rawLeft;
+      const top = view
+        ? Math.max(0, Math.min(rawTop, Math.max(0, view.height - ghostHeight)))
+        : rawTop;
       ghost.style.display = "flex";
-      ghost.style.left = `${state.hit.rect.x + (clientX - state.startClientX)}px`;
-      ghost.style.top = `${state.hit.rect.y + (clientY - state.startClientY)}px`;
-      ghost.style.width = `${state.hit.rect.width}px`;
+      ghost.style.left = `${left}px`;
+      ghost.style.top = `${top}px`;
+      ghost.style.width = `${ghostWidth}px`;
     },
-    [ghostRef]
+    [ghostRef, rendererRef]
   );
 
   // The ghost is a DOM pill, so it can't run a custom canvas drawEvent — but it

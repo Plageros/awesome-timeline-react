@@ -49,6 +49,10 @@ export class SceneStore {
   // geometry change only affects heights/offsets — the cached lanes stay valid
   // and we just bump to trigger a redraw.
   private geometry: Geometry = DEFAULT_GEOMETRY;
+  // Per-row minimum height demanded by the (DOM-measured) row label when it
+  // wraps to multiple lines. Measured in the shell and fed back here so the
+  // canvas grid/dividers, hit-testing and the DOM header all agree on height.
+  private labelMinHeights = new Map<string, number>();
   version = 0;
 
   setGeometry(geometry: Geometry) {
@@ -179,11 +183,35 @@ export class SceneStore {
     return index.lanes;
   }
 
+  /**
+   * Report the per-row label heights measured against the live DOM header
+   * (key: rowId, value: the minimum row height the wrapped label needs,
+   * already including vertical padding). Replaces the previous map wholesale
+   * and only bumps when a value actually changed, so re-measuring identical
+   * labels is a no-op and can't feed back into an infinite render loop.
+   */
+  setLabelMinHeights(heights: Map<string, number>) {
+    let changed = heights.size !== this.labelMinHeights.size;
+    if (!changed) {
+      for (const [id, h] of heights) {
+        if (this.labelMinHeights.get(id) !== h) {
+          changed = true;
+          break;
+        }
+      }
+    }
+    if (!changed) return;
+    this.labelMinHeights = heights;
+    this.bump();
+  }
+
   getRowHeight(rowId: string, windowStart: number, windowEnd: number): number {
-    return rowMinHeight(
+    const laneHeight = rowMinHeight(
       this.getLanes(rowId, windowStart, windowEnd).highestLane,
       this.geometry
     );
+    const labelHeight = this.labelMinHeights.get(rowId) ?? 0;
+    return Math.max(laneHeight, labelHeight);
   }
 
   /**

@@ -2,6 +2,7 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -85,6 +86,10 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
     const staticCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const dynamicCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const ghostRef = useRef<HTMLDivElement | null>(null);
+    const headerWrapperRef = useRef<HTMLDivElement | null>(null);
+    // Latest content height, read by measureViewport (which is defined before
+    // totalHeight is computed). Assigned during render below.
+    const totalHeightRef = useRef(0);
 
     const [scrollTop, setScrollTop] = useState(0);
     const [viewportHeight, setViewportHeight] = useState(0);
@@ -130,28 +135,39 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
     ]);
 
     // viewport size (content column width x body height)
+    const measureViewport = useCallback(() => {
+      const column =
+        contentRef && "current" in contentRef ? contentRef.current : null;
+      const body = bodyRef.current;
+      if (!column || !body) return;
+      // Clamp the viewport-sized canvas to:
+      //  - window.innerHeight: a content-sized board (unbounded host) would
+      //    otherwise blow past browser canvas limits on large boards;
+      //  - totalHeight (content): body.clientHeight is inflated by the
+      //    absolutely-positioned canvas itself, so deriving the canvas height
+      //    purely from it feeds back on itself and sticks at a stale value
+      //    after the content shrinks (canvas taller than the column). The
+      //    content height is the clean upper bound.
+      const cap = totalHeightRef.current > 0 ? totalHeightRef.current : Infinity;
+      const height = Math.min(body.clientHeight, cap, window.innerHeight);
+      setViewportHeight(height);
+      rendererRef.current?.setView({
+        width: column.getBoundingClientRect().width,
+        height,
+      });
+    }, [bodyRef, contentRef, rendererRef]);
+
     useEffect(() => {
       const column =
         contentRef && "current" in contentRef ? contentRef.current : null;
       const body = bodyRef.current;
       if (!column || !body) return;
-      const measure = () => {
-        // Clamp to the window: if the consumer didn't bound the timeline's
-        // height the body grows to its content, and a content-sized canvas
-        // would blow past browser canvas limits on large boards.
-        const height = Math.min(body.clientHeight, window.innerHeight);
-        setViewportHeight(height);
-        rendererRef.current?.setView({
-          width: column.getBoundingClientRect().width,
-          height,
-        });
-      };
-      measure();
-      const observer = new ResizeObserver(measure);
+      measureViewport();
+      const observer = new ResizeObserver(measureViewport);
       observer.observe(column);
       observer.observe(body);
       return () => observer.disconnect();
-    }, [bodyRef, contentRef, rendererRef]);
+    }, [bodyRef, contentRef, measureViewport]);
 
     // scroll: renderer gets it imperatively, React only re-renders the
     // virtualized header list
@@ -171,6 +187,55 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       useCallback((listener) => scene.subscribe(listener), [scene]),
       () => scene.version
     );
+
+    // Measure how tall each row's label is when wrapped at the header width and
+    // feed it into the scene as a per-row minimum height. A long label thus
+    // grows its row (and the matching canvas dividers) instead of overflowing.
+    // All rows are measured — not just the visible ones — so scrolling doesn't
+    // jump as off-screen labels are discovered. Measurement uses one reused
+    // off-screen node styled like the real label so fonts/wrapping match.
+    useLayoutEffect(() => {
+      const wrapper = headerWrapperRef.current;
+      if (!wrapper) return;
+
+      const measurer = document.createElement("div");
+      measurer.className = "row-header-label";
+      measurer.setAttribute("aria-hidden", "true");
+      measurer.style.position = "absolute";
+      measurer.style.left = "-9999px";
+      measurer.style.top = "0";
+      measurer.style.visibility = "hidden";
+      measurer.style.height = "auto";
+      wrapper.appendChild(measurer);
+
+      let lastWidth = -1;
+      const measure = () => {
+        const width = wrapper.clientWidth;
+        // ResizeObserver also fires when the wrapper grows in height (our own
+        // height changes feed back here); only re-measure when the wrapping
+        // width actually changed, otherwise the result is identical.
+        if (width === 0 || width === lastWidth) return;
+        lastWidth = width;
+        measurer.style.width = `${width}px`;
+        const heights = new Map<string, number>();
+        for (const row of rows) {
+          measurer.textContent = row.name ?? "";
+          heights.set(
+            row.id,
+            Math.ceil(measurer.offsetHeight) + 2 * theme.rowPaddingY
+          );
+        }
+        scene.setLabelMinHeights(heights);
+      };
+      measure();
+
+      const observer = new ResizeObserver(measure);
+      observer.observe(wrapper);
+      return () => {
+        observer.disconnect();
+        wrapper.removeChild(measurer);
+      };
+    }, [rows, scene, theme.rowPaddingY, rowsHeaderClassName]);
 
     const {
       handlePointerDown,
@@ -201,6 +266,16 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       windowTime[0],
       windowTime[1]
     );
+    totalHeightRef.current = totalHeight;
+
+    // Keep the canvas height locked to the content in the SAME commit the DOM
+    // (header panel + scroll spacer) resizes in. The ResizeObserver above is
+    // async, so on its own the canvas lags a frame behind a row re-stack — the
+    // canvas/timeline momentarily taller than the header panel, leaving empty
+    // space and a transient scrollbar. Re-measure synchronously, before paint.
+    useLayoutEffect(() => {
+      measureViewport();
+    }, [totalHeight, measureViewport]);
 
     // virtualized rows header: only headers intersecting the viewport
     const visibleHeaders: JSX.Element[] = [];
@@ -219,14 +294,11 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
             height,
             borderBottom:
               i === rows.length - 1 ? "none" : "1px solid yellow",
-            // keeps the DOM header in step with the canvas layout tween
-            transition:
-              animations.layoutMs > 0
-                ? `top ${animations.layoutMs}ms ease-in-out, height ${animations.layoutMs}ms ease-in-out`
-                : "none",
+            // Row heights/positions apply instantly (no layout tween) so the
+            // header snaps in lockstep with its canvas row — see draw-events.
           }}
         >
-          {row.name}
+          <span className="row-header-label">{row.name}</span>
         </div>
       );
     }
@@ -237,7 +309,11 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
 
     return (
       <>
-        <div className={headerClassNames} style={{ height: totalHeight }}>
+        <div
+          ref={headerWrapperRef}
+          className={headerClassNames}
+          style={{ height: totalHeight }}
+        >
           {visibleHeaders}
         </div>
         <div className="canvas-content-column" ref={contentRef}>

@@ -41,8 +41,7 @@ const roundedRect = (
 export const drawRowDividers = (
   ctx: CanvasRenderingContext2D,
   view: RendererView,
-  scene: SceneStore,
-  animator: LayoutAnimator
+  scene: SceneStore
 ) => {
   const [windowStart, windowEnd] = view.windowTime;
   const rowIds = scene.getRowIds();
@@ -51,10 +50,9 @@ export const drawRowDividers = (
   ctx.beginPath();
   let y = 0;
   for (let i = 0; i < rowIds.length; i++) {
-    y += animator.rowHeight(
-      rowIds[i],
-      scene.getRowHeight(rowIds[i], windowStart, windowEnd)
-    );
+    // Row heights apply instantly (no layout tween) so the canvas rows stay
+    // locked to the DOM headers, which also snap. Only event tops animate.
+    y += scene.getRowHeight(rowIds[i], windowStart, windowEnd);
     if (i === rowIds.length - 1) break; // :not(:last-child)
     const screenY = y - view.scrollTop;
     if (screenY < 0) continue;
@@ -173,10 +171,8 @@ export const drawEvents = (
 
   let rowTop = 0;
   for (const rowId of scene.getRowIds()) {
-    const rowHeight = animator.rowHeight(
-      rowId,
-      scene.getRowHeight(rowId, windowStart, windowEnd)
-    );
+    // Row heights are instant (see drawRowDividers); only event tops animate.
+    const rowHeight = scene.getRowHeight(rowId, windowStart, windowEnd);
     const rowY = rowTop - view.scrollTop;
     rowTop += rowHeight;
     if (rowY + rowHeight < 0) continue;

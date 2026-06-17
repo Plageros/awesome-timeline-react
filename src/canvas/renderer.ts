@@ -73,6 +73,7 @@ export class TimelineRenderer {
       this.dpr = dpr;
       this.resizeCanvases();
       this.invalidate("all");
+      this.scheduler.flush(); // repaint in-frame; see setView's resize branch
     });
   }
 
@@ -86,8 +87,16 @@ export class TimelineRenderer {
       (partial.height !== undefined && partial.height !== this.view.height);
     this.view = { ...this.view, ...partial };
     if (sizeChanged) {
+      // Setting canvas.width/height clears both backing stores. setView is
+      // usually called from a ResizeObserver/effect that fires AFTER this
+      // frame's rAF redraw, so a deferred (scheduled) redraw would leave the
+      // canvas blank until the next frame — a one-frame flash of every event
+      // (seen e.g. when a row re-stacks and the viewport height changes).
+      // Repaint synchronously so the clear and the redraw land in the same
+      // frame.
       this.resizeCanvases();
       this.invalidate("all");
+      this.scheduler.flush();
       return;
     }
     // scroll/pan/zoom move both layers; scrollTop alone still shifts the grid
@@ -132,7 +141,7 @@ export class TimelineRenderer {
           tick: this.view.tick,
           color: this.view.theme.gridColor,
         });
-        drawRowDividers(ctx, this.view, this.scene, this.animator);
+        drawRowDividers(ctx, this.view, this.scene);
       }
     }
     if (dirty.dynamic) {

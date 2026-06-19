@@ -1,5 +1,6 @@
 import React, {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -37,6 +38,9 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
       onResize,
       onEventClick,
       onEventHover,
+      selectable = false,
+      defaultSelectedEventIds,
+      onSelectionChange,
       startDate,
       endDate,
       theme,
@@ -98,6 +102,32 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
     }
     const scene = sceneRef.current;
 
+    // Uncontrolled selection state. Lives in a ref (off the React render path,
+    // like the SceneStore) and is mirrored into the renderer view for drawing.
+    // `applySelection` is the single write path used by both the click handler
+    // and the imperative handle.
+    const selectionRef = useRef<Set<string>>(
+      new Set(defaultSelectedEventIds ?? [])
+    );
+    const onSelectionChangeRef = useRef(onSelectionChange);
+    onSelectionChangeRef.current = onSelectionChange;
+    const applySelection = useCallback(
+      (ids: string[]) => {
+        // single enforcement point: events opted out via props.isSelectable
+        // never enter the selection — covers click, group-click and the
+        // imperative setSelection alike.
+        selectionRef.current = new Set(
+          ids.filter((id) => scene.isEventSelectable(id))
+        );
+        rendererRef.current?.setView({
+          selectedEventIds: selectionRef.current,
+        });
+        onSelectionChangeRef.current?.([...selectionRef.current]);
+      },
+      [scene]
+    );
+    const getSelection = useCallback(() => [...selectionRef.current], []);
+
     // A `rows`/`events` reference change is a full scene reset. The animator's
     // per-row tweens are keyed by rowId and would otherwise survive the swap,
     // leaving the canvas drawing a row at the previous dataset's (stale) height
@@ -142,9 +172,11 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
           startTime: windowTimeRef.current[0],
           endTime: windowTimeRef.current[1],
         }),
+        setSelection: (ids) => applySelection(ids),
+        getSelection,
         redraw: () => rendererRef.current?.invalidate("all"),
       }),
-      [scene]
+      [scene, applySelection, getSelection]
     );
 
     useEffect(() => {
@@ -248,6 +280,9 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
             eventsResize={eventsResize}
             panZoom={panZoom}
             animations={resolvedAnimations}
+            selectable={selectable}
+            applySelection={applySelection}
+            getSelection={getSelection}
             ref={contentRef}
           />
           {showEventPrompt && eventPrompt}

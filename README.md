@@ -48,6 +48,8 @@ The following properties for Timeline component are available:
     - `label`: `string` (plain-text label drawn inside the event bar)
     - `style`: `EventStyle` (per-event appearance: `fill`, `stroke`, `strokeWidth`, `textColor`, `font`, `borderRadius`, `opacity`)
     - `drawEvent`: `DrawEventFn` (per-event custom canvas renderer, see below)
+    - `groupId`: `string` (connects this event to others sharing the same tag; Cmd/Ctrl+click selects the whole group — see Selection)
+    - `isSelectable`: `boolean` (set `false` to opt this event out of selection while the Timeline is `selectable`; default selectable)
     - `isResizable`: `boolean` (defines if event is resizable, overrides the default property `eventsResize`)
     - `showPrompt`: `boolean` (defines if prompt will be shown after hover. Works only if `showEventPrompt` is set as true)
     - `metadata`: `unknown` (some data that can be used by event prompt template)
@@ -71,6 +73,12 @@ The following properties for Timeline component are available:
 - `onEventClick` – callback for a click on an event (`eventId`, `rowId`, `nativeEvent`, `modifiers`).
 
 - `onEventHover` – callback when the hovered event changes (`eventId`/`rowId`, `null` on hover-out).
+
+- `selectable` – enable click selection (default `false`). See Selection.
+
+- `defaultSelectedEventIds` – initial selection (uncontrolled).
+
+- `onSelectionChange` – callback fired with the selected event ids whenever the selection changes.
 
 - `theme` – color/font tokens for everything drawn to canvas (see Theming).
 
@@ -116,6 +124,11 @@ CSS classes cannot style canvas pixels, so canvas-drawn elements are themed with
     gridColor: "#e4dcdc",
     timeBarBorder: "yellow",
     timeBarTextColor: "white",
+    // selection visuals (see Selection)
+    dimmedOpacity: 0.35, // opacity of non-selected events while a selection is active
+    selectionShadowColor: "rgba(0,0,0,0.35)", // lift shadow of selected events
+    selectionShadowBlur: 8,
+    selectionElevation: 2, // px the selected bar is lifted
     font: "12px Inter", // defaults to the canvas element's computed font
     // bar geometry — themeable since 0.2.x (defaults shown)
     barHeight: 20, // event bar height
@@ -130,6 +143,40 @@ CSS classes cannot style canvas pixels, so canvas-drawn elements are themed with
 Bar geometry tokens drive row heights, lane stacking, hit-testing, and the drag
 ghost together — changing `barHeight`/`laneGap` restacks and re-measures rows
 automatically. (Per-event `style.borderRadius` still overrides `barRadius`.)
+
+## Selection
+
+Set `selectable` to enable click selection. A selected event is **elevated**
+(drawn on top with a shadow) while every other event is **dimmed**
+(`theme.dimmedOpacity`), so the current selection reads at a glance.
+
+- **Click** an event → selects just that event.
+- **Cmd/Ctrl + click** → selects the whole *connected group*: every event
+  sharing the clicked event's `props.groupId`. (An event with no `groupId`
+  selects only itself.)
+- **Background click** or **Escape** → clears the selection.
+
+Individual events can opt out with `props.isSelectable = false`: they can't be
+clicked into the selection, are excluded from a group selection, and are ignored
+by `setSelection`. Clicking a non-selectable event leaves the current selection
+unchanged (it's transparent to selection, not a clear).
+
+`onSelectionChange(eventIds)` fires on every change. Selection is uncontrolled —
+seed it with `defaultSelectedEventIds` and drive it imperatively:
+
+```tsx
+const ref = useRef<TimelineHandle>(null);
+ref.current?.setSelection(["a1", "a2"]); // replace the selection (no group expansion)
+ref.current?.getSelection();             // string[]
+
+<Timeline ref={ref} selectable onSelectionChange={(ids) => …} … />
+```
+
+Selection is additive to `onEventClick` (both fire). Dragging and resizing
+always operate on the single grabbed event, regardless of how many are selected.
+
+> Follow-ups not yet implemented: rubber-band rectangle selection, group-drag
+> (moving a whole selection together), and a controlled `selectedEventIds` prop.
 
 ## Time bar rows
 
@@ -237,4 +284,4 @@ Here, we will store major features planned for future releases (from highest to 
 4. ~~Canvas rendering engine, virtualization, streaming API~~ - published in 0.2.0 version
 5. ~~Customizable second row of the time bar~~ - `timeBar.topRow/bottomRow` (unit + format)
 6. ~~Themeable bar geometry (heights, lane spacing, radius)~~ - `theme.barHeight/laneGap/rowPaddingY/barRadius`
-7. Multi-select and rubber-band selection
+7. ~~Tag-based selection & multi-select~~ — `selectable`, `props.groupId`, Cmd/Ctrl+click selects the connected group, `setSelection`/`getSelection`. (Rubber-band selection and group-drag remain follow-ups.)

@@ -469,3 +469,67 @@ export const TimelineLongRowLabels = () => {
     </div>
   );
 };
+
+/**
+ * Selection: `selectable` turns on click selection. A plain click selects one
+ * event (it lifts with a shadow while every other event dims); Cmd/Ctrl+click
+ * selects the whole connected group (`props.groupId`). Background click or
+ * Escape clears. The buttons drive the same state through the imperative
+ * handle (`setSelection`/`getSelection`). Dragging/resizing still operate on a
+ * single event regardless of how many are selected.
+ */
+export const TimelineSelectable = () => {
+  const timelineRef = useRef<TimelineHandle>(null);
+  const d = (h: number, m = 0) =>
+    new Date(2024, 4, 27, h, m, 0).getTime() / 1000;
+  const rows = [
+    { id: "r1", name: "Welder" },
+    { id: "r2", name: "Press" },
+    { id: "r3", name: "CNC Mill" },
+    { id: "r4", name: "Paint" },
+  ];
+  // colored palettes per group so the elevation/dim reads against filled bars
+  const orderA = { fill: "#1e88e5", stroke: "#0d47a1", textColor: "#ffffff" }; // blue
+  const orderB = { fill: "#fb8c00", stroke: "#e65100", textColor: "#ffffff" }; // amber
+  const loose = { fill: "#43a047", stroke: "#1b5e20", textColor: "#ffffff" }; // green
+  const lockedOut = { fill: "#bdbdbd", stroke: "#757575", textColor: "#424242" }; // grey
+  // Two connected groups (shared groupId) spread across rows, plus a couple of
+  // ungrouped events.
+  const events: EventType[] = [
+    { id: "a1", rowId: "r1", startTime: d(1), endTime: d(2, 30), props: { label: "Order A · weld", groupId: "order-A", style: orderA } },
+    { id: "a2", rowId: "r2", startTime: d(2, 30), endTime: d(4), props: { label: "Order A · press", groupId: "order-A", style: orderA } },
+    { id: "a3", rowId: "r4", startTime: d(4), endTime: d(5, 30), props: { label: "Order A · paint", groupId: "order-A", style: orderA } },
+    { id: "b1", rowId: "r2", startTime: d(1), endTime: d(2), props: { label: "Order B · press", groupId: "order-B", style: orderB } },
+    { id: "b2", rowId: "r3", startTime: d(2), endTime: d(3, 30), props: { label: "Order B · mill", groupId: "order-B", style: orderB } },
+    { id: "c1", rowId: "r3", startTime: d(4), endTime: d(5), props: { label: "Loose 1", style: loose } },
+    { id: "c2", rowId: "r1", startTime: d(5), endTime: d(6, 30), props: { label: "Locked-out (not selectable)", isSelectable: false, style: lockedOut } },
+  ];
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, padding: "8px 0" }}>
+        <button onClick={() => timelineRef.current?.setSelection(["a1", "a2", "a3"])}>
+          Select Order A (API)
+        </button>
+        <button onClick={() => timelineRef.current?.setSelection([])}>
+          Clear (API)
+        </button>
+        <button
+          onClick={() => alert(JSON.stringify(timelineRef.current?.getSelection() ?? []))}
+        >
+          getSelection()
+        </button>
+      </div>
+      <div style={{ height: "60vh" }}>
+        <Timeline
+          ref={timelineRef}
+          rows={rows}
+          events={events}
+          selectable
+          onSelectionChange={(ids) => console.log("selection:", ids)}
+          startDate={new Date(2024, 4, 27, 0)}
+          endDate={new Date(2024, 4, 27, 8)}
+        />
+      </div>
+    </div>
+  );
+};

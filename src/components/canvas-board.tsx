@@ -45,6 +45,9 @@ type CanvasBoardProps = {
   eventsResize: boolean;
   panZoom?: PanZoomConfig;
   animations: { layoutMs: number; fadeMs: number };
+  selectable: boolean;
+  applySelection: (eventIds: string[]) => void;
+  getSelection: () => string[];
 };
 
 /**
@@ -80,6 +83,9 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       eventsResize,
       panZoom,
       animations,
+      selectable,
+      applySelection,
+      getSelection,
     },
     contentRef
   ) => {
@@ -260,7 +266,18 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       onEventHover,
       eventsResize,
       panZoom,
+      selectable,
+      applySelection,
+      getSelection,
     });
+
+    // Seed the renderer with the current selection (e.g. defaultSelectedEventIds)
+    // once it exists. Later changes flow through applySelection directly.
+    useEffect(() => {
+      rendererRef.current?.setView({
+        selectedEventIds: new Set(getSelection()),
+      });
+    }, [getSelection, rendererRef]);
 
     const { offsetOf, totalHeight } = scene.getRowOffsets(
       windowTime[0],

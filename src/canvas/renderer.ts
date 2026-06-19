@@ -27,6 +27,7 @@ export type RendererView = {
   hoveredEventId: string | null;
   draggedEventId: string | null;
   resizePreview: ResizePreview | null;
+  selectedEventIds: ReadonlySet<string>;
 };
 
 /**
@@ -53,6 +54,7 @@ export class TimelineRenderer {
     hoveredEventId: null,
     draggedEventId: null,
     resizePreview: null,
+    selectedEventIds: new Set<string>(),
   };
   readonly animator = new LayoutAnimator();
   private scheduler: FrameScheduler;

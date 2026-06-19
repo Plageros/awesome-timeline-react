@@ -50,6 +50,17 @@ export type Theme = {
   gridColor?: string;
   timeBarBorder?: string;
   timeBarTextColor?: string;
+  /** opacity applied to NON-selected events while a selection is active, so the
+   *  selection stands out (default 0.35). 1 disables dimming. */
+  dimmedOpacity?: number;
+  /** shadow color for the "lifted" look of selected events (default
+   *  "rgba(0,0,0,0.35)") */
+  selectionShadowColor?: string;
+  /** shadow blur in px for selected events (default 8) */
+  selectionShadowBlur?: number;
+  /** px the selected event bar is lifted (drawn offset upward) to read as
+   *  elevated above the others (default 2) */
+  selectionElevation?: number;
   /** canvas text font; defaults to the canvas element's computed font */
   font?: string;
   /** event bar height in px (default 20) */
@@ -75,6 +86,14 @@ export type EventPropsType = {
   style?: EventStyle;
   /** per-event custom renderer; overrides the Timeline-level drawEvent */
   drawEvent?: DrawEventFn;
+  /** connects this event to others sharing the same tag. Cmd/Ctrl+click on any
+   *  member selects the whole connected group (requires `selectable`). */
+  groupId?: string;
+  /** opt this event out of selection while the Timeline is `selectable`
+   *  (default: selectable). A non-selectable event can't be clicked into the
+   *  selection, is excluded from a group selection, and is ignored by
+   *  `setSelection`. */
+  isSelectable?: boolean;
   /** arbitrary data for eventPromptTemplate */
   metadata?: unknown;
 };
@@ -197,6 +216,11 @@ export type TimelineHandle = {
   /** set the visible time window explicitly (unix seconds) */
   setWindow(startTime: number, endTime: number): void;
   getVisibleRange(): { startTime: number; endTime: number };
+  /** replace the current selection with exactly these event ids (no group
+   *  expansion). Requires `selectable`; fires `onSelectionChange`. */
+  setSelection(eventIds: string[]): void;
+  /** the currently selected event ids */
+  getSelection(): string[];
   /** force a full redraw of both canvas layers */
   redraw(): void;
 };
@@ -221,6 +245,15 @@ export type TimelineProps = {
   onResize?: (props: OnResizeProps) => void;
   onEventClick?: (props: OnEventClickProps) => void;
   onEventHover?: (props: OnEventHoverProps) => void;
+  /** enable click selection: click selects one event (elevated + others dimmed),
+   *  Cmd/Ctrl+click selects its whole connected group (`props.groupId`),
+   *  background click / Escape clears. Default false (no selection). */
+  selectable?: boolean;
+  /** initial selection for the uncontrolled selection state */
+  defaultSelectedEventIds?: string[];
+  /** fires whenever the selection changes (click, group-click, clear, or the
+   *  imperative handle) */
+  onSelectionChange?: (eventIds: string[]) => void;
   theme?: Theme;
   drawEvent?: DrawEventFn;
   /** only `rowsHeader` still applies — everything else is canvas-drawn (use `theme`) */

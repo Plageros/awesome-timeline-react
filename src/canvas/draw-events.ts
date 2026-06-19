@@ -169,6 +169,56 @@ export const drawEvents = (
   ctx.textBaseline = "middle";
   ctx.textAlign = "left";
 
+  const selectedIds = view.selectedEventIds;
+  const hasSelection = selectedIds.size > 0;
+  // Selected events are drawn last (after every row) so they sit above their
+  // neighbours, with a shadow + upward offset to read as "lifted". Non-selected
+  // events draw dimmed in the main loop while a selection is active.
+  const deferred: Array<() => void> = [];
+
+  const paintEvent = (
+    event: EventType,
+    rect: Rect,
+    state: EventState,
+    opts: { dim: boolean; elevate: boolean }
+  ) => {
+    ctx.save();
+    if (opts.elevate) {
+      ctx.translate(0, -view.theme.selectionElevation);
+      ctx.shadowColor = view.theme.selectionShadowColor;
+      ctx.shadowBlur = view.theme.selectionShadowBlur;
+      ctx.shadowOffsetY = view.theme.selectionElevation;
+    }
+    if (state.dragging) ctx.globalAlpha = 0.5; // legacy drag opacity
+    else if (opts.dim) ctx.globalAlpha *= view.theme.dimmedOpacity;
+
+    const custom = event.props?.drawEvent ?? view.drawEvent;
+    const drawn =
+      custom !== undefined &&
+      custom(ctx, event, rect, state, view.theme) !== false;
+    if (!drawn) {
+      defaultDrawEvent(ctx, event, rect, view, font, geometry.barRadius);
+    }
+
+    if (canResizeEvent(event, view.eventsResize)) {
+      const alpha = animator.handleAlpha(
+        event.id,
+        state.hovered || state.resizing ? 1 : 0
+      );
+      if (alpha > 0.01) {
+        // the lift shadow shouldn't smear the thin handle bars
+        ctx.shadowColor = "transparent";
+        drawResizeHandles(
+          ctx,
+          rect,
+          alpha,
+          event.props?.style?.stroke ?? view.theme.eventStroke
+        );
+      }
+    }
+    ctx.restore();
+  };
+
   let rowTop = 0;
   for (const rowId of scene.getRowIds()) {
     // Row heights are instant (see drawRowDividers); only event tops animate.
@@ -232,39 +282,23 @@ export const drawEvents = (
       }
 
       const rect: Rect = { x, y, width, height: geometry.barHeight };
+      const selected = selectedIds.has(event.id);
       const state: EventState = {
         hovered: view.hoveredEventId === event.id,
         dragging: view.draggedEventId === event.id,
         resizing,
-        selected: false,
+        selected,
       };
 
-      ctx.save();
-      if (state.dragging) ctx.globalAlpha = 0.5; // legacy drag opacity
-
-      const custom = event.props?.drawEvent ?? view.drawEvent;
-      const drawn =
-        custom !== undefined &&
-        custom(ctx, event, rect, state, view.theme) !== false;
-      if (!drawn) {
-        defaultDrawEvent(ctx, event, rect, view, font, geometry.barRadius);
-      }
-
-      if (canResizeEvent(event, view.eventsResize)) {
-        const alpha = animator.handleAlpha(
-          event.id,
-          state.hovered || state.resizing ? 1 : 0
+      if (selected) {
+        deferred.push(() =>
+          paintEvent(event, rect, state, { dim: false, elevate: true })
         );
-        if (alpha > 0.01) {
-          drawResizeHandles(
-            ctx,
-            rect,
-            alpha,
-            event.props?.style?.stroke ?? view.theme.eventStroke
-          );
-        }
+      } else {
+        paintEvent(event, rect, state, { dim: hasSelection, elevate: false });
       }
-      ctx.restore();
     }
   }
+
+  for (const paint of deferred) paint();
 };

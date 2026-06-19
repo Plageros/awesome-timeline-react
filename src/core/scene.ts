@@ -44,6 +44,12 @@ export class SceneStore {
   private rowIndexes = new Map<string, RowIndex>();
   private rowOrder: string[] = [];
   private eventRow = new Map<string, string>();
+  // Group index for tag-based "connected" selection. eventGroup: eventId ->
+  // groupId; groupMembers: groupId -> set of eventIds. Maintained alongside
+  // eventRow so Cmd/Ctrl+click resolves the whole group in O(group size)
+  // without scanning all rows.
+  private eventGroup = new Map<string, string>();
+  private groupMembers = new Map<string, Set<string>>();
   private listeners = new Set<() => void>();
   // Themeable vertical layout. Lanes are geometry-free (pure time logic), so a
   // geometry change only affects heights/offsets — the cached lanes stay valid
@@ -85,7 +91,10 @@ export class SceneStore {
     }
     // events of removed rows drop with their index
     for (const [id, rowId] of this.eventRow) {
-      if (!next.has(rowId)) this.eventRow.delete(id);
+      if (!next.has(rowId)) {
+        this.eventRow.delete(id);
+        this.removeFromGroup(id);
+      }
     }
     this.rowIndexes = next;
     this.rowOrder = rows.map((row) => row.id);
@@ -98,11 +107,14 @@ export class SceneStore {
       index.lanesDirty = true;
     }
     this.eventRow.clear();
+    this.eventGroup.clear();
+    this.groupMembers.clear();
     for (const event of events) {
       const index = this.rowIndexes.get(event.rowId);
       if (!index) continue;
       index.events.push(event);
       this.eventRow.set(event.id, event.rowId);
+      this.addToGroup(event.id, event.props?.groupId);
     }
     for (const index of this.rowIndexes.values()) {
       index.events.sort(sortEvents);
@@ -148,6 +160,30 @@ export class SceneStore {
     return this.rowIndexes
       .get(rowId)
       ?.events.find((event) => event.id === id);
+  }
+
+  /**
+   * Event ids "connected" to the given event via a shared `props.groupId`.
+   * Returns every member of the group (including the event itself), or just
+   * `[eventId]` when the event has no group / no other members / is unknown.
+   */
+  getConnectedEventIds(eventId: string): string[] {
+    const groupId = this.eventGroup.get(eventId);
+    if (groupId === undefined) return [eventId];
+    const members = this.groupMembers.get(groupId);
+    if (!members || members.size === 0) return [eventId];
+    return [...members];
+  }
+
+  /**
+   * Whether an event may enter the selection. False only when the event is
+   * present and explicitly opted out (`props.isSelectable === false`); unknown
+   * ids are treated as selectable so a selection can be set before data loads
+   * and survives streaming.
+   */
+  isEventSelectable(id: string): boolean {
+    const event = this.getEvent(id);
+    return event === undefined || event.props?.isSelectable !== false;
   }
 
   getRowIds(): string[] {
@@ -242,6 +278,7 @@ export class SceneStore {
     index.events.splice(binaryInsertIndex(index.events, event), 0, event);
     index.lanesDirty = true;
     this.eventRow.set(event.id, event.rowId);
+    this.addToGroup(event.id, event.props?.groupId);
   }
 
   private remove(id: string) {
@@ -254,6 +291,29 @@ export class SceneStore {
       index.lanesDirty = true;
     }
     this.eventRow.delete(id);
+    this.removeFromGroup(id);
+  }
+
+  private addToGroup(eventId: string, groupId: string | undefined) {
+    if (groupId === undefined) return;
+    this.eventGroup.set(eventId, groupId);
+    let members = this.groupMembers.get(groupId);
+    if (!members) {
+      members = new Set();
+      this.groupMembers.set(groupId, members);
+    }
+    members.add(eventId);
+  }
+
+  private removeFromGroup(eventId: string) {
+    const groupId = this.eventGroup.get(eventId);
+    if (groupId === undefined) return;
+    this.eventGroup.delete(eventId);
+    const members = this.groupMembers.get(groupId);
+    if (members) {
+      members.delete(eventId);
+      if (members.size === 0) this.groupMembers.delete(groupId);
+    }
   }
 
   private bump() {

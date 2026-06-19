@@ -34,7 +34,14 @@ type ZoomBase = {
 
 type InteractionState =
   | { mode: "idle" }
-  | { mode: "pan"; lastClientX: number; lastClientY: number; touch: boolean }
+  | {
+      mode: "pan";
+      lastClientX: number;
+      lastClientY: number;
+      startClientX: number;
+      startClientY: number;
+      touch: boolean;
+    }
   | {
       mode: "drag";
       hit: HitTarget;
@@ -80,6 +87,10 @@ type UseCanvasInteractionsArgs = {
   onEventHover?: (props: OnEventHoverProps) => void;
   eventsResize: boolean;
   panZoom?: PanZoomConfig;
+  selectable: boolean;
+  /** replace the selection with exactly these ids (single write path) */
+  applySelection: (eventIds: string[]) => void;
+  getSelection: () => string[];
 };
 
 const lockCursor = (cursor: string) => {
@@ -115,6 +126,9 @@ const useCanvasInteractions = ({
   onEventHover,
   eventsResize,
   panZoom,
+  selectable,
+  applySelection,
+  getSelection,
 }: UseCanvasInteractionsArgs) => {
   const stateRef = useRef<InteractionState>({ mode: "idle" });
   const changeGridRef = useRef(false);
@@ -403,9 +417,21 @@ const useCanvasInteractions = ({
           mode: "pan",
           lastClientX: pointerEvent.clientX,
           lastClientY: pointerEvent.clientY,
+          startClientX: pointerEvent.clientX,
+          startClientY: pointerEvent.clientY,
           touch: isTouch,
         };
         canvas.style.cursor = "grabbing";
+      } else if (selectable && !hit) {
+        // background press with panning disabled: still allow click-to-clear
+        stateRef.current = {
+          mode: "pan",
+          lastClientX: pointerEvent.clientX,
+          lastClientY: pointerEvent.clientY,
+          startClientX: pointerEvent.clientX,
+          startClientY: pointerEvent.clientY,
+          touch: isTouch,
+        };
       } else {
         return;
       }
@@ -422,6 +448,7 @@ const useCanvasInteractions = ({
       ghostRef,
       rendererRef,
       styleGhost,
+      selectable,
     ]
   );
 
@@ -696,6 +723,30 @@ const useCanvasInteractions = ({
             },
           });
         }
+        // selection is additive to onEventClick: plain click selects just the
+        // event, Cmd/Ctrl+click selects its whole connected group. A
+        // non-selectable event is transparent to selection — clicking it leaves
+        // the current selection untouched (applySelection filters group members
+        // too, so opted-out events never enter a group selection either).
+        if (selectable) {
+          const id = state.hit.event.id;
+          if (scene.isEventSelectable(id)) {
+            applySelection(
+              pointerEvent.ctrlKey || pointerEvent.metaKey
+                ? scene.getConnectedEventIds(id)
+                : [id]
+            );
+          }
+        }
+      } else if (state.mode === "pan") {
+        // a background press+release without movement clears the selection
+        const moved =
+          Math.abs(pointerEvent.clientX - state.startClientX) +
+            Math.abs(pointerEvent.clientY - state.startClientY) >
+          DRAG_THRESHOLD_PX;
+        if (selectable && !moved && getSelection().length > 0) {
+          applySelection([]);
+        }
       } else if (state.mode === "resize") {
         commitResize(state);
       }
@@ -707,6 +758,10 @@ const useCanvasInteractions = ({
       commitDrop,
       commitResize,
       onEventClick,
+      selectable,
+      applySelection,
+      getSelection,
+      scene,
     ]
   );
 
@@ -802,6 +857,18 @@ const useCanvasInteractions = ({
   }, [dynamicCanvasRef, rendererRef, setCellWidth, applyZoom, config]);
 
   useEffect(() => unlockCursor, []); // safety on unmount
+
+  // Escape clears the selection while one is active.
+  useEffect(() => {
+    if (!selectable) return;
+    const handleKeyDown = (keyEvent: KeyboardEvent) => {
+      if (keyEvent.key === "Escape" && getSelection().length > 0) {
+        applySelection([]);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectable, getSelection, applySelection]);
 
   return {
     handlePointerDown,

@@ -3,7 +3,11 @@ import { DrawEventFn, ResolvedTheme } from "../types";
 import { FrameScheduler, Layer, LayerDirty } from "./frame-scheduler";
 import { sizeCanvas, watchDpr } from "./dpr";
 import { drawGridLines } from "./draw-grid";
-import { drawEvents, drawRowDividers } from "./draw-events";
+import {
+  drawEvents,
+  drawGroupShading,
+  drawRowDividers,
+} from "./draw-events";
 import { DEFAULT_THEME } from "./theme";
 import { LayoutAnimator } from "./animator";
 
@@ -135,6 +139,9 @@ export class TimelineRenderer {
       const ctx = this.staticCanvas.getContext("2d");
       if (ctx) {
         ctx.clearRect(0, 0, this.view.width, this.view.height);
+        // recessed-group tint/shadow first, so grid lines + dividers stay crisp
+        // on top of it
+        drawGroupShading(ctx, this.view, this.scene);
         drawGridLines(ctx, {
           width: this.view.width,
           height: this.view.height,

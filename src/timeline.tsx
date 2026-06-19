@@ -41,6 +41,7 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
       selectable = false,
       defaultSelectedEventIds,
       onSelectionChange,
+      defaultCollapsedRowIds,
       startDate,
       endDate,
       theme,
@@ -113,11 +114,22 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
     onSelectionChangeRef.current = onSelectionChange;
     const applySelection = useCallback(
       (ids: string[]) => {
+        // group expansion (parent → children): selecting a group-parent event
+        // also selects all of its child events. Done here so click, group-click,
+        // and the imperative setSelection all inherit it. Direction is
+        // parent → children only — selecting a child alone selects just it.
+        const expanded: string[] = [];
+        for (const id of ids) {
+          expanded.push(id);
+          for (const childId of scene.getChildEventIds(id)) {
+            expanded.push(childId);
+          }
+        }
         // single enforcement point: events opted out via props.isSelectable
         // never enter the selection — covers click, group-click and the
         // imperative setSelection alike.
         selectionRef.current = new Set(
-          ids.filter((id) => scene.isEventSelectable(id))
+          expanded.filter((id) => scene.isEventSelectable(id))
         );
         rendererRef.current?.setView({
           selectedEventIds: selectionRef.current,
@@ -145,6 +157,17 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
     useEffect(() => {
       scene.setStaticEvents(staticEvents ? [...staticEvents] : []);
     }, [scene, staticEvents]);
+
+    // Seed the uncontrolled collapse state once. After this the scene owns it and
+    // it survives every data update — we never re-apply the prop.
+    const seededCollapseRef = useRef(false);
+    useEffect(() => {
+      if (seededCollapseRef.current) return;
+      seededCollapseRef.current = true;
+      for (const id of defaultCollapsedRowIds ?? []) {
+        scene.setCollapsed(id, true);
+      }
+    }, [scene, defaultCollapsedRowIds]);
 
     const windowTimeRef = useRef(windowTime);
     windowTimeRef.current = windowTime;
@@ -174,6 +197,8 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
         }),
         setSelection: (ids) => applySelection(ids),
         getSelection,
+        toggleRow: (rowId) => scene.toggleCollapsed(rowId),
+        setCollapsed: (rowId, collapsed) => scene.setCollapsed(rowId, collapsed),
         redraw: () => rendererRef.current?.invalidate("all"),
       }),
       [scene, applySelection, getSelection]

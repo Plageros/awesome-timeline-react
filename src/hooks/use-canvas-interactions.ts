@@ -16,6 +16,7 @@ import {
   computeDropTimes,
   computeResizeTimes,
   computeZoom,
+  isRowDroppable,
   stepCellWidth,
   ZoomLimits,
 } from "../core/interactions";
@@ -515,6 +516,33 @@ const useCanvasInteractions = ({
     ]
   );
 
+  // resolve which visible row a viewport y falls on (same accumulated-height
+  // walk the drawing/hit-test use). Shared by the drop commit and the live
+  // drop-target cursor feedback.
+  const resolveRowAtClientY = useCallback(
+    (clientY: number): string | null => {
+      const canvas = dynamicCanvasRef.current;
+      const renderer = rendererRef.current;
+      if (!canvas || !renderer) return null;
+      const view = renderer.getView();
+      if (view.tick === null) return null;
+      const yContent =
+        clientY - canvas.getBoundingClientRect().top + view.scrollTop;
+      let rowTop = 0;
+      for (const id of scene.getVisibleRowIds()) {
+        const height = scene.getRowHeight(
+          id,
+          view.windowTime[0],
+          view.windowTime[1]
+        );
+        if (yContent >= rowTop && yContent < rowTop + height) return id;
+        rowTop += height;
+      }
+      return null;
+    },
+    [dynamicCanvasRef, rendererRef, scene]
+  );
+
   const handlePointerMove = useCallback(
     (pointerEvent: React.PointerEvent<HTMLCanvasElement>) => {
       const tracked = pointersRef.current.get(pointerEvent.pointerId);
@@ -562,6 +590,11 @@ const useCanvasInteractions = ({
         return;
       }
       if (state.mode === "drag") {
+        // group-parent (summary) bars are read-only: their span is derived from
+        // their children, so a parent is never dragged. The press still enters
+        // drag mode (so a click-without-move selects it on pointerup) but never
+        // activates — no ghost, no move.
+        if (state.hit.event.props?.isGroupParent) return;
         if (
           !state.active &&
           Math.abs(pointerEvent.clientX - state.startClientX) +
@@ -573,6 +606,15 @@ const useCanvasInteractions = ({
         }
         if (state.active) {
           updateGhost(state, pointerEvent.clientX, pointerEvent.clientY);
+          // live drop-target feedback: show not-allowed while hovering a row
+          // outside the event's droppableRowIds (only when restricted)
+          const allowed = state.hit.event.props?.droppableRowIds;
+          if (allowed) {
+            const row = resolveRowAtClientY(pointerEvent.clientY);
+            const ok = row !== null && isRowDroppable(allowed, row);
+            const canvas = dynamicCanvasRef.current;
+            if (canvas) canvas.style.cursor = ok ? "grabbing" : "not-allowed";
+          }
         }
         return;
       }
@@ -593,6 +635,8 @@ const useCanvasInteractions = ({
       rendererRef,
       scheduleContinuousZoom,
       bodyRef,
+      resolveRowAtClientY,
+      dynamicCanvasRef,
     ]
   );
 
@@ -608,27 +652,20 @@ const useCanvasInteractions = ({
       const view = renderer.getView();
       if (view.tick === null || view.cellWidth <= 0) return;
       const canvasRect = canvas.getBoundingClientRect();
-      const yContent = clientY - canvasRect.top + view.scrollTop;
 
-      // target row by accumulated heights (same walk the drawing uses)
-      let rowTop = 0;
-      let targetRowId: string | null = null;
-      for (const id of scene.getRowIds()) {
-        const height = scene.getRowHeight(
-          id,
-          view.windowTime[0],
-          view.windowTime[1]
-        );
-        if (yContent >= rowTop && yContent < rowTop + height) {
-          targetRowId = id;
-          break;
-        }
-        rowTop += height;
-      }
+      const targetRowId = resolveRowAtClientY(clientY);
       if (targetRowId === null) return; // dropped outside all rows -> cancel
 
       const liveEvent = scene.getEvent(state.hit.event.id);
       if (!liveEvent) return;
+
+      // drop-target restriction: a drop onto a row not in droppableRowIds is
+      // cancelled — the event snaps back (no patch, no onDrop). Time-shifts that
+      // stay on an allowed row are unaffected.
+      if (!isRowDroppable(liveEvent.props?.droppableRowIds, targetRowId)) {
+        renderer.animator.snapEventTop(liveEvent.id);
+        return;
+      }
 
       const { startTime, endTime } = computeDropTimes({
         pointerX: clientX - canvasRect.left,
@@ -658,7 +695,7 @@ const useCanvasInteractions = ({
         },
       ]);
     },
-    [scene, dynamicCanvasRef, rendererRef, onDrop]
+    [scene, dynamicCanvasRef, rendererRef, onDrop, resolveRowAtClientY]
   );
 
   const commitResize = useCallback(

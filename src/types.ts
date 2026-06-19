@@ -4,6 +4,10 @@ import type { Rect } from "./core/types";
 export type RowType = {
   id: string;
   name: string;
+  /** group this row under a parent row (one level of nesting only in v1). Child
+   *  rows are hidden when their parent row is collapsed. List child rows
+   *  immediately after their parent row for the clearest visual nesting. */
+  parentId?: string;
 };
 
 /** Interaction state passed to custom drawEvent renderers. */
@@ -71,6 +75,15 @@ export type Theme = {
   rowPaddingY?: number;
   /** event bar corner radius in px (default 5) */
   barRadius?: number;
+  /** faint fill laid over the child-row block of an expanded group so it reads
+   *  as recessed beneath its parent row (default "rgba(0,0,0,0.05)"). Also used
+   *  to tint child row headers. */
+  groupChildBackground?: string;
+  /** color of the inset shadow drawn at the top (and left) of an expanded
+   *  group's child block — the "sitting beneath the parent" depth cue (default
+   *  "rgba(0,0,0,0.22)"). Also tints the header tree connector lines if no
+   *  gridColor contrast is desired. */
+  groupShadowColor?: string;
 };
 
 export type ResolvedTheme = Required<Omit<Theme, "font">> &
@@ -94,8 +107,44 @@ export type EventPropsType = {
    *  selection, is excluded from a group selection, and is ignored by
    *  `setSelection`. */
   isSelectable?: boolean;
-  /** arbitrary data for eventPromptTemplate */
+  /** mark this event as a group summary bar. Its `startTime`/`endTime` are
+   *  derived by the scene from its children (earliest start → latest end) and
+   *  ignored on input — supplied values are kept only as a fallback while the
+   *  parent has no resolved children yet. A parent event is never resizable and
+   *  (in v1) never draggable; it stays clickable/selectable. Selecting it also
+   *  selects all of its children. Must live on a row that is some row's
+   *  `parentId`. */
+  isGroupParent?: boolean;
+  /** child → parent-event link. The referenced parent event is expected to live
+   *  on this row's `parentId` row. An unresolved link is harmless — the event
+   *  draws as a plain event (a dev warning is logged). */
+  parentEventId?: string;
+  /** rows this event may be dragged/dropped onto. `undefined` = any row (the
+   *  default). When set, a drag only commits if the target row is in the list —
+   *  otherwise the event snaps back (no `onDrop`). An empty array therefore pins
+   *  the event (every drop snaps back).
+   *
+   *  If the event's own `rowId` is not in this list, the library records a
+   *  `{ droppableError: DroppableError }` on `props.metadata` (merging, not
+   *  clobbering, any object you already put there) so the host app can surface
+   *  the misconfiguration. The error is cleared automatically once the event is
+   *  on an allowed row. */
+  droppableRowIds?: string[];
+  /** arbitrary data for eventPromptTemplate. The library may merge a
+   *  `droppableError` key here — see `droppableRowIds`. */
   metadata?: unknown;
+};
+
+/**
+ * Written by the library into `props.metadata.droppableError` when an event's
+ * current `rowId` is absent from its `droppableRowIds`. Read it off events your
+ * app holds (or via the handle's `getEvent`) to flag the misconfiguration.
+ */
+export type DroppableError = {
+  /** the event's current rowId, which is not among its droppableRowIds */
+  rowId: string;
+  /** the rows the event declared it may live on */
+  droppableRowIds: string[];
 };
 
 export type EventType = {
@@ -216,11 +265,17 @@ export type TimelineHandle = {
   /** set the visible time window explicitly (unix seconds) */
   setWindow(startTime: number, endTime: number): void;
   getVisibleRange(): { startTime: number; endTime: number };
-  /** replace the current selection with exactly these event ids (no group
-   *  expansion). Requires `selectable`; fires `onSelectionChange`. */
+  /** replace the current selection with these event ids. No `groupId`-tag
+   *  expansion (that's Cmd/Ctrl+click only), but a group-parent id still pulls
+   *  in its child events (parent → children). Requires `selectable`; fires
+   *  `onSelectionChange`. */
   setSelection(eventIds: string[]): void;
   /** the currently selected event ids */
   getSelection(): string[];
+  /** toggle a parent row's collapsed state (hides/shows its child rows) */
+  toggleRow(rowId: string): void;
+  /** explicitly collapse or expand a parent row */
+  setCollapsed(rowId: string, collapsed: boolean): void;
   /** force a full redraw of both canvas layers */
   redraw(): void;
 };
@@ -254,6 +309,11 @@ export type TimelineProps = {
   /** fires whenever the selection changes (click, group-click, clear, or the
    *  imperative handle) */
   onSelectionChange?: (eventIds: string[]) => void;
+  /** rows collapsed initially (uncontrolled). After mount, collapse state lives
+   *  in the scene and survives every data update — streaming patches,
+   *  `setEvents`, and `events`-prop resets never change it; only a user caret
+   *  click or the imperative handle (`toggleRow`/`setCollapsed`) does. */
+  defaultCollapsedRowIds?: string[];
   theme?: Theme;
   drawEvent?: DrawEventFn;
   /** only `rowsHeader` still applies — everything else is canvas-drawn (use `theme`) */

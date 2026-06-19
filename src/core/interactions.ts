@@ -56,16 +56,29 @@ export const computeResizeTimes = (
   return null;
 };
 
-/** Eligibility: same expression as the legacy Event component's render guard. */
+/** Eligibility: same expression as the legacy Event component's render guard.
+ *  A group-parent (summary) event is never resizable — its span is derived from
+ *  its children. */
 export const canResizeEvent = (
   event: EventType,
   eventsResize: boolean
 ): boolean =>
   !event.props?.isLocked &&
+  !event.props?.isGroupParent &&
   ((eventsResize &&
     (event.props?.isResizable === true ||
       event.props?.isResizable === undefined)) ||
     (!eventsResize && event.props?.isResizable === true));
+
+/**
+ * Whether an event may be dropped onto a row, given its `droppableRowIds`.
+ * `undefined` = unrestricted (any row); otherwise the target must be listed.
+ */
+export const isRowDroppable = (
+  droppableRowIds: string[] | undefined,
+  targetRowId: string
+): boolean =>
+  droppableRowIds === undefined || droppableRowIds.includes(targetRowId);
 
 /** Grid granularity step: same clamp as content.tsx handleOnWheel. */
 export const stepCellWidth = (

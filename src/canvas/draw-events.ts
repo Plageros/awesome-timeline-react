@@ -37,6 +37,82 @@ const roundedRect = (
   }
 };
 
+/**
+ * Recessed-group depth cue. For each expanded group, the contiguous block of
+ * its visible child rows is filled with a faint tint and given an inset shadow
+ * along its top (and left) edge, so the child rows read as sitting *beneath*
+ * their parent row. Drawn on the static layer beneath the grid lines/dividers.
+ */
+export const drawGroupShading = (
+  ctx: CanvasRenderingContext2D,
+  view: RendererView,
+  scene: SceneStore
+) => {
+  const [windowStart, windowEnd] = view.windowTime;
+  const visible = scene.getVisibleRowIds();
+  // collect the content-space y-range of each contiguous run of child rows
+  const regions: Array<{ top: number; bottom: number }> = [];
+  let y = 0;
+  let runParent: string | null = null;
+  let runTop = 0;
+  let runBottom = 0;
+  const flush = () => {
+    if (runParent !== null) regions.push({ top: runTop, bottom: runBottom });
+    runParent = null;
+  };
+  for (const rowId of visible) {
+    const height = scene.getRowHeight(rowId, windowStart, windowEnd);
+    const parentId = scene.getRow(rowId)?.parentId;
+    if (parentId !== undefined) {
+      if (runParent === parentId) {
+        runBottom = y + height;
+      } else {
+        flush();
+        runParent = parentId;
+        runTop = y;
+        runBottom = y + height;
+      }
+    } else {
+      flush();
+    }
+    y += height;
+  }
+  flush();
+  if (regions.length === 0) return;
+
+  ctx.save();
+  for (const { top, bottom } of regions) {
+    const sTop = top - view.scrollTop;
+    const sBottom = bottom - view.scrollTop;
+    if (sBottom < 0 || sTop > view.height) continue;
+    const regionHeight = sBottom - sTop;
+    // 1. faint recess tint over the whole child block
+    ctx.fillStyle = view.theme.groupChildBackground;
+    ctx.fillRect(0, sTop, view.width, regionHeight);
+    const depth = Math.min(12, regionHeight / 2);
+    // 2. inset top shadow — the "beneath the parent" depth cue
+    const topGrad = ctx.createLinearGradient(0, sTop, 0, sTop + depth);
+    topGrad.addColorStop(0, view.theme.groupShadowColor);
+    topGrad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = topGrad;
+    ctx.fillRect(0, sTop, view.width, depth);
+    // 3. inset bottom shadow — closes the recessed shelf at its lower edge
+    const botGrad = ctx.createLinearGradient(0, sBottom - depth, 0, sBottom);
+    botGrad.addColorStop(0, "rgba(0,0,0,0)");
+    botGrad.addColorStop(1, view.theme.groupShadowColor);
+    ctx.fillStyle = botGrad;
+    ctx.fillRect(0, sBottom - depth, view.width, depth);
+    // 4. matching inset left shadow so the recess reads on the leading edge too
+    const leftShadow = 10;
+    const hGrad = ctx.createLinearGradient(0, 0, leftShadow, 0);
+    hGrad.addColorStop(0, view.theme.groupShadowColor);
+    hGrad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = hGrad;
+    ctx.fillRect(0, sTop, leftShadow, regionHeight);
+  }
+  ctx.restore();
+};
+
 /** Horizontal row dividers — replaces .row-content border-bottom. */
 export const drawRowDividers = (
   ctx: CanvasRenderingContext2D,
@@ -44,7 +120,7 @@ export const drawRowDividers = (
   scene: SceneStore
 ) => {
   const [windowStart, windowEnd] = view.windowTime;
-  const rowIds = scene.getRowIds();
+  const rowIds = scene.getVisibleRowIds();
   ctx.strokeStyle = view.theme.gridColor;
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -220,7 +296,7 @@ export const drawEvents = (
   };
 
   let rowTop = 0;
-  for (const rowId of scene.getRowIds()) {
+  for (const rowId of scene.getVisibleRowIds()) {
     // Row heights are instant (see drawRowDividers); only event tops animate.
     const rowHeight = scene.getRowHeight(rowId, windowStart, windowEnd);
     const rowY = rowTop - view.scrollTop;

@@ -294,14 +294,37 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       measureViewport();
     }, [totalHeight, measureViewport]);
 
-    // virtualized rows header: only headers intersecting the viewport
+    // last child row id per parent (in `rows` order) — drives the └─ vs ├─
+    // connector shape so the tree spine stops at the final child.
+    const lastChildOf = new Map<string, string>();
+    for (const row of rows) {
+      if (row.parentId !== undefined) lastChildOf.set(row.parentId, row.id);
+    }
+    // the rows header has a dark background, so the connector uses the (light)
+    // grid/divider color rather than the dark group-shadow color
+    const connectorColor = theme.gridColor;
+    const SPINE_X = 11; // px from the left edge of the header
+
+    // virtualized rows header: only headers intersecting the viewport. Rows
+    // hidden inside a collapsed parent are skipped entirely (and aren't in
+    // offsetOf, which now walks the visible rows). Parent rows get a collapse
+    // caret; child rows show a tree connector linking them to their parent.
     const visibleHeaders: JSX.Element[] = [];
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
-      const top = offsetOf.get(row.id) as number;
+      if (scene.isRowHidden(row.id)) continue;
+      const top = offsetOf.get(row.id);
+      if (top === undefined) continue;
       const height = scene.getRowHeight(row.id, windowTime[0], windowTime[1]);
       if (top + height < scrollTop) continue;
       if (top > scrollTop + viewportHeight) break;
+      const isParent = scene.isRowParent(row.id);
+      const parentId = row.parentId;
+      const isChild = parentId !== undefined;
+      const isLastChild =
+        parentId !== undefined && lastChildOf.get(parentId) === row.id;
+      const collapsed = scene.isRowCollapsed(row.id);
+      const grouped = isParent || isChild;
       visibleHeaders.push(
         <div
           key={`row_header_${row.id}`}
@@ -313,9 +336,61 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
               i === rows.length - 1 ? "none" : "1px solid yellow",
             // Row heights/positions apply instantly (no layout tween) so the
             // header snaps in lockstep with its canvas row — see draw-events.
+            // Grouped rows left-align so the caret + tree spine line up; plain
+            // rows keep the centered default.
+            justifyContent: grouped ? "flex-start" : undefined,
+            paddingLeft: isChild ? 24 : isParent ? 6 : undefined,
           }}
         >
-          <span className="row-header-label">{row.name}</span>
+          {isChild && (
+            // tree connector: a vertical spine + a horizontal tick at the row's
+            // vertical center. The spine runs the full height for a mid child
+            // (├─) and stops at the center for the last child (└─), so stacked
+            // children form one continuous spine descending from the parent.
+            <>
+              <span
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  left: SPINE_X,
+                  top: 0,
+                  width: 1,
+                  height: isLastChild ? "50%" : "100%",
+                  backgroundColor: connectorColor,
+                  pointerEvents: "none",
+                }}
+              />
+              <span
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  left: SPINE_X,
+                  top: "50%",
+                  width: 9,
+                  height: 1,
+                  backgroundColor: connectorColor,
+                  pointerEvents: "none",
+                }}
+              />
+            </>
+          )}
+          {isParent && (
+            <span
+              className="row-header-caret"
+              role="button"
+              aria-label={collapsed ? "Expand group" : "Collapse group"}
+              onClick={() => scene.toggleCollapsed(row.id)}
+              style={{ cursor: "pointer", marginRight: 4, userSelect: "none" }}
+            >
+              {collapsed ? "▸" : "▾"}
+            </span>
+          )}
+          <span
+            className="row-header-label"
+            style={grouped ? { textAlign: "left" } : undefined}
+          >
+            {row.name}
+          </span>
         </div>
       );
     }

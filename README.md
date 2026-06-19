@@ -178,6 +178,87 @@ always operate on the single grabbed event, regardless of how many are selected.
 > Follow-ups not yet implemented: rubber-band rectangle selection, group-drag
 > (moving a whole selection together), and a controlled `selectedEventIds` prop.
 
+## Grouped (collapsible) rows
+
+Rows can be nested one level: give a row a `parentId` to make it a **child** of a
+parent row. A **group-parent event** (`props.isGroupParent`) on the parent row
+summarizes the **child events** that point at it via `props.parentEventId`:
+
+```tsx
+const rows = [
+  { id: "order", name: "Order #1001" },              // parent row
+  { id: "weld", name: "Weld", parentId: "order" },   // child rows
+  { id: "paint", name: "Paint", parentId: "order" },
+];
+
+const events = [
+  // the parent's startTime/endTime are derived — supplied values are just a
+  // fallback shown until it has children
+  { id: "P", rowId: "order", startTime: 0, endTime: 0, props: { isGroupParent: true, label: "Order #1001" } },
+  { id: "w", rowId: "weld",  startTime: t1, endTime: t2, props: { parentEventId: "P" } },
+  { id: "p", rowId: "paint", startTime: t3, endTime: t4, props: { parentEventId: "P" } },
+];
+```
+
+Behavior:
+
+- **Derived span** — the parent bar spans the earliest child `startTime` to the
+  latest child `endTime`, recomputed automatically as children move. A childless
+  parent keeps its supplied times.
+- **Read-only parent** — a group-parent is never resizable and never draggable
+  (its bounds belong to its children). It stays clickable/selectable.
+- **Group selection** — selecting a parent event (click, `setSelection`, …) also
+  selects all of its child events. Direction is parent → children only.
+- **Collapse** — a parent row shows a caret in its header; collapsing it hides
+  the child rows while the summary bar stays. Collapse is **uncontrolled**: seed
+  it with `defaultCollapsedRowIds` and drive it imperatively. The state lives in
+  the timeline and **survives streaming updates / `setEvents` / `events`-prop
+  resets** — only a caret click or the handle changes it.
+
+```tsx
+const ref = useRef<TimelineHandle>(null);
+ref.current?.toggleRow("order");          // flip collapsed/expanded
+ref.current?.setCollapsed("order", true); // collapse explicitly
+
+<Timeline ref={ref} rows={rows} events={events} defaultCollapsedRowIds={["order"]} … />
+```
+
+List child rows immediately after their parent row in `rows` for the clearest
+visual nesting. Unresolved `parentEventId` links are harmless — the event just
+draws as a plain event.
+
+> Follow-ups not yet implemented: parent batch-drag (time-shifting all children
+> together), child-pinning to sibling rows, deeper nesting, and a controlled
+> `collapsedRowIds` prop.
+
+## Restricting where an event can be dropped
+
+Give an event `props.droppableRowIds` to limit which rows it can be dragged onto:
+
+```tsx
+{ id: "weld", rowId: "r1", startTime, endTime,
+  props: { droppableRowIds: ["r1", "r3"] } } // only Welder / CNC
+```
+
+- `undefined` (default) → droppable onto any row.
+- A list → a drag only commits if the target row is in it; otherwise the event
+  **snaps back** (no `onDrop`), and the cursor shows `not-allowed` while hovering
+  a disallowed row. An **empty array** pins the event to no row.
+
+If an event's own `rowId` is not in its `droppableRowIds` (a misconfiguration),
+the library records the problem on `props.metadata` so your app can flag it —
+merging into any object you already stored there, and clearing automatically
+once the event is on an allowed row:
+
+```ts
+import type { DroppableError } from "awesome-timeline-react";
+
+const meta = event.props?.metadata as { droppableError?: DroppableError };
+if (meta?.droppableError) {
+  // { rowId: "r4", droppableRowIds: ["r1", "r2"] } — surface it in your UI
+}
+```
+
 ## Time bar rows
 
 The time bar has two rows. By default the top row shows calendar days and the
@@ -285,3 +366,5 @@ Here, we will store major features planned for future releases (from highest to 
 5. ~~Customizable second row of the time bar~~ - `timeBar.topRow/bottomRow` (unit + format)
 6. ~~Themeable bar geometry (heights, lane spacing, radius)~~ - `theme.barHeight/laneGap/rowPaddingY/barRadius`
 7. ~~Tag-based selection & multi-select~~ — `selectable`, `props.groupId`, Cmd/Ctrl+click selects the connected group, `setSelection`/`getSelection`. (Rubber-band selection and group-drag remain follow-ups.)
+8. ~~Grouped (collapsible) rows~~ — `row.parentId`, `props.isGroupParent` + `parentEventId`, derived read-only parent span, parent→children selection, uncontrolled collapse (`defaultCollapsedRowIds`, `toggleRow`/`setCollapsed`). (Parent batch-drag and controlled collapse remain follow-ups.)
+9. ~~Per-event drop-target restriction~~ — `props.droppableRowIds` limits drag targets (snap-back + `not-allowed` cursor); a misconfigured row is flagged via `metadata.droppableError`. (Auto child-pinning to sibling group rows remains a follow-up.)

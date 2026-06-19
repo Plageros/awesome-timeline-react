@@ -39,7 +39,7 @@ export const hitTest = (
 
   let rowTop = 0;
   let rowId: string | null = null;
-  for (const id of scene.getRowIds()) {
+  for (const id of scene.getVisibleRowIds()) {
     const height = scene.getRowHeight(id, windowStart, windowEnd);
     if (yContent >= rowTop && yContent < rowTop + height) {
       rowId = id;

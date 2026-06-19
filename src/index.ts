@@ -13,6 +13,7 @@ export type {
   OnResizeProps,
   OnEventClickProps,
   OnEventHoverProps,
+  DroppableError,
   PanZoomConfig,
   EventPatch,
   TimelineHandle,

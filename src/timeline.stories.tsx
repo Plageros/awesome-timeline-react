@@ -533,3 +533,143 @@ export const TimelineSelectable = () => {
     </div>
   );
 };
+
+/**
+ * Grouped (collapsible) rows. A parent row owns child rows (`parentId`); a
+ * group-parent event (`isGroupParent`) on the parent row summarizes the child
+ * events that point at it (`parentEventId`). The parent's span is derived
+ * (earliest child start → latest child end) — it is never resizable or
+ * draggable. Selecting a parent also selects its children. Collapsing a parent
+ * row hides its child rows while the summary bar stays.
+ */
+export const TimelineGrouped = () => {
+  const timelineRef = useRef<TimelineHandle>(null);
+  const d = (h: number, m = 0) =>
+    new Date(2024, 4, 27, h, m, 0).getTime() / 1000;
+
+  const rows = [
+    { id: "m1", name: "Standalone machine" },
+    { id: "g1", name: "Order #1001" },
+    { id: "g1-weld", name: "Weld", parentId: "g1" },
+    { id: "g1-paint", name: "Paint", parentId: "g1" },
+    { id: "g2", name: "Order #1002" },
+    { id: "g2-cnc", name: "CNC", parentId: "g2" },
+    { id: "g2-asm", name: "Assembly", parentId: "g2" },
+  ];
+
+  const summary = { fill: "#37474f", stroke: "#102027", textColor: "#ffffff" }; // slate parent bar
+  const blue = { fill: "#1e88e5", stroke: "#0d47a1", textColor: "#ffffff" };
+  const amber = { fill: "#fb8c00", stroke: "#e65100", textColor: "#ffffff" };
+
+  const events: EventType[] = [
+    { id: "loose", rowId: "m1", startTime: d(2), endTime: d(4), props: { label: "Maintenance" } },
+    // Group 1 — supplied parent times are placeholders; the scene derives them.
+    { id: "P1", rowId: "g1", startTime: d(0), endTime: d(0), props: { label: "Order #1001 (summary)", isGroupParent: true, style: summary } },
+    { id: "P1-weld", rowId: "g1-weld", startTime: d(1), endTime: d(2, 30), props: { label: "Weld", parentEventId: "P1", style: blue } },
+    { id: "P1-paint", rowId: "g1-paint", startTime: d(3), endTime: d(4, 30), props: { label: "Paint", parentEventId: "P1", style: blue } },
+    // Group 2
+    { id: "P2", rowId: "g2", startTime: d(0), endTime: d(0), props: { label: "Order #1002 (summary)", isGroupParent: true, style: summary } },
+    { id: "P2-cnc", rowId: "g2-cnc", startTime: d(2), endTime: d(3), props: { label: "CNC", parentEventId: "P2", style: amber } },
+    { id: "P2-asm", rowId: "g2-asm", startTime: d(5), endTime: d(6, 30), props: { label: "Assembly", parentEventId: "P2", style: amber } },
+  ];
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, padding: "8px 0", flexWrap: "wrap" }}>
+        <button onClick={() => timelineRef.current?.toggleRow("g1")}>
+          Toggle Order #1001
+        </button>
+        <button onClick={() => timelineRef.current?.toggleRow("g2")}>
+          Toggle Order #1002
+        </button>
+        <button onClick={() => timelineRef.current?.setSelection(["P1"])}>
+          Select Order #1001 (parent → children)
+        </button>
+        <button onClick={() => timelineRef.current?.setSelection([])}>
+          Clear
+        </button>
+        <button
+          onClick={() =>
+            // stream a child move; the summary bar re-derives live
+            timelineRef.current?.updateEvents([
+              { op: "update", id: "P1-paint", changes: { startTime: d(5), endTime: d(6, 30) } },
+            ])
+          }
+        >
+          Push Paint later (re-derives summary)
+        </button>
+      </div>
+      <div style={{ height: "60vh" }}>
+        <Timeline
+          ref={timelineRef}
+          rows={rows}
+          events={events}
+          selectable
+          defaultCollapsedRowIds={["g2"]}
+          onSelectionChange={(ids) => console.log("selection:", ids)}
+          startDate={new Date(2024, 4, 27, 0)}
+          endDate={new Date(2024, 4, 27, 8)}
+        />
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Per-event drop-target restriction (`props.droppableRowIds`). The blue event
+ * can only be dropped onto Welder/CNC (drag it elsewhere → not-allowed cursor,
+ * snaps back). The green event is unrestricted. The red event is *misconfigured*
+ * — it sits on Paint but its droppableRowIds doesn't include Paint, so the
+ * library records `metadata.droppableError`; click "Inspect" to see it.
+ */
+export const TimelineDroppableRows = () => {
+  const timelineRef = useRef<TimelineHandle>(null);
+  const d = (h: number, m = 0) =>
+    new Date(2024, 4, 27, h, m, 0).getTime() / 1000;
+
+  const rows = [
+    { id: "r1", name: "Welder" },
+    { id: "r2", name: "Press" },
+    { id: "r3", name: "CNC Mill" },
+    { id: "r4", name: "Paint" },
+  ];
+  const blue = { fill: "#1e88e5", stroke: "#0d47a1", textColor: "#ffffff" };
+  const green = { fill: "#43a047", stroke: "#1b5e20", textColor: "#ffffff" };
+  const red = { fill: "#e53935", stroke: "#b71c1c", textColor: "#ffffff" };
+
+  const events: EventType[] = [
+    { id: "restricted", rowId: "r1", startTime: d(1), endTime: d(2, 30), props: { label: "Welder or CNC only", droppableRowIds: ["r1", "r3"], style: blue } },
+    { id: "free", rowId: "r2", startTime: d(3), endTime: d(4), props: { label: "Any row", style: green } },
+    { id: "bad", rowId: "r4", startTime: d(5), endTime: d(6), props: { label: "Misconfigured", droppableRowIds: ["r1", "r2"], style: red } },
+  ];
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, padding: "8px 0" }}>
+        <button
+          onClick={() =>
+            alert(
+              JSON.stringify(
+                timelineRef.current?.getEvent("bad")?.props?.metadata ?? null,
+                null,
+                2
+              )
+            )
+          }
+        >
+          Inspect "bad" metadata
+        </button>
+      </div>
+      <div style={{ height: "60vh" }}>
+        <Timeline
+          ref={timelineRef}
+          rows={rows}
+          events={events}
+          onDrop={(p) => console.log("dropped:", p)}
+          startDate={new Date(2024, 4, 27, 0)}
+          endDate={new Date(2024, 4, 27, 8)}
+        />
+      </div>
+    </div>
+  );
+};

@@ -4,6 +4,7 @@ import {
   computeDropTimes,
   computeResizeTimes,
   computeZoom,
+  isRowDroppable,
   stepCellWidth,
 } from "../src/core/interactions";
 import { EventType } from "../src/types";
@@ -87,6 +88,33 @@ describe("canResizeEvent (legacy render guard)", () => {
   test("eventsResize off: only explicit per-event opt-in", () => {
     expect(canResizeEvent(ev(), false)).toBe(false);
     expect(canResizeEvent(ev({ isResizable: true }), false)).toBe(true);
+  });
+
+  test("group-parent is never resizable, regardless of mode or opt-in", () => {
+    expect(canResizeEvent(ev({ isGroupParent: true }), true)).toBe(false);
+    expect(
+      canResizeEvent({ ...ev({ isGroupParent: true, isResizable: true }) }, true)
+    ).toBe(false);
+    expect(
+      canResizeEvent({ ...ev({ isGroupParent: true, isResizable: true }) }, false)
+    ).toBe(false);
+  });
+});
+
+describe("isRowDroppable (per-event drop-target restriction)", () => {
+  test("undefined droppableRowIds = unrestricted (any row)", () => {
+    expect(isRowDroppable(undefined, "r1")).toBe(true);
+    expect(isRowDroppable(undefined, "anything")).toBe(true);
+  });
+
+  test("only listed rows are allowed", () => {
+    expect(isRowDroppable(["r1", "r2"], "r1")).toBe(true);
+    expect(isRowDroppable(["r1", "r2"], "r2")).toBe(true);
+    expect(isRowDroppable(["r1", "r2"], "r3")).toBe(false);
+  });
+
+  test("empty list pins the event (every row rejected)", () => {
+    expect(isRowDroppable([], "r1")).toBe(false);
   });
 });
 

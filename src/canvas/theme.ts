@@ -18,6 +18,8 @@ export const DEFAULT_THEME: ResolvedTheme = {
   laneGap: 2,
   rowPaddingY: 10,
   barRadius: 5,
+  groupChildBackground: "rgba(0,0,0,0.05)",
+  groupShadowColor: "rgba(0,0,0,0.22)",
 };
 
 export const resolveTheme = (theme?: Theme): ResolvedTheme => ({

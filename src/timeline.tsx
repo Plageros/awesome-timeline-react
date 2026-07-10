@@ -153,6 +153,18 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
     useEffect(() => {
       scene.setEvents([...events].sort(sortEvents));
       rendererRef.current?.animator.reset();
+      // Reconcile the selection with the new dataset. A selected id that no longer exists (e.g. the
+      // consumer re-keyed or dropped that event on an update) would otherwise linger — and because a
+      // non-empty selection dims every *unselected* event, a selection that matches nothing dims the
+      // ENTIRE plan (looks like the events vanished). Drop the vanished ids; keep the rest selected.
+      const survivors = [...selectionRef.current].filter(
+        (id) => scene.getEvent(id) !== undefined
+      );
+      if (survivors.length !== selectionRef.current.size) {
+        selectionRef.current = new Set(survivors);
+        rendererRef.current?.setView({ selectedEventIds: selectionRef.current });
+        onSelectionChangeRef.current?.(survivors);
+      }
     }, [scene, events]);
     useEffect(() => {
       scene.setStaticEvents(staticEvents ? [...staticEvents] : []);

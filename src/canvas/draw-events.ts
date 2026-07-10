@@ -23,7 +23,11 @@ const roundedRect = (
   height: number,
   radius: number
 ) => {
-  const r = Math.min(radius, width / 2, height / 2);
+  // Clamp to >= 0: a sub-pixel bar (width < 1, e.g. a short setup bar at a wide zoom) makes
+  // width/2 negative, and `ctx.roundRect` THROWS a RangeError on a negative radius — which, thrown
+  // mid-paint, skips the caller's ctx.restore() and corrupts the canvas state (every later bar
+  // vanishes). Never let the radius go negative.
+  const r = Math.max(0, Math.min(radius, width / 2, height / 2));
   ctx.beginPath();
   if (typeof ctx.roundRect === "function") {
     ctx.roundRect(x, y, width, height, r);
@@ -259,6 +263,11 @@ export const drawEvents = (
     opts: { dim: boolean; elevate: boolean }
   ) => {
     ctx.save();
+    // Each event is painted from a CLEAN alpha. Opacity below is applied with `*=` (dim, style
+    // opacity), so if a prior event/frame left globalAlpha < 1 on the shared context it would
+    // otherwise accumulate — fading every subsequent event further down the row loop (and frame over
+    // frame) until they vanish. Anchoring to 1 here makes each event's opacity self-contained.
+    ctx.globalAlpha = 1;
     if (opts.elevate) {
       ctx.translate(0, -view.theme.selectionElevation);
       ctx.shadowColor = view.theme.selectionShadowColor;

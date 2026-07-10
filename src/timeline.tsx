@@ -217,6 +217,47 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
       }
     }, []);
 
+    // Follow startDate/endDate when the range they describe actually changes, re-fitting the visible
+    // window AND recomputing `tick`/`cellWidth` together. Without this the window is frozen at mount
+    // (its initial useState), so a consumer that swaps in a re-ranged dataset without remounting would
+    // keep the stale window+tick — culling or mis-scaling the new events until a manual zoom.
+    //
+    // We compare the HOUR-ROUNDED range (the same rounding the initial window uses), so a re-render
+    // with the same span — or a sub-hour nudge — does NOT stomp the user's pan/zoom; only a genuine
+    // range change re-fits.
+    const fitStart =
+      new Date(
+        startDate.getFullYear(),
+        startDate.getMonth(),
+        startDate.getDate(),
+        startDate.getHours(),
+        0,
+        0
+      ).getTime() / 1000;
+    const fitEnd =
+      new Date(
+        endDate.getFullYear(),
+        endDate.getMonth(),
+        endDate.getDate(),
+        endDate.getHours(),
+        0,
+        0
+      ).getTime() / 1000;
+    const lastFitRef = useRef<[number, number]>([fitStart, fitEnd]);
+    useEffect(() => {
+      if (lastFitRef.current[0] === fitStart && lastFitRef.current[1] === fitEnd) {
+        return; // same span (incl. first run) — leave the window where the user left it
+      }
+      lastFitRef.current = [fitStart, fitEnd];
+      setWindowTime([fitStart, fitEnd]);
+      const width = contentRef.current?.getBoundingClientRect().width;
+      if (width) {
+        const windowDuration = fitEnd - fitStart;
+        setTick(windowDuration / width);
+        setCellWidth(width / (windowDuration / 3600));
+      }
+    }, [fitStart, fitEnd]);
+
     useEffect(() => {
       if (bodyRef.current) {
         setScrollWidth(

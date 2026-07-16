@@ -228,6 +228,64 @@ const defaultDrawEvent = (
   }
 };
 
+const STRIPE_STEP = 6; // px between 45° stripes
+const STRIPE_WIDTH = 2; // px line width
+const STRIPE_WASH_ALPHA = 0.18; // faint fill so the slice darkens between stripes
+
+/**
+ * Draw 45° diagonal stripes on the slice of an event bar that overlaps any
+ * static event on the same row. The overlap is computed in time, projected to
+ * px, clamped to the bar's own box, and each slice is clipped so stripes never
+ * bleed past the bar. Called after the bar body so it reads as an overlay.
+ */
+const paintOverlapStripes = (
+  ctx: CanvasRenderingContext2D,
+  event: EventType,
+  rect: Rect,
+  rowStatics: EventType[],
+  windowStart: number,
+  tick: number,
+  color: string
+) => {
+  const barRight = rect.x + rect.width;
+  for (const band of rowStatics) {
+    const overlapStart = Math.max(event.startTime, band.startTime);
+    const overlapEnd = Math.min(event.endTime, band.endTime);
+    if (overlapEnd <= overlapStart) continue;
+    const x0 = Math.max(timeToX(overlapStart, windowStart, tick), rect.x);
+    const x1 = Math.min(
+      timeToX(overlapStart, windowStart, tick) +
+        timeToWidth(overlapStart, overlapEnd, tick),
+      barRight
+    );
+    const width = x1 - x0;
+    if (width <= 0) continue;
+    const { y, height } = rect;
+    // save/clip/restore is always paired so a leaked clip can't corrupt later
+    // bars (see roundedRect's radius-clamp note for the same failure mode).
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x0, y, width, height);
+    ctx.clip();
+    const baseAlpha = ctx.globalAlpha;
+    // faint wash so the covered slice reads as "non-working" even between stripes
+    ctx.globalAlpha = baseAlpha * STRIPE_WASH_ALPHA;
+    ctx.fillStyle = color;
+    ctx.fillRect(x0, y, width, height);
+    ctx.globalAlpha = baseAlpha;
+    // 45° stripes
+    ctx.strokeStyle = color;
+    ctx.lineWidth = STRIPE_WIDTH;
+    for (let sx = x0 - height; sx < x1; sx += STRIPE_STEP) {
+      ctx.beginPath();
+      ctx.moveTo(sx, y + height);
+      ctx.lineTo(sx + height, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+};
+
 /**
  * All window- and viewport-visible events in one pass. Rows fully outside
  * the vertical viewport are skipped without touching their events. Custom
@@ -260,7 +318,8 @@ export const drawEvents = (
     event: EventType,
     rect: Rect,
     state: EventState,
-    opts: { dim: boolean; elevate: boolean }
+    opts: { dim: boolean; elevate: boolean },
+    rowStatics: EventType[]
   ) => {
     ctx.save();
     // Each event is painted from a CLEAN alpha. Opacity below is applied with `*=` (dim, style
@@ -283,6 +342,18 @@ export const drawEvents = (
       custom(ctx, event, rect, state, view.theme) !== false;
     if (!drawn) {
       defaultDrawEvent(ctx, event, rect, view, font, geometry.barRadius);
+    }
+
+    if (view.stripeOverlap && rowStatics.length > 0) {
+      paintOverlapStripes(
+        ctx,
+        event,
+        rect,
+        rowStatics,
+        windowStart,
+        tick,
+        view.theme.overlapStripeColor
+      );
     }
 
     if (canResizeEvent(event, view.eventsResize)) {
@@ -315,12 +386,14 @@ export const drawEvents = (
 
     const lanes = scene.getLanes(rowId, windowStart, windowEnd);
 
-    // static events sit below interactive ones (legacy z-index 0 vs 1)
-    for (const event of cullToWindow(
+    // static events sit below interactive ones (legacy z-index 0 vs 1). The
+    // culled list is reused below to stripe event↔band overlaps (stripeOverlap).
+    const rowStatics = cullToWindow(
       scene.getRowStaticEvents(rowId),
       windowStart,
       windowEnd
-    )) {
+    );
+    for (const event of rowStatics) {
       const x = timeToX(event.startTime, windowStart, tick);
       const width = timeToWidth(event.startTime, event.endTime, tick);
       ctx.fillStyle = view.theme.staticEventFill;
@@ -377,10 +450,16 @@ export const drawEvents = (
 
       if (selected) {
         deferred.push(() =>
-          paintEvent(event, rect, state, { dim: false, elevate: true })
+          paintEvent(event, rect, state, { dim: false, elevate: true }, rowStatics)
         );
       } else {
-        paintEvent(event, rect, state, { dim: hasSelection, elevate: false });
+        paintEvent(
+          event,
+          rect,
+          state,
+          { dim: hasSelection, elevate: false },
+          rowStatics
+        );
       }
     }
   }

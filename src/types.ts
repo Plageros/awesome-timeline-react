@@ -51,6 +51,10 @@ export type Theme = {
   eventStroke?: string;
   eventTextColor?: string;
   staticEventFill?: string;
+  /** color of the 45° stripes drawn over the slice of an event bar that overlaps
+   *  a static event, when the `stripeOverlap` prop is on (default a translucent
+   *  slate so it reads over any bar fill). */
+  overlapStripeColor?: string;
   gridColor?: string;
   timeBarBorder?: string;
   timeBarTextColor?: string;
@@ -320,6 +324,12 @@ export type TimelineProps = {
   additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
   showRTIndicator?: boolean;
   eventsResize?: boolean;
+  /** draw 45° diagonal stripes on the slice of an event bar that overlaps a
+   *  static event (e.g. an off-shift/downtime band) on the same row. This gives
+   *  a visible cause for a bar that looks "too wide" because it spans
+   *  non-working time. Stripe color is `theme.overlapStripeColor`. Default
+   *  false (no striping). */
+  stripeOverlap?: boolean;
   showEventPrompt?: boolean;
   eventPromptTemplate?: (event: EventType) => JSX.Element;
   panZoom?: PanZoomConfig;

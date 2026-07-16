@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Timeline } from "./timeline";
 import { EventPatch, EventType, TimelineHandle } from "./types";
 export default {
@@ -668,6 +668,69 @@ export const TimelineDroppableRows = () => {
           onDrop={(p) => console.log("dropped:", p)}
           startDate={new Date(2024, 4, 27, 0)}
           endDate={new Date(2024, 4, 27, 8)}
+        />
+      </div>
+    </div>
+  );
+};
+
+/**
+ * `stripeOverlap`: where an event bar overlaps a static event (an off-shift /
+ * downtime band) on the same row, its overlapping slice is hatched with 45°
+ * stripes so an over-wide bar has a visible cause (spec §6.4 — "why is my 2h op
+ * 14h wide?"). Toggle it to compare. Row 1's op straddles the band (striped over
+ * the gap only); row 2's op starts at the band's end (no overlap → no stripes),
+ * modelling a "continuous / no-straddle" op that shifted whole. Stripe color is
+ * `theme.overlapStripeColor`.
+ */
+export const TimelineStripedOverlap = () => {
+  const [stripeOverlap, setStripeOverlap] = useState(true);
+  const h = (hour: number) => new Date(2024, 4, 27, hour, 0, 0).getTime() / 1000;
+  const rows = [
+    { id: "mill", name: "Mill (pausable)" },
+    { id: "auto", name: "Autoclave (continuous)" },
+  ];
+  // Both rows carry the same off-shift band 10:00–14:00.
+  const staticEvents: EventType[] = [
+    { id: "gap-mill", rowId: "mill", startTime: h(10), endTime: h(14) },
+    { id: "gap-auto", rowId: "auto", startTime: h(10), endTime: h(14) },
+  ];
+  const events: EventType[] = [
+    // straddles the band → its bar stretches over the gap; stripes mark the slice
+    {
+      id: "op-mill",
+      rowId: "mill",
+      startTime: h(8),
+      endTime: h(18),
+      props: { label: "Mill job", style: { fill: "#2563eb", stroke: "#1e3a8a" } },
+    },
+    // starts at the band's end → no overlap → no stripes (continuous op moved whole)
+    {
+      id: "op-auto",
+      rowId: "auto",
+      startTime: h(14),
+      endTime: h(20),
+      props: { label: "Autoclave job", style: { fill: "#059669", stroke: "#064e3b" } },
+    },
+  ];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <input
+          type="checkbox"
+          checked={stripeOverlap}
+          onChange={(e) => setStripeOverlap(e.target.checked)}
+        />
+        stripeOverlap
+      </label>
+      <div style={{ height: "60vh" }}>
+        <Timeline
+          rows={rows}
+          events={events}
+          staticEvents={staticEvents}
+          stripeOverlap={stripeOverlap}
+          startDate={new Date(2024, 4, 27, 6)}
+          endDate={new Date(2024, 4, 27, 22)}
         />
       </div>
     </div>

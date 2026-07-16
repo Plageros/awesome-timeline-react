@@ -49,6 +49,7 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
       additionalClassNames,
       showRTIndicator = true,
       eventsResize = true,
+      stripeOverlap = false,
       eventPromptTemplate,
       showEventPrompt = true,
       panZoom,
@@ -356,6 +357,7 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
             onEventClick={onEventClick}
             onEventHover={onEventHover}
             eventsResize={eventsResize}
+            stripeOverlap={stripeOverlap}
             panZoom={panZoom}
             animations={resolvedAnimations}
             selectable={selectable}

@@ -43,6 +43,7 @@ type CanvasBoardProps = {
   onEventClick?: (props: OnEventClickProps) => void;
   onEventHover?: (props: OnEventHoverProps) => void;
   eventsResize: boolean;
+  stripeOverlap: boolean;
   panZoom?: PanZoomConfig;
   animations: { layoutMs: number; fadeMs: number };
   selectable: boolean;
@@ -81,6 +82,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       onEventClick,
       onEventHover,
       eventsResize,
+      stripeOverlap,
       panZoom,
       animations,
       selectable,
@@ -128,6 +130,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
         theme,
         drawEvent,
         eventsResize,
+        stripeOverlap,
       });
     }, [
       windowTime,
@@ -136,6 +139,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       theme,
       drawEvent,
       eventsResize,
+      stripeOverlap,
       animations,
       rendererRef,
     ]);

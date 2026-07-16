@@ -89,6 +89,7 @@ const run = (selectedEventIds: Set<string>) => {
       // returning void (!== false) counts as "drawn" -> skips default bar draw
     },
     eventsResize: true,
+    stripeOverlap: false,
     hoveredEventId: null,
     draggedEventId: null,
     resizePreview: null,

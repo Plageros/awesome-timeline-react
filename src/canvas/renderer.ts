@@ -27,6 +27,7 @@ export type RendererView = {
   theme: ResolvedTheme;
   drawEvent?: DrawEventFn;
   eventsResize: boolean;
+  stripeOverlap: boolean;
   // interaction state
   hoveredEventId: string | null;
   draggedEventId: string | null;
@@ -55,6 +56,7 @@ export class TimelineRenderer {
     theme: DEFAULT_THEME,
     drawEvent: undefined,
     eventsResize: true,
+    stripeOverlap: false,
     hoveredEventId: null,
     draggedEventId: null,
     resizePreview: null,

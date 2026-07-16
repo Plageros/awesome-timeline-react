@@ -6,6 +6,7 @@ export const DEFAULT_THEME: ResolvedTheme = {
   eventStroke: "#000000",
   eventTextColor: "#000000",
   staticEventFill: "#e0e0e0",
+  overlapStripeColor: "rgba(15,23,42,0.6)",
   gridColor: "#e4dcdc",
   timeBarBorder: "yellow",
   timeBarTextColor: "white",

@@ -42,6 +42,82 @@ export const TimelineCanvas = () => {
 };
 
 /**
+ * `renderRowLabel` slot: custom React in the row-header cell instead of the plain name. Here each
+ * header shows a small circular value control ("dial") stacked over the row name — proving custom
+ * content fits the fixed-width (100px) header, stacks when narrow, and vertically centers within each
+ * row's DYNAMIC height (rows here have different numbers of stacked events, so heights vary). The
+ * header width is NOT changed (it feeds the canvas time-scale); the dial sizes to the space it's given.
+ */
+export const TimelineRowHeaderSlot = () => {
+  const day = new Date(2024, 4, 28).getTime() / 1000;
+  const hr = 3600;
+  // rows with a varying number of overlapping events → varying (dynamic) row heights.
+  const rows = [
+    { id: "M1", name: "CNC Mill A" },
+    { id: "M2", name: "Heat-treat oven (long label wraps)" },
+    { id: "M3", name: "Assembly" },
+    { id: "M4", name: "Packing" },
+  ];
+  const lanes: Record<string, number> = { M1: 1, M2: 3, M3: 2, M4: 1 };
+  const events: EventType[] = [];
+  for (const r of rows) {
+    for (let l = 0; l < lanes[r.id]; l++) {
+      events.push({
+        id: `${r.id}_${l}`,
+        rowId: r.id,
+        startTime: day + (4 + l) * hr,
+        endTime: day + (7 + l) * hr,
+        props: { label: `${r.id} op${l + 1}` },
+      });
+    }
+  }
+
+  const [eff, setEff] = useState<Record<string, number>>({ M1: 100, M2: 130, M3: 60, M4: 100 });
+  // red (0) → green (100) → violet (200): a diverging ramp with green at nominal.
+  const rampColor = (pct: number) => {
+    const p = Math.max(0, Math.min(200, pct));
+    if (p <= 100) { const t = p / 100; return `hsl(${Math.round(0 + t * 120)} 70% 45%)`; } // red→green
+    const t = (p - 100) / 100; return `hsl(${Math.round(120 + t * 160)} 60% 50%)`; // green→violet
+  };
+  return (
+    <div style={{ height: "90vh" }}>
+      <Timeline
+        rows={rows}
+        events={events}
+        startDate={new Date(2024, 4, 27, 23)}
+        endDate={new Date(2024, 4, 28, 23)}
+        renderRowLabel={(row) => {
+          const v = eff[row.id] ?? 100;
+          const color = rampColor(v);
+          // deliberately TALL stacked content (circle + slider + label) to show the row grows to fit
+          // it now — no overflow into the neighbouring row.
+          return (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, width: "100%", padding: "2px 0" }}>
+              <div
+                title={`${row.name} — efficiency ${v}%`}
+                style={{
+                  width: 34, height: 34, borderRadius: "50%", flex: "0 0 auto",
+                  border: `3px solid ${color}`, color,
+                  display: "grid", placeItems: "center", fontSize: 10, fontWeight: 700,
+                }}
+              >
+                {v}
+              </div>
+              <input
+                type="range" min={0} max={200} step={5} value={v}
+                onChange={(e) => setEff((prev) => ({ ...prev, [row.id]: Number(e.target.value) }))}
+                style={{ width: "88%" }}
+              />
+              <span style={{ fontSize: 10, lineHeight: 1.1, textAlign: "center", overflowWrap: "anywhere" }}>{row.name}</span>
+            </div>
+          );
+        }}
+      />
+    </div>
+  );
+};
+
+/**
  * 10k events across 500 rows with a fake websocket pushing 200 random
  * event moves every 100ms through the imperative handle — zero React
  * re-renders of the board on the hot path.

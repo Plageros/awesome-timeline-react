@@ -47,6 +47,7 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
       theme,
       drawEvent,
       additionalClassNames,
+      renderRowLabel,
       showRTIndicator = true,
       eventsResize = true,
       stripeOverlap = false,
@@ -349,6 +350,7 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
             rendererRef={rendererRef}
             eventPromptRef={eventPromptRef}
             rowsHeaderClassName={additionalClassNames?.rowsHeader}
+            renderRowLabel={renderRowLabel}
             setWindowTime={setWindowTime}
             setCellWidth={setCellWidth}
             setTick={setTick}

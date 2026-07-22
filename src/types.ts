@@ -1,4 +1,5 @@
 export type { Rect } from "./core/types";
+import type { ReactNode } from "react";
 import type { Rect } from "./core/types";
 
 export type RowType = {
@@ -322,6 +323,12 @@ export type TimelineProps = {
   drawEvent?: DrawEventFn;
   /** only `rowsHeader` still applies — everything else is canvas-drawn (use `theme`) */
   additionalClassNames?: PartialRecord<keyof ModifableElements, string>;
+  /** Custom content for a row's header cell (the left label column), replacing the default
+   *  `{row.name}` text. Rendered as real DOM inside the existing fixed-width header — the column width
+   *  is NOT changed (it feeds the canvas time-scale), so keep content within it; long text should wrap
+   *  or stack. The row's height stays driven by its event lanes / measured label, so custom content
+   *  should size to the height it's given (it varies per row). Absent → the default label. */
+  renderRowLabel?: (row: RowType) => ReactNode;
   showRTIndicator?: boolean;
   eventsResize?: boolean;
   /** draw 45° diagonal stripes on the slice of an event bar that overlaps a

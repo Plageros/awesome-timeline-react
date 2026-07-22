@@ -35,6 +35,7 @@ type CanvasBoardProps = {
   rendererRef: React.MutableRefObject<TimelineRenderer | null>;
   eventPromptRef: React.MutableRefObject<EventPromptActionsType | null>;
   rowsHeaderClassName?: string;
+  renderRowLabel?: (row: RowType) => React.ReactNode;
   setWindowTime: React.Dispatch<React.SetStateAction<number[]>>;
   setCellWidth: React.Dispatch<React.SetStateAction<number>>;
   setTick: React.Dispatch<React.SetStateAction<number | null>>;
@@ -74,6 +75,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       rendererRef,
       eventPromptRef,
       rowsHeaderClassName,
+      renderRowLabel,
       setWindowTime,
       setCellWidth,
       setTick,
@@ -95,6 +97,9 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
     const dynamicCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const ghostRef = useRef<HTMLDivElement | null>(null);
     const headerWrapperRef = useRef<HTMLDivElement | null>(null);
+    // hidden layer that renders EVERY row's custom header off-screen so its natural height can be
+    // measured and fed back as the row's min-height (custom content grows the row, like labels do).
+    const measureLayerRef = useRef<HTMLDivElement | null>(null);
     // Latest content height, read by measureViewport (which is defined before
     // totalHeight is computed). Assigned during render below.
     const totalHeightRef = useRef(0);
@@ -205,6 +210,8 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
     // jump as off-screen labels are discovered. Measurement uses one reused
     // off-screen node styled like the real label so fonts/wrapping match.
     useLayoutEffect(() => {
+      // custom headers are measured by their own effect below (they aren't plain text).
+      if (renderRowLabel) return;
       const wrapper = headerWrapperRef.current;
       if (!wrapper) return;
 
@@ -245,7 +252,37 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
         observer.disconnect();
         wrapper.removeChild(measurer);
       };
-    }, [rows, scene, theme.rowPaddingY, rowsHeaderClassName]);
+    }, [rows, scene, theme.rowPaddingY, rowsHeaderClassName, renderRowLabel]);
+
+    // Custom row headers (`renderRowLabel`): measure each row's rendered content at the header width
+    // and feed it as the row's min-height, so a dial/label taller than the events grows the row (the
+    // same "grow to fit" contract labels get). Measures ALL rows off-screen so scrolling doesn't jump.
+    useLayoutEffect(() => {
+      if (!renderRowLabel) return;
+      const layer = measureLayerRef.current;
+      const wrapper = headerWrapperRef.current;
+      if (!layer || !wrapper) return;
+      const measure = () => {
+        // match the real header column width so wrapping is identical
+        const real = wrapper.querySelector<HTMLElement>(".canvas-row-header");
+        const w = real?.clientWidth || wrapper.clientWidth || 100;
+        layer.style.width = `${w}px`;
+        const heights = new Map<string, number>();
+        layer.querySelectorAll<HTMLElement>("[data-measure-row]").forEach((el) => {
+          const id = el.dataset.measureRow;
+          if (id) heights.set(id, Math.ceil(el.getBoundingClientRect().height) + 2 * theme.rowPaddingY);
+        });
+        if (heights.size) scene.setLabelMinHeights(heights);
+      };
+      measure();
+      // re-measure when the layer or any row's content resizes (value/label changes), or width shifts
+      const ro = new ResizeObserver(measure);
+      ro.observe(layer);
+      layer.querySelectorAll<HTMLElement>("[data-measure-row]").forEach((el) => ro.observe(el));
+      const wo = new ResizeObserver(measure);
+      wo.observe(wrapper);
+      return () => { ro.disconnect(); wo.disconnect(); };
+    }, [rows, scene, theme.rowPaddingY, renderRowLabel]);
 
     const {
       handlePointerDown,
@@ -389,12 +426,18 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
               {collapsed ? "▸" : "▾"}
             </span>
           )}
-          <span
-            className="row-header-label"
-            style={grouped ? { textAlign: "left" } : undefined}
-          >
-            {row.name}
-          </span>
+          {renderRowLabel ? (
+            // custom header content (e.g. a control) fills the cell; it sizes to the row's height,
+            // which stays driven by event lanes / the measured label (unchanged below).
+            <div className="row-header-custom">{renderRowLabel(row)}</div>
+          ) : (
+            <span
+              className="row-header-label"
+              style={grouped ? { textAlign: "left" } : undefined}
+            >
+              {row.name}
+            </span>
+          )}
         </div>
       );
     }
@@ -411,6 +454,21 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
           style={{ height: totalHeight }}
         >
           {visibleHeaders}
+          {renderRowLabel && (
+            // off-screen: renders every row's custom header so its natural height can be measured
+            // (see the custom-header measurement effect). Never visible / hit-testable.
+            <div
+              ref={measureLayerRef}
+              aria-hidden
+              style={{ position: "absolute", left: -99999, top: 0, visibility: "hidden", pointerEvents: "none" }}
+            >
+              {rows.map((row) => (
+                <div key={row.id} data-measure-row={row.id} className="row-header-custom" style={{ height: "auto" }}>
+                  {renderRowLabel(row)}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="canvas-content-column" ref={contentRef}>
           <div className="canvas-sticky">

@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Timeline } from "./timeline";
 import { EventPatch, EventType, TimelineHandle } from "./types";
+import { assignLanes } from "./core/lanes";
+import sortEvents from "./helpers/sort-events";
 export default {
   title: "Timeline",
 };
@@ -807,6 +809,163 @@ export const TimelineStripedOverlap = () => {
           stripeOverlap={stripeOverlap}
           startDate={new Date(2024, 4, 27, 6)}
           endDate={new Date(2024, 4, 27, 22)}
+        />
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Lane stacking on a row whose events genuinely run in parallel (a shared pool / capacity row: one
+ * row, many concurrent bars). A row must open as many lanes as its peak concurrency so every bar is
+ * drawn in full — no bar may be laid over another.
+ *
+ * Both rows here are the same story with different data:
+ *  - **Pool A** is the minimal case: four bars stack up, then lane 0's occupant ends and a new bar
+ *    takes the freed lane, and the bars after it collide.
+ *  - **Pool B** is the same failure in a realistic shape: a pool admitting a bar every 15 min, with
+ *    runs of mixed length (one short "Hold"), so lane releases stop lining up with admissions.
+ *
+ * The panel above the board is computed by calling the SAME `assignLanes` the renderer uses, next to
+ * the peak concurrency the data actually needs — so it reports whether the layout is correct rather
+ * than asking you to eyeball it. `overlapping pairs` must be 0 and `lanes` must equal `needs`.
+ */
+export const TimelineLaneStacking = () => {
+  const t = (h: number, m = 0) => new Date(2024, 4, 27, h, m, 0).getTime() / 1000;
+  const rows = [
+    { id: "poolA", name: "Pool A (minimal)" },
+    { id: "poolB", name: "Pool B (mixed lengths)" },
+  ];
+
+  // hue per bar so a bar drawn over another is unmistakable
+  const bar = (
+    id: string,
+    rowId: string,
+    startTime: number,
+    endTime: number,
+    label: string,
+    hue: number
+  ): EventType => ({
+    id,
+    rowId,
+    startTime,
+    endTime,
+    props: {
+      label,
+      style: { fill: `hsl(${hue} 70% 62%)`, stroke: `hsl(${hue} 65% 34%)` },
+    },
+  });
+
+  const events: EventType[] = [
+    // --- Pool A: stack of four, then lane 0 frees at 10:00 -------------------------------------
+    bar("a1", "poolA", t(8), t(10), "A1", 10),
+    bar("a2", "poolA", t(8, 20), t(11, 40), "A2", 45),
+    bar("a3", "poolA", t(8, 40), t(11, 40), "A3", 80),
+    bar("a4", "poolA", t(9), t(11, 40), "A4", 120),
+    bar("a5", "poolA", t(10), t(13), "A5 (takes the freed lane)", 160),
+    bar("a6", "poolA", t(10, 20), t(13, 20), "A6", 200),
+    bar("a7", "poolA", t(10, 40), t(13, 40), "A7", 240),
+    bar("a8", "poolA", t(11), t(14), "A8", 280),
+    // --- Pool B: 15-min admissions, mixed run lengths ------------------------------------------
+    bar("b1", "poolB", t(9), t(11, 30), "B1", 10),
+    bar("b2", "poolB", t(9, 15), t(11, 45), "B2", 35),
+    bar("b3", "poolB", t(11, 30), t(14), "B3", 60),
+    bar("b4", "poolB", t(11, 52), t(14, 22), "B4", 85),
+    bar("b5", "poolB", t(12, 56), t(14, 56), "Hold (short)", 0),
+    ...Array.from({ length: 9 }, (_, i) =>
+      bar(
+        `b${i + 6}`,
+        "poolB",
+        t(13, 11 + i * 15),
+        t(15, 41 + i * 15),
+        `B${i + 6}`,
+        110 + i * 20
+      )
+    ),
+  ];
+
+  // --- diagnostics: what the renderer's own lane assignment produces, vs what the data needs ---
+  const windowStart = t(7);
+  const windowEnd = t(19);
+  const report = rows.map((row) => {
+    const rowEvents = events
+      .filter((e) => e.rowId === row.id)
+      .sort(sortEvents);
+    const { laneOf, highestLane } = assignLanes(rowEvents, windowStart, windowEnd);
+
+    // peak concurrency = the number of lanes this data genuinely requires
+    const edges = rowEvents
+      .flatMap((e) => [
+        { at: e.startTime, d: 1 },
+        { at: e.endTime, d: -1 },
+      ])
+      .sort((x, y) => x.at - y.at || x.d - y.d);
+    let live = 0;
+    let needs = 0;
+    for (const { d } of edges) {
+      live += d;
+      needs = Math.max(needs, live);
+    }
+
+    // any pair sharing a lane while overlapping in time is a bar drawn over another
+    const byLane = new Map<number, EventType[]>();
+    for (const e of rowEvents) {
+      const lane = laneOf.get(e.id);
+      if (lane === undefined) continue;
+      byLane.set(lane, [...(byLane.get(lane) ?? []), e]);
+    }
+    const collisions: string[] = [];
+    for (const [lane, list] of byLane) {
+      const sorted = [...list].sort((x, y) => x.startTime - y.startTime);
+      sorted.forEach((e, i) => {
+        const next = sorted[i + 1];
+        if (next && next.startTime < e.endTime) {
+          collisions.push(
+            `lane ${lane}: ${e.props?.label} over ${next.props?.label} ` +
+              `(${Math.round((e.endTime - next.startTime) / 60)} min)`
+          );
+        }
+      });
+    }
+    return { row: row.name, lanes: highestLane + 1, needs, collisions };
+  });
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div
+        style={{
+          font: "12px/1.5 ui-monospace, monospace",
+          background: "#f6f7f9",
+          border: "1px solid #dfe3e8",
+          borderRadius: 8,
+          padding: "8px 10px",
+        }}
+      >
+        {report.map((r) => (
+          <div key={r.row}>
+            <b>{r.row}</b> — lanes: {r.lanes} · needs: {r.needs} ·{" "}
+            <span
+              style={{
+                color: r.collisions.length ? "#c0392b" : "#1c8c4a",
+                fontWeight: 700,
+              }}
+            >
+              overlapping pairs: {r.collisions.length}
+            </span>
+            {r.collisions.map((c) => (
+              <div key={c} style={{ paddingLeft: 16, color: "#c0392b" }}>
+                {c}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div style={{ height: "60vh" }}>
+        <Timeline
+          rows={rows}
+          events={events}
+          startDate={new Date(2024, 4, 27, 7)}
+          endDate={new Date(2024, 4, 27, 19)}
         />
       </div>
     </div>

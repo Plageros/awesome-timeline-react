@@ -50,7 +50,7 @@ export const hitTest = (
   if (rowId === null) return null;
 
   const lanes = scene.getLanes(rowId, windowStart, windowEnd);
-  const rowY = rowTop - scrollTop;
+  const lanesY = rowTop - scrollTop + scene.getLaneInset(rowId, windowStart, windowEnd);
 
   const events = cullToWindow(
     scene.getRowEvents(rowId),
@@ -61,7 +61,7 @@ export const hitTest = (
     const event = events[i];
     const rect: Rect = {
       x: timeToX(event.startTime, windowStart, tick),
-      y: rowY + laneTop(lanes.laneOf.get(event.id) as number, geometry),
+      y: lanesY + laneTop(lanes.laneOf.get(event.id) as number, geometry),
       width: timeToWidth(event.startTime, event.endTime, tick),
       height: geometry.barHeight,
     };
@@ -79,7 +79,7 @@ export const hitTest = (
     const event = statics[i];
     const rect: Rect = {
       x: timeToX(event.startTime, windowStart, tick),
-      y: rowY + geometry.laneTopOffset,
+      y: lanesY + geometry.laneTopOffset,
       width: timeToWidth(event.startTime, event.endTime, tick),
       height: staticEventHeight(lanes.highestLane, geometry),
     };

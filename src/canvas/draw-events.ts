@@ -385,6 +385,7 @@ export const drawEvents = (
     if (rowY > view.height) break;
 
     const lanes = scene.getLanes(rowId, windowStart, windowEnd);
+    const inset = scene.getLaneInset(rowId, windowStart, windowEnd);
 
     // static events sit below interactive ones (legacy z-index 0 vs 1). The
     // culled list is reused below to stripe event↔band overlaps (stripeOverlap).
@@ -400,7 +401,7 @@ export const drawEvents = (
       roundedRect(
         ctx,
         x,
-        rowY + geometry.laneTopOffset,
+        rowY + inset + geometry.laneTopOffset,
         width,
         staticEventHeight(lanes.highestLane, geometry),
         geometry.barRadius
@@ -424,7 +425,7 @@ export const drawEvents = (
         rowY +
         animator.eventTop(
           event.id,
-          laneTop(lanes.laneOf.get(event.id) as number, geometry)
+          inset + laneTop(lanes.laneOf.get(event.id) as number, geometry)
         );
 
       const resize = view.resizePreview;

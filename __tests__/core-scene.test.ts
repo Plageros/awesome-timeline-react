@@ -137,6 +137,14 @@ describe("SceneStore", () => {
     expect(totalHeight).toBe(152);
   });
 
+  test("lanes centre in a row a tall label grew, and sit at the top otherwise", () => {
+    const store = makeStore([ev("a", "r1", 0, 100), ev("b", "r1", 50, 150), ev("c", "r2", 0, 100)]);
+    store.setLabelMinHeights(new Map([["r1", 30], ["r2", 91]]));
+    // r1: lanes (62) win, no inset; r2: 91 over a 40px lane block leaves 51 -> 25 above
+    expect(store.getLaneInset("r1", 0, 1000)).toBe(0);
+    expect(store.getLaneInset("r2", 0, 1000)).toBe(25);
+  });
+
   test("setLabelMinHeights only bumps version when a value changes", () => {
     const store = makeStore();
     const before = store.version;

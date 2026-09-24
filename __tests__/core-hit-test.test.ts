@@ -36,6 +36,14 @@ describe("hitTest", () => {
     expect(hit?.rect).toEqual({ x: 100, y: 10, width: 100, height: 20 });
   });
 
+  test("in a row a tall label grew, the bar is hit where it is drawn: centred", () => {
+    const scene = makeScene();
+    // r1's label needs 80px; its one lane needs 40 -> 20px inset, bar at y 30..50
+    scene.setLabelMinHeights(new Map([["r1", 80]]));
+    expect(hitTest(scene, view, 150, 20)).toBeNull();
+    expect(hitTest(scene, view, 150, 40)?.rect).toEqual({ x: 100, y: 30, width: 100, height: 20 });
+  });
+
   test("misses above and below the event bar within the row", () => {
     const scene = makeScene();
     expect(hitTest(scene, view, 150, 5)).toBeNull(); // above lane 0

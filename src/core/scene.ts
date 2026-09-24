@@ -352,6 +352,17 @@ export class SceneStore {
     return Math.max(laneHeight, labelHeight);
   }
 
+  /** Extra top offset for a row's lanes: when a tall label grows the row past what its lanes need,
+   *  the lanes sit centred in it rather than hugging the top with the surplus all below. */
+  getLaneInset(rowId: string, windowStart: number, windowEnd: number): number {
+    const laneHeight = rowMinHeight(
+      this.getLanes(rowId, windowStart, windowEnd).highestLane,
+      this.geometry
+    );
+    const labelHeight = this.labelMinHeights.get(rowId) ?? 0;
+    return labelHeight > laneHeight ? Math.floor((labelHeight - laneHeight) / 2) : 0;
+  }
+
   /**
    * y offset of each row's top edge (content coordinates, before scroll) plus
    * the total content height — drives both drawing and the scroll spacer.

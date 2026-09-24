@@ -41,6 +41,7 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
       selectable = false,
       defaultSelectedEventIds,
       onSelectionChange,
+      onWindowChange,
       defaultCollapsedRowIds,
       startDate,
       endDate,
@@ -185,6 +186,12 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
 
     const windowTimeRef = useRef(windowTime);
     windowTimeRef.current = windowTime;
+
+    const onWindowChangeRef = useRef(onWindowChange);
+    onWindowChangeRef.current = onWindowChange;
+    useEffect(() => {
+      onWindowChangeRef.current?.({ startTime: windowTime[0], endTime: windowTime[1] });
+    }, [windowTime[0], windowTime[1]]);
 
     useImperativeHandle(
       handleRef,

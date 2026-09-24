@@ -971,3 +971,99 @@ export const TimelineLaneStacking = () => {
     </div>
   );
 };
+
+/**
+ * `onWindowChange`: the visible window reported on every pan, zoom and refit. Two consumers here —
+ * the readout a date picker would show, and a strip below the board that draws each event's span
+ * against the reported window, the way a coupled chart follows the timeline. Drag the background to
+ * pan, ctrl/cmd + wheel to zoom; the strip and the readout must move with the bars. The inputs set
+ * `startDate`/`endDate`, which refits the board and reports the new window through the same callback.
+ */
+export const TimelineWindowSync = () => {
+  const d = (day: number, h: number) => new Date(2024, 4, day, h, 0, 0).getTime() / 1000;
+  const rows = [
+    { id: "m1", name: "Machine 1" },
+    { id: "m2", name: "Machine 2" },
+    { id: "m3", name: "Machine 3" },
+  ];
+  const events: EventType[] = [];
+  for (let day = 20; day < 34; day++) {
+    rows.forEach((r, i) => {
+      events.push({
+        id: `${r.id}_${day}`,
+        rowId: r.id,
+        startTime: d(day, 6 + i * 2),
+        endTime: d(day, 12 + i * 2),
+        props: { label: `${r.name} · ${day}` },
+      });
+    });
+  }
+
+  const toInput = (s: number) => {
+    const t = new Date(s * 1000);
+    const p = (n: number) => String(n).padStart(2, "0");
+    return `${t.getFullYear()}-${p(t.getMonth() + 1)}-${p(t.getDate())}T${p(t.getHours())}:${p(t.getMinutes())}`;
+  };
+  const fromInput = (v: string) => Math.floor(new Date(v).getTime() / 1000);
+
+  const [range, setRange] = useState({ from: d(27, 0), to: d(28, 0) });
+  const [win, setWin] = useState<{ startTime: number; endTime: number } | null>(null);
+  const [calls, setCalls] = useState(0);
+  const [draft, setDraft] = useState({ from: toInput(range.from), to: toInput(range.to) });
+  const onWindowChange = useCallback((r: { startTime: number; endTime: number }) => {
+    setWin(r);
+    setCalls((n) => n + 1);
+  }, []);
+
+  const HEADER = 100;
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [stripW, setStripW] = useState(0);
+  useEffect(() => {
+    const el = stripRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setStripW(e.contentRect.width - HEADER));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const x = (t: number) =>
+    win ? ((t - win.startTime) / (win.endTime - win.startTime)) * stripW : 0;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, font: "13px sans-serif" }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <input type="datetime-local" value={draft.from}
+          onChange={(e) => setDraft({ ...draft, from: e.target.value })} />
+        <input type="datetime-local" value={draft.to}
+          onChange={(e) => setDraft({ ...draft, to: e.target.value })} />
+        <button onClick={() => setRange({ from: fromInput(draft.from), to: fromInput(draft.to) })}>
+          Apply
+        </button>
+        <span style={{ fontFamily: "monospace" }}>
+          visible: {win ? `${toInput(win.startTime)} → ${toInput(win.endTime)}` : "—"} · callbacks: {calls}
+        </span>
+      </div>
+      <div style={{ height: "40vh" }}>
+        <Timeline
+          rows={rows}
+          events={events}
+          startDate={new Date(range.from * 1000)}
+          endDate={new Date(range.to * 1000)}
+          onWindowChange={onWindowChange}
+        />
+      </div>
+      <div ref={stripRef} style={{ position: "relative", height: 48, overflow: "hidden",
+        borderTop: "1px solid #ddd", background: "#fafafa" }}>
+        <div style={{ position: "absolute", left: 0, width: HEADER, top: 16, color: "#888" }}>coupled strip</div>
+        <div style={{ position: "absolute", left: HEADER, right: 0, top: 0, bottom: 0, overflow: "hidden" }}>
+          {events.map((e, i) => (
+            <div key={e.id} style={{
+              position: "absolute", top: 6 + (i % 3) * 13, height: 10,
+              left: x(e.startTime), width: Math.max(1, x(e.endTime) - x(e.startTime)),
+              background: ["#3b7dd8", "#15aec4", "#2e9e5b"][i % 3], borderRadius: 2,
+            }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};

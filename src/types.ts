@@ -314,6 +314,9 @@ export type TimelineProps = {
   /** fires whenever the selection changes (click, group-click, clear, or the
    *  imperative handle) */
   onSelectionChange?: (eventIds: string[]) => void;
+  /** fires whenever the visible time window changes (pan, zoom, a startDate/endDate refit, or the
+   *  imperative handle) and once on mount, in unix seconds — the same range `getVisibleRange` returns */
+  onWindowChange?: (range: { startTime: number; endTime: number }) => void;
   /** rows collapsed initially (uncontrolled). After mount, collapse state lives
    *  in the scene and survives every data update — streaming patches,
    *  `setEvents`, and `events`-prop resets never change it; only a user caret

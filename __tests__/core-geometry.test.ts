@@ -27,6 +27,7 @@ describe("geometryFromTheme", () => {
       rowBaseHeight: 58, // barHeight + 2*rowPaddingY
       staticEventBaseHeight: 30, // == barHeight
       barRadius: 8,
+      minHitWidth: 0,
     });
   });
 });

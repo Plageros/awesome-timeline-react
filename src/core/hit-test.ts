@@ -65,7 +65,11 @@ export const hitTest = (
       width: timeToWidth(event.startTime, event.endTime, tick),
       height: geometry.barHeight,
     };
-    if (rectContains(rect, x, y)) {
+    const hit =
+      rect.width >= geometry.minHitWidth
+        ? rect
+        : { ...rect, x: rect.x + (rect.width - geometry.minHitWidth) / 2, width: geometry.minHitWidth };
+    if (rectContains(hit, x, y)) {
       return { kind: "event", event, rowId, rect };
     }
   }

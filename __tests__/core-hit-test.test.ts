@@ -44,6 +44,18 @@ describe("hitTest", () => {
     expect(hitTest(scene, view, 150, 40)?.rect).toEqual({ x: 100, y: 30, width: 100, height: 20 });
   });
 
+  test("a sliver of an event is hit across minHitWidth, centred on it", () => {
+    const scene = new SceneStore();
+    scene.setRows([{ id: "r1", name: "Row 1" }]);
+    scene.setEvents([ev("mark", "r1", 500, 501)]);
+    expect(hitTest(scene, view, 506, 20)).toBeNull();
+    scene.setGeometry({ ...scene.getGeometry(), minHitWidth: 16 });
+    const hit = hitTest(scene, view, 506, 20);
+    expect(hit?.event.id).toBe("mark");
+    expect(hit?.rect.width).toBe(1); // the drawn rect, not the widened one
+    expect(hitTest(scene, view, 510, 20)).toBeNull();
+  });
+
   test("misses above and below the event bar within the row", () => {
     const scene = makeScene();
     expect(hitTest(scene, view, 150, 5)).toBeNull(); // above lane 0

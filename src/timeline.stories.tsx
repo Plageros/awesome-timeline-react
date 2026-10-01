@@ -1148,9 +1148,16 @@ export const TimelineSecondaryStrip = () => {
           events={[...holders, ...drops.map((f) => ({ ...f, props: { ...f.props, drawEvent: triangle } }))]}
           staticEvents={bands}
           startDate={new Date(d(24, 0) * 1000)} endDate={new Date(d(27, 0) * 1000)}
-          showTimeBar={false} showRTIndicator={false} eventsResize={false} showEventPrompt={false}
+          showTimeBar={false} showRTIndicator={false} eventsResize={false} showEventPrompt
+          eventPromptTemplate={(e) => (
+            <div style={{ background: "white", border: "1px solid #ddd", borderRadius: 6, padding: "6px 9px",
+              font: "12px sans-serif", boxShadow: "0 4px 14px rgba(0,0,0,.15)" }}>
+              {e.id.startsWith("drop_") ? "drop" : e.props?.label} ·{" "}
+              {new Date(e.startTime * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </div>
+          )}
           animations={false}
-          theme={{ barHeight: 16, laneGap: 3, rowPaddingY: 6, barRadius: 4,
+          theme={{ barHeight: 16, laneGap: 3, rowPaddingY: 6, barRadius: 4, minHitWidth: 14,
             eventFill: "#e2e8f0", eventStroke: "#94a3b8", eventTextColor: "#334155",
             font: "11px monospace", gridColor: "#eef1f5",
             headerBackground: "#f5f6f8", headerTextColor: "#334155",

@@ -80,6 +80,10 @@ export type Theme = {
   rowPaddingY?: number;
   /** event bar corner radius in px (default 5) */
   barRadius?: number;
+  /** narrowest an event is for hover and click, in px, centred on it (default 0): a short event
+   *  — a milestone, a mark drawn wider than its time — stays hoverable at any zoom. Drawing is
+   *  unaffected. */
+  minHitWidth?: number;
   /** faint fill laid over the child-row block of an expanded group so it reads
    *  as recessed beneath its parent row (default "rgba(0,0,0,0.05)"). Also used
    *  to tint child row headers. */

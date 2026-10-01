@@ -21,6 +21,8 @@ export type Geometry = {
   staticEventBaseHeight: number;
   /** event bar corner radius */
   barRadius: number;
+  /** narrowest an event's hover/click rect is (see Theme.minHitWidth) */
+  minHitWidth: number;
 };
 
 /** Defaults mirror the pre-0.2.x constants (20px bars, 22px lanes, 10px pad). */
@@ -31,6 +33,7 @@ export const DEFAULT_GEOMETRY: Geometry = {
   rowBaseHeight: 40,
   staticEventBaseHeight: 20,
   barRadius: 5,
+  minHitWidth: 0,
 };
 
 /** Derive the full Geometry from the resolved theme's geometry tokens. */
@@ -44,5 +47,6 @@ export const geometryFromTheme = (theme: ResolvedTheme): Geometry => {
     rowBaseHeight: barHeight + 2 * rowPaddingY,
     staticEventBaseHeight: barHeight,
     barRadius: theme.barRadius,
+    minHitWidth: theme.minHitWidth,
   };
 };

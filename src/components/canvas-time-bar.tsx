@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { generateUnitBlocks } from "../core/time-blocks";
 import { sizeCanvas } from "../canvas/dpr";
 import { drawTimeBar } from "../canvas/draw-grid";
+import { DEFAULT_THEME } from "../canvas/theme";
 import { ResolvedTheme, TimeBarConfig } from "../types";
 
 // .time-bar is 50px with a 1px border on each side
@@ -23,6 +24,7 @@ const CanvasTimeBar = ({
   timeBar?: TimeBarConfig;
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const header = theme ?? DEFAULT_THEME;
 
   const topRow = timeBar?.topRow ?? { unit: "day" as const };
   const bottomRow = timeBar?.bottomRow ?? { unit: "hour" as const };
@@ -58,8 +60,11 @@ const CanvasTimeBar = ({
   }, [windowTime, tick, contentWidth, theme, timeBar]);
 
   return (
-    <div className="time-bar">
-      <div className="empty-block"></div>
+    <div
+      className="time-bar"
+      style={{ background: header.headerBackground, color: header.headerTextColor, borderColor: header.headerBorderColor }}
+    >
+      <div className="empty-block" style={{ borderRightColor: header.headerBorderColor }}></div>
       <canvas
         ref={canvasRef}
         className="canvas-time-bar"
@@ -71,7 +76,7 @@ const CanvasTimeBar = ({
             width: scrollWidth,
             height: "100%",
             boxSizing: "border-box",
-            borderLeft: "1px solid yellow",
+            borderLeft: `1px solid ${header.headerBorderColor ?? "yellow"}`,
           }}
         ></div>
       ) : null}

@@ -371,7 +371,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
             top,
             height,
             borderBottom:
-              i === rows.length - 1 ? "none" : "1px solid yellow",
+              i === rows.length - 1 ? "none" : `1px solid ${theme.headerBorderColor ?? "yellow"}`,
             // Row heights/positions apply instantly (no layout tween) so the
             // header snaps in lockstep with its canvas row — see draw-events.
             // Grouped rows left-align so the caret + tree spine line up; plain
@@ -448,7 +448,13 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
         <div
           ref={headerWrapperRef}
           className={headerClassNames}
-          style={{ height: totalHeight }}
+          style={{
+            height: totalHeight,
+            background: theme.headerBackground,
+            color: theme.headerTextColor,
+            borderRightColor: theme.headerBorderColor,
+            boxShadow: theme.headerShadow,
+          }}
         >
           {visibleHeaders}
           {renderRowLabel && (

@@ -352,7 +352,7 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
           />
         )}
 
-        <div className="body-wrapper" ref={bodyRef}>
+        <div className="body-wrapper" ref={bodyRef} style={{ borderColor: resolvedTheme.borderColor }}>
           <CanvasBoard
             scene={scene}
             rows={rows}

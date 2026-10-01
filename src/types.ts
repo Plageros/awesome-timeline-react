@@ -89,10 +89,22 @@ export type Theme = {
    *  "rgba(0,0,0,0.22)"). Also tints the header tree connector lines if no
    *  gridColor contrast is desired. */
   groupShadowColor?: string;
+  /** the row-header column and the time bar: background, text, their borders and the column's row
+   *  dividers, and the column's shadow onto the rows ("none" for none). Unset, the stylesheet's
+   *  dark header with yellow borders applies. */
+  headerBackground?: string;
+  headerTextColor?: string;
+  headerBorderColor?: string;
+  headerShadow?: string;
+  /** the frame around the rows; unset, the stylesheet's black applies */
+  borderColor?: string;
 };
 
-export type ResolvedTheme = Required<Omit<Theme, "font">> &
-  Pick<Theme, "font">;
+// these stay unset unless given, so the stylesheet (and a `rowsHeader` class) still applies
+type HeaderToken = "headerBackground" | "headerTextColor" | "headerBorderColor" | "headerShadow"
+  | "borderColor";
+export type ResolvedTheme = Required<Omit<Theme, "font" | HeaderToken>> &
+  Pick<Theme, "font" | HeaderToken>;
 
 export type EventPropsType = {
   isLocked?: boolean;

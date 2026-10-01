@@ -1152,7 +1152,9 @@ export const TimelineSecondaryStrip = () => {
           animations={false}
           theme={{ barHeight: 16, laneGap: 3, rowPaddingY: 6, barRadius: 4,
             eventFill: "#e2e8f0", eventStroke: "#94a3b8", eventTextColor: "#334155",
-            font: "11px monospace" }}
+            font: "11px monospace", gridColor: "#eef1f5",
+            headerBackground: "#f5f6f8", headerTextColor: "#334155",
+            headerBorderColor: "#e2e8f0", headerShadow: "none", borderColor: "#e2e8f0" }}
           onWindowChange={onStripWindow} />
       </div>
     </div>

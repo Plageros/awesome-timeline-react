@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Timeline } from "./timeline";
-import { EventPatch, EventType, TimelineHandle } from "./types";
+import { DrawEventFn, EventPatch, EventType, TimelineHandle } from "./types";
 import { assignLanes } from "./core/lanes";
 import sortEvents from "./helpers/sort-events";
 export default {
@@ -55,10 +55,10 @@ export const TimelineRowHeaderSlot = () => {
   const hr = 3600;
   // rows with a varying number of overlapping events → varying (dynamic) row heights.
   const rows = [
-    { id: "M1", name: "CNC Mill A" },
-    { id: "M2", name: "Heat-treat oven (long label wraps)" },
-    { id: "M3", name: "Assembly" },
-    { id: "M4", name: "Packing" },
+    { id: "M1", name: "Track A" },
+    { id: "M2", name: "Track B (a long label that wraps)" },
+    { id: "M3", name: "Track C" },
+    { id: "M4", name: "Track D" },
   ];
   const lanes: Record<string, number> = { M1: 1, M2: 3, M3: 2, M4: 1 };
   const events: EventType[] = [];
@@ -69,7 +69,7 @@ export const TimelineRowHeaderSlot = () => {
         rowId: r.id,
         startTime: day + (4 + l) * hr,
         endTime: day + (7 + l) * hr,
-        props: { label: `${r.id} op${l + 1}` },
+        props: { label: `${r.id} task ${l + 1}` },
       });
     }
   }
@@ -96,7 +96,7 @@ export const TimelineRowHeaderSlot = () => {
           return (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, width: "100%", padding: "2px 0" }}>
               <div
-                title={`${row.name} — efficiency ${v}%`}
+                title={`${row.name} — ${v}%`}
                 style={{
                   width: 34, height: 34, borderRadius: "50%", flex: "0 0 auto",
                   border: `3px solid ${color}`, color,
@@ -134,10 +134,10 @@ export const TimelineStreaming10k = () => {
   const { rows, events } = React.useMemo(() => {
     const rows = [];
     const events: EventType[] = [];
-    const operations = ["Milling", "Welding", "Assembly", "Inspection", "Packing"];
+    const activities = ["Planning", "Drafting", "Review", "Testing", "Release"];
     const statuses = ["scheduled", "in progress", "blocked", "done"];
     for (let r = 1; r <= ROWS; r++) {
-      rows.push({ name: `M-${r}`, id: `${r}` });
+      rows.push({ name: `Track ${r}`, id: `${r}` });
       for (let e = 0; e < EVENTS_PER_ROW; e++) {
         const startTime = dayStart + e * 4300 + ((r * 7919) % 3600);
         events.push({
@@ -148,9 +148,9 @@ export const TimelineStreaming10k = () => {
           props: {
             label: `${r}/${e}`,
             metadata: {
-              order: `WO-${String(r * 100 + e).padStart(6, "0")}`,
-              operation: operations[(r + e) % operations.length],
-              machine: `M-${r}`,
+              task: `T-${String(r * 100 + e).padStart(6, "0")}`,
+              activity: activities[(r + e) % activities.length],
+              track: `Track ${r}`,
               status: statuses[(r * 3 + e) % statuses.length],
             },
           },
@@ -162,9 +162,9 @@ export const TimelineStreaming10k = () => {
 
   const promptTemplate = useCallback((event: EventType) => {
     const meta = event.props?.metadata as {
-      order: string;
-      operation: string;
-      machine: string;
+      task: string;
+      activity: string;
+      track: string;
       status: string;
     };
     const statusColor: Record<string, string> = {
@@ -196,13 +196,13 @@ export const TimelineStreaming10k = () => {
             gap: "12px",
           }}
         >
-          <span style={{ fontWeight: "bold" }}>{meta.order}</span>
-          <span>{meta.machine}</span>
+          <span style={{ fontWeight: "bold" }}>{meta.task}</span>
+          <span>{meta.track}</span>
         </div>
         <div style={{ padding: "8px 12px", display: "grid", gap: "4px" }}>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ color: "#666" }}>Operation</span>
-            <span>{meta.operation}</span>
+            <span style={{ color: "#666" }}>Activity</span>
+            <span>{meta.activity}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <span style={{ color: "#666" }}>Status</span>
@@ -469,12 +469,12 @@ export const TimelineNarrowWindow = () => {
 };
 
 /**
- * Configurable time-bar rows: a day row over 8-hour "shift" blocks instead of
- * hours. The bottom row uses `{ stepSeconds: 8 * 3600 }` with a custom
- * `format`. Grid lines and drop snapping stay on the hour grid, independent of
- * the time-bar rows.
+ * Configurable time-bar rows: a day row over 8-hour blocks instead of hours.
+ * The bottom row uses `{ stepSeconds: 8 * 3600 }` with a custom `format`. Grid
+ * lines and drop snapping stay on the hour grid, independent of the time-bar
+ * rows.
  */
-export const TimelineShiftBar = () => {
+export const TimelineCustomTimeBar = () => {
   const d = (day: number, h: number) =>
     new Date(2024, 4, day, h, 0, 0).getTime() / 1000;
   const rows = [
@@ -498,7 +498,7 @@ export const TimelineShiftBar = () => {
           topRow: { unit: "day" },
           bottomRow: {
             unit: { stepSeconds: 8 * 3600 },
-            format: (start) => `Shift ${Math.floor(start.getHours() / 8) + 1}`,
+            format: (start) => `Block ${Math.floor(start.getHours() / 8) + 1}`,
           },
         }}
       />
@@ -520,21 +520,21 @@ export const TimelineLongRowLabels = () => {
     { id: "r1", name: "Short" },
     {
       id: "r2",
-      name: "Assembly Line 4 — Hydraulic Press Station (North Wing)",
+      name: "Track 4 — a label long enough to need several lines (north side)",
     },
-    { id: "r3", name: "CNC Mill" },
+    { id: "r3", name: "Track C" },
     {
       id: "r4",
-      name: "Supercalifragilisticexpialidocious-Machine-Identifier-0042",
+      name: "Supercalifragilisticexpialidocious-Track-Identifier-0042",
     },
-    { id: "r5", name: "Quality Control & Final Inspection Bay" },
+    { id: "r5", name: "Review & Final Sign-off Track" },
   ];
   const events: EventType[] = [
-    { id: "e1", rowId: "r1", startTime: d(1), endTime: d(3), props: { label: "Job A" } },
-    { id: "e2", rowId: "r2", startTime: d(2), endTime: d(4, 30), props: { label: "Job B" } },
-    { id: "e3", rowId: "r3", startTime: d(1, 30), endTime: d(3), props: { label: "Job C" } },
-    { id: "e4", rowId: "r4", startTime: d(3), endTime: d(5), props: { label: "Job D" } },
-    { id: "e5", rowId: "r5", startTime: d(2, 30), endTime: d(5, 30), props: { label: "Job E" } },
+    { id: "e1", rowId: "r1", startTime: d(1), endTime: d(3), props: { label: "Task A" } },
+    { id: "e2", rowId: "r2", startTime: d(2), endTime: d(4, 30), props: { label: "Task B" } },
+    { id: "e3", rowId: "r3", startTime: d(1, 30), endTime: d(3), props: { label: "Task C" } },
+    { id: "e4", rowId: "r4", startTime: d(3), endTime: d(5), props: { label: "Task D" } },
+    { id: "e5", rowId: "r5", startTime: d(2, 30), endTime: d(5, 30), props: { label: "Task E" } },
   ];
   return (
     <div style={{ height: "60vh" }}>
@@ -561,24 +561,24 @@ export const TimelineSelectable = () => {
   const d = (h: number, m = 0) =>
     new Date(2024, 4, 27, h, m, 0).getTime() / 1000;
   const rows = [
-    { id: "r1", name: "Welder" },
-    { id: "r2", name: "Press" },
-    { id: "r3", name: "CNC Mill" },
-    { id: "r4", name: "Paint" },
+    { id: "r1", name: "Track A" },
+    { id: "r2", name: "Track B" },
+    { id: "r3", name: "Track C" },
+    { id: "r4", name: "Track D" },
   ];
   // colored palettes per group so the elevation/dim reads against filled bars
-  const orderA = { fill: "#1e88e5", stroke: "#0d47a1", textColor: "#ffffff" }; // blue
-  const orderB = { fill: "#fb8c00", stroke: "#e65100", textColor: "#ffffff" }; // amber
+  const groupA = { fill: "#1e88e5", stroke: "#0d47a1", textColor: "#ffffff" }; // blue
+  const groupB = { fill: "#fb8c00", stroke: "#e65100", textColor: "#ffffff" }; // amber
   const loose = { fill: "#43a047", stroke: "#1b5e20", textColor: "#ffffff" }; // green
   const lockedOut = { fill: "#bdbdbd", stroke: "#757575", textColor: "#424242" }; // grey
   // Two connected groups (shared groupId) spread across rows, plus a couple of
   // ungrouped events.
   const events: EventType[] = [
-    { id: "a1", rowId: "r1", startTime: d(1), endTime: d(2, 30), props: { label: "Order A · weld", groupId: "order-A", style: orderA } },
-    { id: "a2", rowId: "r2", startTime: d(2, 30), endTime: d(4), props: { label: "Order A · press", groupId: "order-A", style: orderA } },
-    { id: "a3", rowId: "r4", startTime: d(4), endTime: d(5, 30), props: { label: "Order A · paint", groupId: "order-A", style: orderA } },
-    { id: "b1", rowId: "r2", startTime: d(1), endTime: d(2), props: { label: "Order B · press", groupId: "order-B", style: orderB } },
-    { id: "b2", rowId: "r3", startTime: d(2), endTime: d(3, 30), props: { label: "Order B · mill", groupId: "order-B", style: orderB } },
+    { id: "a1", rowId: "r1", startTime: d(1), endTime: d(2, 30), props: { label: "Group A · step 1", groupId: "group-A", style: groupA } },
+    { id: "a2", rowId: "r2", startTime: d(2, 30), endTime: d(4), props: { label: "Group A · step 2", groupId: "group-A", style: groupA } },
+    { id: "a3", rowId: "r4", startTime: d(4), endTime: d(5, 30), props: { label: "Group A · step 3", groupId: "group-A", style: groupA } },
+    { id: "b1", rowId: "r2", startTime: d(1), endTime: d(2), props: { label: "Group B · step 1", groupId: "group-B", style: groupB } },
+    { id: "b2", rowId: "r3", startTime: d(2), endTime: d(3, 30), props: { label: "Group B · step 2", groupId: "group-B", style: groupB } },
     { id: "c1", rowId: "r3", startTime: d(4), endTime: d(5), props: { label: "Loose 1", style: loose } },
     { id: "c2", rowId: "r1", startTime: d(5), endTime: d(6, 30), props: { label: "Locked-out (not selectable)", isSelectable: false, style: lockedOut } },
   ];
@@ -586,7 +586,7 @@ export const TimelineSelectable = () => {
     <div>
       <div style={{ display: "flex", gap: 8, padding: "8px 0" }}>
         <button onClick={() => timelineRef.current?.setSelection(["a1", "a2", "a3"])}>
-          Select Order A (API)
+          Select Group A (API)
         </button>
         <button onClick={() => timelineRef.current?.setSelection([])}>
           Clear (API)
@@ -626,13 +626,13 @@ export const TimelineGrouped = () => {
     new Date(2024, 4, 27, h, m, 0).getTime() / 1000;
 
   const rows = [
-    { id: "m1", name: "Standalone machine" },
-    { id: "g1", name: "Order #1001" },
-    { id: "g1-weld", name: "Weld", parentId: "g1" },
-    { id: "g1-paint", name: "Paint", parentId: "g1" },
-    { id: "g2", name: "Order #1002" },
-    { id: "g2-cnc", name: "CNC", parentId: "g2" },
-    { id: "g2-asm", name: "Assembly", parentId: "g2" },
+    { id: "m1", name: "Standalone track" },
+    { id: "g1", name: "Group #1001" },
+    { id: "g1-s1", name: "Step 1", parentId: "g1" },
+    { id: "g1-s2", name: "Step 2", parentId: "g1" },
+    { id: "g2", name: "Group #1002" },
+    { id: "g2-s1", name: "Step 1", parentId: "g2" },
+    { id: "g2-s2", name: "Step 2", parentId: "g2" },
   ];
 
   const summary = { fill: "#37474f", stroke: "#102027", textColor: "#ffffff" }; // slate parent bar
@@ -640,28 +640,28 @@ export const TimelineGrouped = () => {
   const amber = { fill: "#fb8c00", stroke: "#e65100", textColor: "#ffffff" };
 
   const events: EventType[] = [
-    { id: "loose", rowId: "m1", startTime: d(2), endTime: d(4), props: { label: "Maintenance" } },
+    { id: "loose", rowId: "m1", startTime: d(2), endTime: d(4), props: { label: "Unrelated task" } },
     // Group 1 — supplied parent times are placeholders; the scene derives them.
-    { id: "P1", rowId: "g1", startTime: d(0), endTime: d(0), props: { label: "Order #1001 (summary)", isGroupParent: true, style: summary } },
-    { id: "P1-weld", rowId: "g1-weld", startTime: d(1), endTime: d(2, 30), props: { label: "Weld", parentEventId: "P1", style: blue } },
-    { id: "P1-paint", rowId: "g1-paint", startTime: d(3), endTime: d(4, 30), props: { label: "Paint", parentEventId: "P1", style: blue } },
+    { id: "P1", rowId: "g1", startTime: d(0), endTime: d(0), props: { label: "Group #1001 (summary)", isGroupParent: true, style: summary } },
+    { id: "P1-s1", rowId: "g1-s1", startTime: d(1), endTime: d(2, 30), props: { label: "Step 1", parentEventId: "P1", style: blue } },
+    { id: "P1-s2", rowId: "g1-s2", startTime: d(3), endTime: d(4, 30), props: { label: "Step 2", parentEventId: "P1", style: blue } },
     // Group 2
-    { id: "P2", rowId: "g2", startTime: d(0), endTime: d(0), props: { label: "Order #1002 (summary)", isGroupParent: true, style: summary } },
-    { id: "P2-cnc", rowId: "g2-cnc", startTime: d(2), endTime: d(3), props: { label: "CNC", parentEventId: "P2", style: amber } },
-    { id: "P2-asm", rowId: "g2-asm", startTime: d(5), endTime: d(6, 30), props: { label: "Assembly", parentEventId: "P2", style: amber } },
+    { id: "P2", rowId: "g2", startTime: d(0), endTime: d(0), props: { label: "Group #1002 (summary)", isGroupParent: true, style: summary } },
+    { id: "P2-s1", rowId: "g2-s1", startTime: d(2), endTime: d(3), props: { label: "Step 1", parentEventId: "P2", style: amber } },
+    { id: "P2-s2", rowId: "g2-s2", startTime: d(5), endTime: d(6, 30), props: { label: "Step 2", parentEventId: "P2", style: amber } },
   ];
 
   return (
     <div>
       <div style={{ display: "flex", gap: 8, padding: "8px 0", flexWrap: "wrap" }}>
         <button onClick={() => timelineRef.current?.toggleRow("g1")}>
-          Toggle Order #1001
+          Toggle Group #1001
         </button>
         <button onClick={() => timelineRef.current?.toggleRow("g2")}>
-          Toggle Order #1002
+          Toggle Group #1002
         </button>
         <button onClick={() => timelineRef.current?.setSelection(["P1"])}>
-          Select Order #1001 (parent → children)
+          Select Group #1001 (parent → children)
         </button>
         <button onClick={() => timelineRef.current?.setSelection([])}>
           Clear
@@ -670,11 +670,11 @@ export const TimelineGrouped = () => {
           onClick={() =>
             // stream a child move; the summary bar re-derives live
             timelineRef.current?.updateEvents([
-              { op: "update", id: "P1-paint", changes: { startTime: d(5), endTime: d(6, 30) } },
+              { op: "update", id: "P1-s2", changes: { startTime: d(5), endTime: d(6, 30) } },
             ])
           }
         >
-          Push Paint later (re-derives summary)
+          Push step 2 later (re-derives summary)
         </button>
       </div>
       <div style={{ height: "60vh" }}>
@@ -695,9 +695,9 @@ export const TimelineGrouped = () => {
 
 /**
  * Per-event drop-target restriction (`props.droppableRowIds`). The blue event
- * can only be dropped onto Welder/CNC (drag it elsewhere → not-allowed cursor,
+ * can only be dropped onto Track A/C (drag it elsewhere → not-allowed cursor,
  * snaps back). The green event is unrestricted. The red event is *misconfigured*
- * — it sits on Paint but its droppableRowIds doesn't include Paint, so the
+ * — it sits on Track D but its droppableRowIds doesn't include Track D, so the
  * library records `metadata.droppableError`; click "Inspect" to see it.
  */
 export const TimelineDroppableRows = () => {
@@ -706,17 +706,17 @@ export const TimelineDroppableRows = () => {
     new Date(2024, 4, 27, h, m, 0).getTime() / 1000;
 
   const rows = [
-    { id: "r1", name: "Welder" },
-    { id: "r2", name: "Press" },
-    { id: "r3", name: "CNC Mill" },
-    { id: "r4", name: "Paint" },
+    { id: "r1", name: "Track A" },
+    { id: "r2", name: "Track B" },
+    { id: "r3", name: "Track C" },
+    { id: "r4", name: "Track D" },
   ];
   const blue = { fill: "#1e88e5", stroke: "#0d47a1", textColor: "#ffffff" };
   const green = { fill: "#43a047", stroke: "#1b5e20", textColor: "#ffffff" };
   const red = { fill: "#e53935", stroke: "#b71c1c", textColor: "#ffffff" };
 
   const events: EventType[] = [
-    { id: "restricted", rowId: "r1", startTime: d(1), endTime: d(2, 30), props: { label: "Welder or CNC only", droppableRowIds: ["r1", "r3"], style: blue } },
+    { id: "restricted", rowId: "r1", startTime: d(1), endTime: d(2, 30), props: { label: "Track A or C only", droppableRowIds: ["r1", "r3"], style: blue } },
     { id: "free", rowId: "r2", startTime: d(3), endTime: d(4), props: { label: "Any row", style: green } },
     { id: "bad", rowId: "r4", startTime: d(5), endTime: d(6), props: { label: "Misconfigured", droppableRowIds: ["r1", "r2"], style: red } },
   ];
@@ -753,42 +753,42 @@ export const TimelineDroppableRows = () => {
 };
 
 /**
- * `stripeOverlap`: where an event bar overlaps a static event (an off-shift /
- * downtime band) on the same row, its overlapping slice is hatched with 45°
- * stripes so an over-wide bar has a visible cause (spec §6.4 — "why is my 2h op
- * 14h wide?"). Toggle it to compare. Row 1's op straddles the band (striped over
- * the gap only); row 2's op starts at the band's end (no overlap → no stripes),
- * modelling a "continuous / no-straddle" op that shifted whole. Stripe color is
+ * `stripeOverlap`: where an event bar overlaps a static event (a band of
+ * unavailable time) on the same row, its overlapping slice is hatched with 45°
+ * stripes so an over-wide bar has a visible cause. Toggle it to compare. Row 1's
+ * task straddles the band (striped over the band only); row 2's task starts at
+ * the band's end (no overlap → no stripes), the shape of a task that may not be
+ * split and so moved past the band whole. Stripe color is
  * `theme.overlapStripeColor`.
  */
 export const TimelineStripedOverlap = () => {
   const [stripeOverlap, setStripeOverlap] = useState(true);
   const h = (hour: number) => new Date(2024, 4, 27, hour, 0, 0).getTime() / 1000;
   const rows = [
-    { id: "mill", name: "Mill (pausable)" },
-    { id: "auto", name: "Autoclave (continuous)" },
+    { id: "split", name: "Track A (may pause)" },
+    { id: "whole", name: "Track B (runs whole)" },
   ];
-  // Both rows carry the same off-shift band 10:00–14:00.
+  // Both rows carry the same unavailable band 10:00–14:00.
   const staticEvents: EventType[] = [
-    { id: "gap-mill", rowId: "mill", startTime: h(10), endTime: h(14) },
-    { id: "gap-auto", rowId: "auto", startTime: h(10), endTime: h(14) },
+    { id: "gap-split", rowId: "split", startTime: h(10), endTime: h(14) },
+    { id: "gap-whole", rowId: "whole", startTime: h(10), endTime: h(14) },
   ];
   const events: EventType[] = [
     // straddles the band → its bar stretches over the gap; stripes mark the slice
     {
-      id: "op-mill",
-      rowId: "mill",
+      id: "task-split",
+      rowId: "split",
       startTime: h(8),
       endTime: h(18),
-      props: { label: "Mill job", style: { fill: "#2563eb", stroke: "#1e3a8a" } },
+      props: { label: "Pausing task", style: { fill: "#2563eb", stroke: "#1e3a8a" } },
     },
-    // starts at the band's end → no overlap → no stripes (continuous op moved whole)
+    // starts at the band's end → no overlap → no stripes (moved whole)
     {
-      id: "op-auto",
-      rowId: "auto",
+      id: "task-whole",
+      rowId: "whole",
       startTime: h(14),
       endTime: h(20),
-      props: { label: "Autoclave job", style: { fill: "#059669", stroke: "#064e3b" } },
+      props: { label: "Unbroken task", style: { fill: "#059669", stroke: "#064e3b" } },
     },
   ];
   return (
@@ -885,13 +885,11 @@ export const TimelineLaneStacking = () => {
   ];
 
   // --- diagnostics: what the renderer's own lane assignment produces, vs what the data needs ---
-  const windowStart = t(7);
-  const windowEnd = t(19);
   const report = rows.map((row) => {
     const rowEvents = events
       .filter((e) => e.rowId === row.id)
       .sort(sortEvents);
-    const { laneOf, highestLane } = assignLanes(rowEvents, windowStart, windowEnd);
+    const { laneOf, highestLane } = assignLanes(rowEvents);
 
     // peak concurrency = the number of lanes this data genuinely requires
     const edges = rowEvents
@@ -982,9 +980,9 @@ export const TimelineLaneStacking = () => {
 export const TimelineWindowSync = () => {
   const d = (day: number, h: number) => new Date(2024, 4, day, h, 0, 0).getTime() / 1000;
   const rows = [
-    { id: "m1", name: "Machine 1" },
-    { id: "m2", name: "Machine 2" },
-    { id: "m3", name: "Machine 3" },
+    { id: "m1", name: "Track 1" },
+    { id: "m2", name: "Track 2" },
+    { id: "m3", name: "Track 3" },
   ];
   const events: EventType[] = [];
   for (let day = 20; day < 34; day++) {
@@ -1063,6 +1061,99 @@ export const TimelineWindowSync = () => {
             }} />
           ))}
         </div>
+      </div>
+    </div>
+  );
+};
+
+/** A second, headerless timeline under the main one, kept on the same window both ways: a shared
+ *  pool (who holds each unit, stacked into lanes) and a level row whose coloured background bands
+ *  are per-event static fills, with drops drawn as triangles. */
+export const TimelineSecondaryStrip = () => {
+  const d = (day: number, h: number, m = 0) => new Date(2024, 4, day, h, m, 0).getTime() / 1000;
+  const [dense, setDense] = useState(false);
+  const main = useRef<TimelineHandle>(null);
+  const strip = useRef<TimelineHandle>(null);
+
+  const tracks = [
+    { id: "t1", name: "Track 1" }, { id: "t2", name: "Track 2" }, { id: "t3", name: "Track 3" },
+  ];
+  const { mainEvents, holders, drops } = React.useMemo(() => {
+    const mainEvents: EventType[] = [];
+    const holders: EventType[] = [];
+    const drops: EventType[] = [];
+    const perDay = dense ? 40 : 4;
+    for (let day = 20; day < 34; day++) {
+      for (let k = 0; k < perDay; k++) {
+        tracks.forEach((tr, i) => {
+          const start = d(day, 6, (k * 960) / perDay + i * 25);
+          const end = start + (dense ? 1200 : 3 * 3600);
+          const id = `${tr.id}_${day}_${k}`;
+          mainEvents.push({ id, rowId: tr.id, startTime: start, endTime: end,
+            props: { label: `T-${day}${k}${i} · ${tr.name}` } });
+          holders.push({ id: `hold_${id}`, rowId: "pool", startTime: start, endTime: start + 1800,
+            props: { label: `T-${day}${k}${i}`, isLocked: true } });
+          if (i === 0) {
+            drops.push({ id: `drop_${id}`, rowId: "level", startTime: start, endTime: start + 60,
+              props: { label: "", isLocked: true, style: { fill: "#334155" } } });
+          }
+        });
+      }
+    }
+    return { mainEvents, holders, drops };
+  }, [dense]);
+
+  const bands: EventType[] = [];
+  for (let day = 20; day < 34; day++) {
+    const state = day % 5 === 0 ? "#fde2e1" : day % 3 === 0 ? "#fef3c7" : "#dbeafe";
+    bands.push({ id: `band_${day}`, rowId: "level", startTime: d(day, 0), endTime: d(day + 1, 0),
+      props: { style: { fill: state } } });
+  }
+
+  const sameWindow = (a: { startTime: number; endTime: number }, b: { startTime: number; endTime: number }) =>
+    Math.abs(a.startTime - b.startTime) < 1 && Math.abs(a.endTime - b.endTime) < 1;
+  const follow = (target: React.RefObject<TimelineHandle>) =>
+    (r: { startTime: number; endTime: number }) => {
+      const t = target.current;
+      if (t && !sameWindow(t.getVisibleRange(), r)) t.setWindow(r.startTime, r.endTime);
+    };
+  const onMainWindow = useCallback(follow(strip), []);
+  const onStripWindow = useCallback(follow(main), []);
+
+  const triangle: DrawEventFn = (ctx, _e, rect) => {
+    const x = rect.x, r = 6, bottom = rect.y + rect.height;
+    ctx.fillStyle = "#334155";
+    ctx.beginPath();
+    ctx.moveTo(x - r, bottom - r * 1.4);
+    ctx.lineTo(x + r, bottom - r * 1.4);
+    ctx.lineTo(x, bottom);
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "92vh", font: "13px sans-serif" }}>
+      <label style={{ padding: 6 }}>
+        <input type="checkbox" checked={dense} onChange={(e) => setDense(e.target.checked)} /> dense
+        ({holders.length} pool events) — pan or zoom either timeline; the other follows
+      </label>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <Timeline ref={main} rows={tracks} events={mainEvents}
+          startDate={new Date(d(24, 0) * 1000)} endDate={new Date(d(27, 0) * 1000)}
+          onWindowChange={onMainWindow} />
+      </div>
+      <div style={{ height: 170 }}>
+        <Timeline ref={strip}
+          rows={[{ id: "pool", name: "Pool ×2" }, { id: "level", name: "Level" }]}
+          events={[...holders, ...drops.map((f) => ({ ...f, props: { ...f.props, drawEvent: triangle } }))]}
+          staticEvents={bands}
+          startDate={new Date(d(24, 0) * 1000)} endDate={new Date(d(27, 0) * 1000)}
+          showTimeBar={false} showRTIndicator={false} eventsResize={false} showEventPrompt={false}
+          animations={false}
+          theme={{ barHeight: 16, laneGap: 3, rowPaddingY: 6, barRadius: 4,
+            eventFill: "#e2e8f0", eventStroke: "#94a3b8", eventTextColor: "#334155",
+            font: "11px monospace" }}
+          onWindowChange={onStripWindow} />
       </div>
     </div>
   );

@@ -134,14 +134,14 @@ describe("SceneStore grouping — visible rows & collapse", () => {
 
   test("getRowOffsets totals skip collapsed children", () => {
     const store = makeStore();
-    const full = store.getRowOffsets(WS, WE).totalHeight;
+    const full = store.getRowOffsets().totalHeight;
     store.setCollapsed("p1", true);
-    const collapsed = store.getRowOffsets(WS, WE).totalHeight;
+    const collapsed = store.getRowOffsets().totalHeight;
     // two child rows removed from the stack -> strictly shorter, and they no
     // longer appear in the offset map
     expect(collapsed).toBeLessThan(full);
-    expect(store.getRowOffsets(WS, WE).offsetOf.has("c1")).toBe(false);
-    expect(store.getRowOffsets(WS, WE).offsetOf.has("p1")).toBe(true);
+    expect(store.getRowOffsets().offsetOf.has("c1")).toBe(false);
+    expect(store.getRowOffsets().offsetOf.has("p1")).toBe(true);
   });
 
   test("toggleCollapsed flips state and bumps the version", () => {

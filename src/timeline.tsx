@@ -56,6 +56,7 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
       showEventPrompt = true,
       panZoom,
       timeBar,
+      showTimeBar = true,
       animations = true,
     },
     handleRef
@@ -200,10 +201,7 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
         updateEvents: (patches) => scene.applyPatches(patches),
         getEvent: (id) => scene.getEvent(id),
         scrollToRow: (rowId) => {
-          const [windowStart, windowEnd] = windowTimeRef.current;
-          const offset = scene
-            .getRowOffsets(windowStart, windowEnd)
-            .offsetOf.get(rowId);
+          const offset = scene.getRowOffsets().offsetOf.get(rowId);
           if (offset !== undefined && bodyRef.current) {
             bodyRef.current.scrollTop = offset;
           }
@@ -211,7 +209,15 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
         scrollToTime: (time) => {
           setWindowTime((prev) => [time, time + (prev[1] - prev[0])]);
         },
-        setWindow: (startTime, endTime) => setWindowTime([startTime, endTime]),
+        // the scale follows the window, or a zoom applied from outside draws and pans at the old one
+        setWindow: (startTime, endTime) => {
+          setWindowTime([startTime, endTime]);
+          const width = contentRef.current?.getBoundingClientRect().width;
+          if (width && endTime > startTime) {
+            setTick((endTime - startTime) / width);
+            setCellWidth(width / ((endTime - startTime) / 3600));
+          }
+        },
         getVisibleRange: () => ({
           startTime: windowTimeRef.current[0],
           endTime: windowTimeRef.current[1],
@@ -331,18 +337,20 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
         {showRTIndicator && (
           <RTIndicator tick={tick} windowTime={windowTime}></RTIndicator>
         )}
-        <CanvasTimeBar
-          windowTime={windowTime}
-          tick={tick}
-          contentWidth={
-            contentRef.current
-              ? contentRef.current.getBoundingClientRect().width
-              : null
-          }
-          scrollWidth={scrollWidth}
-          theme={resolvedTheme}
-          timeBar={timeBar}
-        />
+        {showTimeBar && (
+          <CanvasTimeBar
+            windowTime={windowTime}
+            tick={tick}
+            contentWidth={
+              contentRef.current
+                ? contentRef.current.getBoundingClientRect().width
+                : null
+            }
+            scrollWidth={scrollWidth}
+            theme={resolvedTheme}
+            timeBar={timeBar}
+          />
+        )}
 
         <div className="body-wrapper" ref={bodyRef}>
           <CanvasBoard

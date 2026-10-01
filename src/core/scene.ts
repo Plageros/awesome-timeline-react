@@ -12,9 +12,6 @@ type RowIndex = {
   staticEvents: EventType[];
   lanesDirty: boolean;
   lanes: LaneResult | null;
-  // window the cached lanes were computed for (lanes depend on visibility)
-  laneWindowStart: number;
-  laneWindowEnd: number;
 };
 
 const binaryInsertIndex = (events: EventType[], event: EventType) => {
@@ -37,8 +34,8 @@ const binaryInsertIndex = (events: EventType[], event: EventType) => {
  * frame — React never reconciles individual event motion.
  *
  * Lane assignment (and therefore row height) is computed lazily per row, only
- * when that row is queried for the current window. Bursts of patches against
- * off-screen rows cost nothing beyond an index update.
+ * when that row is queried. Bursts of patches against off-screen rows cost
+ * nothing beyond an index update.
  */
 export class SceneStore {
   private rowIndexes = new Map<string, RowIndex>();
@@ -102,8 +99,6 @@ export class SceneStore {
               staticEvents: [],
               lanesDirty: true,
               lanes: null,
-              laneWindowStart: NaN,
-              laneWindowEnd: NaN,
             }
       );
     }
@@ -303,19 +298,15 @@ export class SceneStore {
     return this.rowIndexes.get(rowId)?.staticEvents ?? [];
   }
 
-  getLanes(rowId: string, windowStart: number, windowEnd: number): LaneResult {
+  /** Lanes over ALL the row's events, not just those in view: a lane assignment that followed the
+   *  window re-packed the row on every pan frame, so bars jumped between lanes as others scrolled in
+   *  and out. The row is as tall as its peak overlap anywhere. */
+  getLanes(rowId: string): LaneResult {
     this.flushParentSpans(rowId);
     const index = this.rowIndexes.get(rowId);
     if (!index) return { laneOf: new Map(), highestLane: 0 };
-    if (
-      index.lanesDirty ||
-      index.lanes === null ||
-      index.laneWindowStart !== windowStart ||
-      index.laneWindowEnd !== windowEnd
-    ) {
-      index.lanes = assignLanes(index.events, windowStart, windowEnd);
-      index.laneWindowStart = windowStart;
-      index.laneWindowEnd = windowEnd;
+    if (index.lanesDirty || index.lanes === null) {
+      index.lanes = assignLanes(index.events);
       index.lanesDirty = false;
     }
     return index.lanes;
@@ -343,22 +334,16 @@ export class SceneStore {
     this.bump();
   }
 
-  getRowHeight(rowId: string, windowStart: number, windowEnd: number): number {
-    const laneHeight = rowMinHeight(
-      this.getLanes(rowId, windowStart, windowEnd).highestLane,
-      this.geometry
-    );
+  getRowHeight(rowId: string): number {
+    const laneHeight = rowMinHeight(this.getLanes(rowId).highestLane, this.geometry);
     const labelHeight = this.labelMinHeights.get(rowId) ?? 0;
     return Math.max(laneHeight, labelHeight);
   }
 
   /** Extra top offset for a row's lanes: when a tall label grows the row past what its lanes need,
    *  the lanes sit centred in it rather than hugging the top with the surplus all below. */
-  getLaneInset(rowId: string, windowStart: number, windowEnd: number): number {
-    const laneHeight = rowMinHeight(
-      this.getLanes(rowId, windowStart, windowEnd).highestLane,
-      this.geometry
-    );
+  getLaneInset(rowId: string): number {
+    const laneHeight = rowMinHeight(this.getLanes(rowId).highestLane, this.geometry);
     const labelHeight = this.labelMinHeights.get(rowId) ?? 0;
     return labelHeight > laneHeight ? Math.floor((labelHeight - laneHeight) / 2) : 0;
   }
@@ -367,15 +352,12 @@ export class SceneStore {
    * y offset of each row's top edge (content coordinates, before scroll) plus
    * the total content height — drives both drawing and the scroll spacer.
    */
-  getRowOffsets(
-    windowStart: number,
-    windowEnd: number
-  ): { offsetOf: Map<string, number>; totalHeight: number } {
+  getRowOffsets(): { offsetOf: Map<string, number>; totalHeight: number } {
     const offsetOf = new Map<string, number>();
     let y = 0;
     for (const rowId of this.getVisibleRowIds()) {
       offsetOf.set(rowId, y);
-      y += this.getRowHeight(rowId, windowStart, windowEnd);
+      y += this.getRowHeight(rowId);
     }
     return { offsetOf, totalHeight: y };
   }

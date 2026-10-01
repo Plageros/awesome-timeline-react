@@ -69,11 +69,11 @@ describe("SceneStore.getRowHeight / getRowOffsets honor geometry", () => {
     scene.setEvents(events);
 
     // default geometry: rowBase 40 + laneHeight 22 * highestLane 1 = 62
-    expect(scene.getRowHeight("r1", 0, 1000)).toBe(62);
+    expect(scene.getRowHeight("r1")).toBe(62);
 
     scene.setGeometry(chunky);
     // chunky: rowBase 58 + laneHeight 36 * 1 = 94
-    expect(scene.getRowHeight("r1", 0, 1000)).toBe(94);
+    expect(scene.getRowHeight("r1")).toBe(94);
   });
 
   test("getRowOffsets totals reflect geometry (barHeight 30)", () => {
@@ -82,7 +82,7 @@ describe("SceneStore.getRowHeight / getRowOffsets honor geometry", () => {
     scene.setEvents(events);
     scene.setGeometry(chunky);
 
-    const { offsetOf, totalHeight } = scene.getRowOffsets(0, 1000);
+    const { offsetOf, totalHeight } = scene.getRowOffsets();
     expect(offsetOf.get("r1")).toBe(0);
     expect(offsetOf.get("r2")).toBe(94); // r1 stacked: 94
     expect(totalHeight).toBe(94 + 58); // r2 empty: rowBase 58

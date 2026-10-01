@@ -58,6 +58,9 @@
   background-color: rgb(39, 36, 36);
   color: white;
   box-sizing: border-box;
+  /* its shadow falls over the canvas below rather than under the bars */
+  position: relative;
+  z-index: 2;
 }
 
 .empty-block {
@@ -69,6 +72,7 @@
 
 .rt-line {
   position: absolute;
+  z-index: 3;
   height: calc(100% - 24px);
   top: 24px;
   width: 2px;
@@ -78,6 +82,7 @@
 
 .rt-arrow {
   position: absolute;
+  z-index: 3;
   top: 0px;
   width: 0;
   height: 0;

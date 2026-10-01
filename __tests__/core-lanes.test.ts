@@ -21,17 +21,13 @@ const ev = (id: string, startTime: number, endTime: number): EventType => ({
 // mid-row) now assert the correct stacking instead.
 describe("assignLanes (interval partitioning)", () => {
   test("no events", () => {
-    const { laneOf, highestLane } = assignLanes([], 0, 1000);
+    const { laneOf, highestLane } = assignLanes([]);
     expect(laneOf.size).toBe(0);
     expect(highestLane).toBe(0);
   });
 
   test("non-overlapping events all get lane 0", () => {
-    const { laneOf, highestLane } = assignLanes(
-      [ev("a", 0, 10), ev("b", 20, 30), ev("c", 40, 50)],
-      0,
-      1000
-    );
+    const { laneOf, highestLane } = assignLanes([ev("a", 0, 10), ev("b", 20, 30), ev("c", 40, 50)]);
     expect(laneOf.get("a")).toBe(0);
     expect(laneOf.get("b")).toBe(0);
     expect(laneOf.get("c")).toBe(0);
@@ -39,33 +35,21 @@ describe("assignLanes (interval partitioning)", () => {
   });
 
   test("touching events (prev.end === next.start) do not overlap", () => {
-    const { laneOf, highestLane } = assignLanes(
-      [ev("a", 0, 10), ev("b", 10, 20)],
-      0,
-      1000
-    );
+    const { laneOf, highestLane } = assignLanes([ev("a", 0, 10), ev("b", 10, 20)]);
     expect(laneOf.get("a")).toBe(0);
     expect(laneOf.get("b")).toBe(0);
     expect(highestLane).toBe(0);
   });
 
   test("two overlapping events stack", () => {
-    const { laneOf, highestLane } = assignLanes(
-      [ev("a", 0, 10), ev("b", 5, 15)],
-      0,
-      1000
-    );
+    const { laneOf, highestLane } = assignLanes([ev("a", 0, 10), ev("b", 5, 15)]);
     expect(laneOf.get("a")).toBe(0);
     expect(laneOf.get("b")).toBe(1);
     expect(highestLane).toBe(1);
   });
 
   test("three nested events stack to three lanes", () => {
-    const { laneOf, highestLane } = assignLanes(
-      [ev("a", 0, 30), ev("b", 5, 25), ev("c", 10, 20)],
-      0,
-      1000
-    );
+    const { laneOf, highestLane } = assignLanes([ev("a", 0, 30), ev("b", 5, 25), ev("c", 10, 20)]);
     expect(laneOf.get("a")).toBe(0);
     expect(laneOf.get("b")).toBe(1);
     expect(laneOf.get("c")).toBe(2);
@@ -76,11 +60,9 @@ describe("assignLanes (interval partitioning)", () => {
     // a(0-10) -> lane 0; b(5-15) -> lane 1; c(12-20) reuses lane 0 (a ended at 10).
     // d(13-18) overlaps BOTH c (lane 0, ends 20) and b (lane 1, ends 15), so it must
     // open lane 2. The pre-fix algorithm put it in lane 1, drawn over b.
-    const { laneOf, highestLane } = assignLanes(
-      [ev("a", 0, 10), ev("b", 5, 15), ev("c", 12, 20), ev("d", 13, 18)],
-      0,
-      1000
-    );
+    const { laneOf, highestLane } = assignLanes([
+      ev("a", 0, 10), ev("b", 5, 15), ev("c", 12, 20), ev("d", 13, 18),
+    ]);
     expect(laneOf.get("a")).toBe(0);
     expect(laneOf.get("b")).toBe(1);
     expect(laneOf.get("c")).toBe(0);
@@ -101,7 +83,7 @@ describe("assignLanes (interval partitioning)", () => {
       ev("e7", 160, 340),
       ev("e8", 180, 360),
     ];
-    const { laneOf, highestLane } = assignLanes(events, 0, 1000);
+    const { laneOf, highestLane } = assignLanes(events);
 
     // peak concurrency is 7 (everything but e1 is live at t=180) -> 7 lanes
     expect(highestLane).toBe(6);
@@ -122,40 +104,17 @@ describe("assignLanes (interval partitioning)", () => {
     }
   });
 
-  test("events outside the window are skipped and do not affect lanes", () => {
-    const { laneOf, highestLane } = assignLanes(
-      [
-        ev("before", 0, 50), // ends before window -> skipped
-        ev("b", 90, 110),
-        ev("c", 150, 250),
-        ev("after", 250, 300), // starts after window -> skipped
-      ],
-      100,
-      200
-    );
-    expect(laneOf.has("before")).toBe(false);
-    expect(laneOf.has("after")).toBe(false);
-    expect(laneOf.get("b")).toBe(0);
-    expect(laneOf.get("c")).toBe(0);
-    expect(highestLane).toBe(0);
-  });
-
-  test("events touching the window edges are included", () => {
-    const { laneOf } = assignLanes(
-      [ev("endsAtStart", 0, 100), ev("startsAtEnd", 200, 300)],
-      100,
-      200
-    );
-    expect(laneOf.get("endsAtStart")).toBe(0);
-    expect(laneOf.get("startsAtEnd")).toBe(0);
+  test("every event of the row is laned, so a pan cannot re-pack them", () => {
+    // `late` overlaps `early`; were only a window holding `late` laned, it would drop to lane 0
+    // as `early` scrolled out of view and jump back up as it scrolled in.
+    const { laneOf, highestLane } = assignLanes([ev("early", 0, 150), ev("late", 100, 300)]);
+    expect(laneOf.get("early")).toBe(0);
+    expect(laneOf.get("late")).toBe(1);
+    expect(highestLane).toBe(1);
   });
 
   test("highest lane from a trailing stack is counted (post-loop flush)", () => {
-    const { highestLane } = assignLanes(
-      [ev("a", 0, 100), ev("b", 10, 90), ev("c", 20, 80)],
-      0,
-      1000
-    );
+    const { highestLane } = assignLanes([ev("a", 0, 100), ev("b", 10, 90), ev("c", 20, 80)]);
     expect(highestLane).toBe(2);
   });
 });

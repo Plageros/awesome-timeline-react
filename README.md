@@ -186,17 +186,17 @@ summarizes the **child events** that point at it via `props.parentEventId`:
 
 ```tsx
 const rows = [
-  { id: "order", name: "Order #1001" },              // parent row
-  { id: "weld", name: "Weld", parentId: "order" },   // child rows
-  { id: "paint", name: "Paint", parentId: "order" },
+  { id: "group", name: "Group #1001" },                // parent row
+  { id: "s1", name: "Step 1", parentId: "group" },     // child rows
+  { id: "s2", name: "Step 2", parentId: "group" },
 ];
 
 const events = [
   // the parent's startTime/endTime are derived — supplied values are just a
   // fallback shown until it has children
-  { id: "P", rowId: "order", startTime: 0, endTime: 0, props: { isGroupParent: true, label: "Order #1001" } },
-  { id: "w", rowId: "weld",  startTime: t1, endTime: t2, props: { parentEventId: "P" } },
-  { id: "p", rowId: "paint", startTime: t3, endTime: t4, props: { parentEventId: "P" } },
+  { id: "P", rowId: "group", startTime: 0, endTime: 0, props: { isGroupParent: true, label: "Group #1001" } },
+  { id: "a", rowId: "s1", startTime: t1, endTime: t2, props: { parentEventId: "P" } },
+  { id: "b", rowId: "s2", startTime: t3, endTime: t4, props: { parentEventId: "P" } },
 ];
 ```
 

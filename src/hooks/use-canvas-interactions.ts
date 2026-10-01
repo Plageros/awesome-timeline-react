@@ -530,11 +530,7 @@ const useCanvasInteractions = ({
         clientY - canvas.getBoundingClientRect().top + view.scrollTop;
       let rowTop = 0;
       for (const id of scene.getVisibleRowIds()) {
-        const height = scene.getRowHeight(
-          id,
-          view.windowTime[0],
-          view.windowTime[1]
-        );
+        const height = scene.getRowHeight(id);
         if (yContent >= rowTop && yContent < rowTop + height) return id;
         rowTop += height;
       }

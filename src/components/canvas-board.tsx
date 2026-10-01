@@ -320,10 +320,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       });
     }, [getSelection, rendererRef]);
 
-    const { offsetOf, totalHeight } = scene.getRowOffsets(
-      windowTime[0],
-      windowTime[1]
-    );
+    const { offsetOf, totalHeight } = scene.getRowOffsets();
     totalHeightRef.current = totalHeight;
 
     // Keep the canvas height locked to the content in the SAME commit the DOM
@@ -356,7 +353,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       if (scene.isRowHidden(row.id)) continue;
       const top = offsetOf.get(row.id);
       if (top === undefined) continue;
-      const height = scene.getRowHeight(row.id, windowTime[0], windowTime[1]);
+      const height = scene.getRowHeight(row.id);
       if (top + height < scrollTop) continue;
       if (top > scrollTop + viewportHeight) break;
       const isParent = scene.isRowParent(row.id);

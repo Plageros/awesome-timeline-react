@@ -52,7 +52,6 @@ export const drawGroupShading = (
   view: RendererView,
   scene: SceneStore
 ) => {
-  const [windowStart, windowEnd] = view.windowTime;
   const visible = scene.getVisibleRowIds();
   // collect the content-space y-range of each contiguous run of child rows
   const regions: Array<{ top: number; bottom: number }> = [];
@@ -65,7 +64,7 @@ export const drawGroupShading = (
     runParent = null;
   };
   for (const rowId of visible) {
-    const height = scene.getRowHeight(rowId, windowStart, windowEnd);
+    const height = scene.getRowHeight(rowId);
     const parentId = scene.getRow(rowId)?.parentId;
     if (parentId !== undefined) {
       if (runParent === parentId) {
@@ -123,7 +122,6 @@ export const drawRowDividers = (
   view: RendererView,
   scene: SceneStore
 ) => {
-  const [windowStart, windowEnd] = view.windowTime;
   const rowIds = scene.getVisibleRowIds();
   ctx.strokeStyle = view.theme.gridColor;
   ctx.lineWidth = 1;
@@ -132,7 +130,7 @@ export const drawRowDividers = (
   for (let i = 0; i < rowIds.length; i++) {
     // Row heights apply instantly (no layout tween) so the canvas rows stay
     // locked to the DOM headers, which also snap. Only event tops animate.
-    y += scene.getRowHeight(rowIds[i], windowStart, windowEnd);
+    y += scene.getRowHeight(rowIds[i]);
     if (i === rowIds.length - 1) break; // :not(:last-child)
     const screenY = y - view.scrollTop;
     if (screenY < 0) continue;
@@ -378,14 +376,14 @@ export const drawEvents = (
   let rowTop = 0;
   for (const rowId of scene.getVisibleRowIds()) {
     // Row heights are instant (see drawRowDividers); only event tops animate.
-    const rowHeight = scene.getRowHeight(rowId, windowStart, windowEnd);
+    const rowHeight = scene.getRowHeight(rowId);
     const rowY = rowTop - view.scrollTop;
     rowTop += rowHeight;
     if (rowY + rowHeight < 0) continue;
     if (rowY > view.height) break;
 
-    const lanes = scene.getLanes(rowId, windowStart, windowEnd);
-    const inset = scene.getLaneInset(rowId, windowStart, windowEnd);
+    const lanes = scene.getLanes(rowId);
+    const inset = scene.getLaneInset(rowId);
 
     // static events sit below interactive ones (legacy z-index 0 vs 1). The
     // culled list is reused below to stripe event↔band overlaps (stripeOverlap).
@@ -397,7 +395,7 @@ export const drawEvents = (
     for (const event of rowStatics) {
       const x = timeToX(event.startTime, windowStart, tick);
       const width = timeToWidth(event.startTime, event.endTime, tick);
-      ctx.fillStyle = view.theme.staticEventFill;
+      ctx.fillStyle = event.props?.style?.fill ?? view.theme.staticEventFill;
       roundedRect(
         ctx,
         x,

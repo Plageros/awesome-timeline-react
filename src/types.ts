@@ -298,6 +298,8 @@ export type PartialRecord<K extends keyof any, T> = Partial<Record<K, T>>;
 export type TimelineProps = {
   rows: RowType[];
   events: EventType[];
+  /** background bands, drawn under the events at full row height in `theme.staticEventFill`, or in
+   *  the band's own `props.style.fill` */
   staticEvents?: EventType[];
   startDate: Date;
   endDate: Date;
@@ -335,9 +337,9 @@ export type TimelineProps = {
   showRTIndicator?: boolean;
   eventsResize?: boolean;
   /** draw 45° diagonal stripes on the slice of an event bar that overlaps a
-   *  static event (e.g. an off-shift/downtime band) on the same row. This gives
+   *  static event (e.g. a band of unavailable time) on the same row. This gives
    *  a visible cause for a bar that looks "too wide" because it spans
-   *  non-working time. Stripe color is `theme.overlapStripeColor`. Default
+   *  that band. Stripe color is `theme.overlapStripeColor`. Default
    *  false (no striping). */
   stripeOverlap?: boolean;
   showEventPrompt?: boolean;
@@ -345,6 +347,9 @@ export type TimelineProps = {
   panZoom?: PanZoomConfig;
   /** configure each row's unit/label in the two-row time bar */
   timeBar?: TimeBarConfig;
+  /** draw the two-row time bar above the rows (default true). Off, the timeline is just its rows —
+   *  e.g. a secondary strip kept in step with a main timeline through `onWindowChange`/`setWindow`. */
+  showTimeBar?: boolean;
   /** layout animations: true (default), false to disable, or durations */
   animations?: AnimationConfig;
 };

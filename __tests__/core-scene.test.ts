@@ -94,26 +94,23 @@ describe("SceneStore", () => {
     ).not.toThrow();
   });
 
-  test("getLanes caches per window and invalidates on patches", () => {
+  test("getLanes caches until the row's events change", () => {
     const store = makeStore([ev("a", "r1", 0, 100), ev("b", "r1", 50, 150)]);
-    const first = store.getLanes("r1", 0, 1000);
+    const first = store.getLanes("r1");
     expect(first.laneOf.get("b")).toBe(1);
-    // cached: same object back for the same window
-    expect(store.getLanes("r1", 0, 1000)).toBe(first);
-    // different window -> recompute
-    expect(store.getLanes("r1", 500, 1000)).not.toBe(first);
+    // cached: same object back however often it is asked
+    expect(store.getLanes("r1")).toBe(first);
     // patch invalidates
-    const again = store.getLanes("r1", 0, 1000);
     store.applyPatches([{ op: "remove", id: "b" }]);
-    const afterPatch = store.getLanes("r1", 0, 1000);
-    expect(afterPatch).not.toBe(again);
+    const afterPatch = store.getLanes("r1");
+    expect(afterPatch).not.toBe(first);
     expect(afterPatch.highestLane).toBe(0);
   });
 
   test("getRowOffsets accumulates heights in row order", () => {
     // r1 has a 2-lane stack -> height 40 + 22 = 62; r2 empty -> 40
     const store = makeStore([ev("a", "r1", 0, 100), ev("b", "r1", 50, 150)]);
-    const { offsetOf, totalHeight } = store.getRowOffsets(0, 1000);
+    const { offsetOf, totalHeight } = store.getRowOffsets();
     expect(offsetOf.get("r1")).toBe(0);
     expect(offsetOf.get("r2")).toBe(62);
     expect(totalHeight).toBe(102);
@@ -130,9 +127,9 @@ describe("SceneStore", () => {
       ])
     );
     // r1: max(62, 30) = 62 (lanes win); r2: max(40, 90) = 90 (label wins)
-    expect(store.getRowHeight("r1", 0, 1000)).toBe(62);
-    expect(store.getRowHeight("r2", 0, 1000)).toBe(90);
-    const { offsetOf, totalHeight } = store.getRowOffsets(0, 1000);
+    expect(store.getRowHeight("r1")).toBe(62);
+    expect(store.getRowHeight("r2")).toBe(90);
+    const { offsetOf, totalHeight } = store.getRowOffsets();
     expect(offsetOf.get("r2")).toBe(62);
     expect(totalHeight).toBe(152);
   });
@@ -141,8 +138,8 @@ describe("SceneStore", () => {
     const store = makeStore([ev("a", "r1", 0, 100), ev("b", "r1", 50, 150), ev("c", "r2", 0, 100)]);
     store.setLabelMinHeights(new Map([["r1", 30], ["r2", 91]]));
     // r1: lanes (62) win, no inset; r2: 91 over a 40px lane block leaves 51 -> 25 above
-    expect(store.getLaneInset("r1", 0, 1000)).toBe(0);
-    expect(store.getLaneInset("r2", 0, 1000)).toBe(25);
+    expect(store.getLaneInset("r1")).toBe(0);
+    expect(store.getLaneInset("r2")).toBe(25);
   });
 
   test("setLabelMinHeights only bumps version when a value changes", () => {

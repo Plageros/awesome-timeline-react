@@ -6,6 +6,9 @@
   color: white;
   box-sizing: border-box;
   box-shadow: 4px 0px 20px black;
+  /* above the canvas, so bars panned under the header slide beneath its shadow */
+  position: relative;
+  z-index: 2;
 }
 
 .main-wrapper {

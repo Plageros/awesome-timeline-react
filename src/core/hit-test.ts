@@ -40,7 +40,7 @@ export const hitTest = (
   let rowTop = 0;
   let rowId: string | null = null;
   for (const id of scene.getVisibleRowIds()) {
-    const height = scene.getRowHeight(id, windowStart, windowEnd);
+    const height = scene.getRowHeight(id);
     if (yContent >= rowTop && yContent < rowTop + height) {
       rowId = id;
       break;
@@ -49,8 +49,8 @@ export const hitTest = (
   }
   if (rowId === null) return null;
 
-  const lanes = scene.getLanes(rowId, windowStart, windowEnd);
-  const lanesY = rowTop - scrollTop + scene.getLaneInset(rowId, windowStart, windowEnd);
+  const lanes = scene.getLanes(rowId);
+  const lanesY = rowTop - scrollTop + scene.getLaneInset(rowId);
 
   const events = cullToWindow(
     scene.getRowEvents(rowId),

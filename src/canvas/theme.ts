@@ -22,6 +22,8 @@ export const DEFAULT_THEME: ResolvedTheme = {
   minHitWidth: 0,
   groupChildBackground: "rgba(0,0,0,0.05)",
   groupShadowColor: "rgba(0,0,0,0.22)",
+  pointerLineColor: "rgba(15,23,42,0.7)",
+  pointerLabelColor: "#ffffff",
 };
 
 export const resolveTheme = (theme?: Theme): ResolvedTheme => ({

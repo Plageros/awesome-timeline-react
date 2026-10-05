@@ -21,12 +21,15 @@ import useResizeObserver from "./hooks/use-resize-observer";
 import sortEvents from "./helpers/sort-events";
 import RTIndicator from "./components/rt-indicator";
 import EventPrompt from "./components/event-prompt";
-import CanvasTimeBar from "./components/canvas-time-bar";
+import CanvasTimeBar, { TIME_BAR_HEIGHT } from "./components/canvas-time-bar";
 import CanvasBoard from "./components/canvas-board";
+import PointerLine, { PointerLineActions } from "./components/pointer-line";
 import { SceneStore } from "./core/scene";
 import { TimelineRenderer } from "./canvas/renderer";
 import { resolveTheme } from "./canvas/theme";
 import { geometryFromTheme } from "./core/geometry";
+
+const defaultPointerFormat = (time: number) => new Date(time * 1000).toLocaleString();
 
 export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
   (
@@ -57,6 +60,9 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
       panZoom,
       timeBar,
       showTimeBar = true,
+      showPointerLine = false,
+      formatPointerTime,
+      onPointerTime,
       animations = true,
     },
     handleRef
@@ -194,6 +200,63 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
       onWindowChangeRef.current?.({ startTime: windowTime[0], endTime: windowTime[1] });
     }, [windowTime[0], windowTime[1]]);
 
+    const tickRef = useRef(tick);
+    tickRef.current = tick;
+    const pointerLineRef = useRef<PointerLineActions | null>(null);
+    // the pointer over these rows (`x` into the column), or a time a linked timeline asked for
+    const pointerRef = useRef<{ x: number } | { time: number } | null>(null);
+    const pointerOpts = useRef({ showPointerLine, showTimeBar, formatPointerTime, onPointerTime });
+    pointerOpts.current = { showPointerLine, showTimeBar, formatPointerTime, onPointerTime };
+
+    const drawPointer = useCallback(() => {
+      const line = pointerLineRef.current;
+      const p = pointerRef.current;
+      const t = tickRef.current;
+      if (!line) return;
+      if (!p || !t) return line.hide();
+      const start = windowTimeRef.current[0];
+      const time = "x" in p ? start + p.x * t : p.time;
+      const x = "x" in p ? p.x : (p.time - start) / t;
+      const width = contentRef.current?.getBoundingClientRect().width ?? 0;
+      if (x < 0 || x > width) return line.hide();
+      const { showTimeBar: labelled, formatPointerTime: format } = pointerOpts.current;
+      line.show(x, labelled ? (format ?? defaultPointerFormat)(time) : null);
+    }, []);
+
+    useEffect(() => {
+      const column = contentRef.current;
+      if (!column) return;
+      const move = (e: PointerEvent) => {
+        const t = tickRef.current;
+        if (!t) return;
+        const x = e.clientX - column.getBoundingClientRect().left;
+        pointerOpts.current.onPointerTime?.(windowTimeRef.current[0] + x * t);
+        if (!pointerOpts.current.showPointerLine) return;
+        pointerRef.current = { x };
+        drawPointer();
+      };
+      const leave = () => {
+        pointerOpts.current.onPointerTime?.(null);
+        if (pointerRef.current && "x" in pointerRef.current) {
+          pointerRef.current = null;
+          drawPointer();
+        }
+      };
+      column.addEventListener("pointermove", move);
+      column.addEventListener("pointerleave", leave);
+      return () => {
+        column.removeEventListener("pointermove", move);
+        column.removeEventListener("pointerleave", leave);
+      };
+    }, [drawPointer]);
+
+    // a pan or zoom under a still pointer moves the time beneath it
+    useEffect(() => {
+      const p = pointerRef.current;
+      if (p && "x" in p && tick) pointerOpts.current.onPointerTime?.(windowTime[0] + p.x * tick);
+      drawPointer();
+    }, [windowTime[0], windowTime[1], tick, drawPointer]);
+
     useImperativeHandle(
       handleRef,
       (): TimelineHandle => ({
@@ -211,6 +274,7 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
         },
         // the scale follows the window, or a zoom applied from outside draws and pans at the old one
         setWindow: (startTime, endTime) => {
+          windowTimeRef.current = [startTime, endTime];
           setWindowTime([startTime, endTime]);
           const width = contentRef.current?.getBoundingClientRect().width;
           if (width && endTime > startTime) {
@@ -222,13 +286,17 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
           startTime: windowTimeRef.current[0],
           endTime: windowTimeRef.current[1],
         }),
+        setPointerTime: (time) => {
+          pointerRef.current = time === null ? null : { time };
+          drawPointer();
+        },
         setSelection: (ids) => applySelection(ids),
         getSelection,
         toggleRow: (rowId) => scene.toggleCollapsed(rowId),
         setCollapsed: (rowId, collapsed) => scene.setCollapsed(rowId, collapsed),
         redraw: () => rendererRef.current?.invalidate("all"),
       }),
-      [scene, applySelection, getSelection]
+      [scene, applySelection, getSelection, drawPointer]
     );
 
     useEffect(() => {
@@ -294,7 +362,7 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
       }
     }, []);
 
-    useResizeObserver({ contentRef, setCellWidth, setTick, windowTime });
+    useResizeObserver({ contentRef, setCellWidth, setTick, windowTimeRef });
 
     const resolvedTheme = useMemo(() => resolveTheme(theme), [theme]);
 
@@ -384,6 +452,9 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
           />
           {showEventPrompt && eventPrompt}
         </div>
+        <PointerLine ref={pointerLineRef} contentRef={contentRef} mainRef={mainRef}
+          top={showTimeBar ? TIME_BAR_HEIGHT : 0} color={resolvedTheme.pointerLineColor}
+          labelColor={resolvedTheme.pointerLabelColor} font={resolvedTheme.font} />
       </div>
     );
   }

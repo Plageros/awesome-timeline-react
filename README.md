@@ -108,6 +108,12 @@ The following properties for Timeline component are available:
 
 - `timeBar` – configure the two-row time bar (see Time bar rows). Defaults to a day row over an hour row.
 
+- `showPointerLine` – a dashed vertical line follows the pointer over the rows, with its time shown in the time bar (default `false`). Colors come from `theme.pointerLineColor` / `theme.pointerLabelColor`.
+
+- `formatPointerTime` – `(time: number) => string`, the pointer line's label for a unix-seconds time (default: the browser's locale date and time).
+
+- `onPointerTime` – `(time: number | null) => void`, fires as the pointer moves over the rows with the time under it, and `null` when it leaves. Feed it to a linked timeline's `setPointerTime` handle method so one line runs through both.
+
 - `animations` – layout animations when events re-stack (rows growing, events changing lanes). `true` (default), `false` to disable, or `{ layoutMs?: number, fadeMs?: number }` to tune (defaults 200/120; `layoutMs` is the stacking tween, `fadeMs` the resize-handle fade). A dropped event always lands instantly — only the events re-stacking around it animate.
 
 ## Theming
@@ -321,7 +327,7 @@ ref.current?.updateEvents([
 ]);
 ```
 
-The full handle: `setEvents`, `updateEvents`, `getEvent`, `scrollToRow`, `scrollToTime`, `setWindow`, `getVisibleRange`, `redraw`.
+The full handle: `setEvents`, `updateEvents`, `getEvent`, `scrollToRow`, `scrollToTime`, `setWindow`, `getVisibleRange`, `setPointerTime`, `redraw`.
 
 **Reconciliation rule:** the `events` prop is authoritative whenever its reference changes — a new array fully resets the store and discards imperative state. Pick one mode: declarative (swap the prop) or imperative (stable prop + handle calls).
 

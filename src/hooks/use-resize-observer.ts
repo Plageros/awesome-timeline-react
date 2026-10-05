@@ -1,39 +1,48 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect } from "react";
+
+/** Rescales on a width change. The window is read when the callback fires, never captured: the first
+ *  callback lands a frame after mount, by when a consumer may already have called `setWindow`, and a
+ *  captured window would overwrite that window's scale with the one the timeline mounted on. */
+export const createWidthObserver = (
+  getWindow: () => number[],
+  onScale: (tick: number, cellWidth: number) => void
+): ResizeObserver => {
+  let prevWidth = 0;
+  return new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const width = entry.borderBoxSize?.[0].inlineSize;
+      if (typeof width === "number" && width !== prevWidth) {
+        prevWidth = width;
+        const [start, end] = getWindow();
+        const windowDuration = end - start;
+        onScale(windowDuration / entry.contentRect.width,
+                entry.contentRect.width / (windowDuration / 3600));
+      }
+    }
+  });
+};
 
 const useResizeObserver = ({
-  windowTime,
+  windowTimeRef,
   setTick,
   setCellWidth,
   contentRef,
 }: {
-  windowTime: number[];
+  windowTimeRef: React.MutableRefObject<number[]>;
   setTick: React.Dispatch<React.SetStateAction<number | null>>;
   setCellWidth: React.Dispatch<React.SetStateAction<number>>;
   contentRef: React.MutableRefObject<HTMLDivElement | null>;
 }) => {
-  const prevWidthRef = useRef(0);
-
-  const resizeObserver = useMemo(() => {
-    return new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const width = entry.borderBoxSize?.[0].inlineSize;
-        if (typeof width === "number" && width !== prevWidthRef.current) {
-          prevWidthRef.current = width;
-          const windowDuration = windowTime[1] - windowTime[0];
-          const numberOfHourBlocks = windowDuration / 3600;
-          setTick(windowDuration / entry.contentRect.width);
-          setCellWidth(entry.contentRect.width / numberOfHourBlocks);
-        }
-      }
-    });
-  }, [windowTime]);
-
   useEffect(() => {
+    const observer = createWidthObserver(() => windowTimeRef.current, (tick, cellWidth) => {
+      setTick(tick);
+      setCellWidth(cellWidth);
+    });
     if (contentRef.current) {
-      resizeObserver.observe(contentRef.current, { box: "border-box" });
+      observer.observe(contentRef.current, { box: "border-box" });
     }
-    return () => resizeObserver.disconnect();
-  }, [resizeObserver]);
+    return () => observer.disconnect();
+  }, [windowTimeRef, setTick, setCellWidth, contentRef]);
 };
 
 export default useResizeObserver;

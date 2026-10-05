@@ -5,8 +5,9 @@ import { drawTimeBar } from "../canvas/draw-grid";
 import { DEFAULT_THEME } from "../canvas/theme";
 import { ResolvedTheme, TimeBarConfig } from "../types";
 
-// .time-bar is 50px with a 1px border on each side
-const TIME_BAR_INNER_HEIGHT = 48;
+// .time-bar's height in style.css, with a 1px border on each side
+export const TIME_BAR_HEIGHT = 50;
+const TIME_BAR_INNER_HEIGHT = TIME_BAR_HEIGHT - 2;
 
 const CanvasTimeBar = ({
   windowTime,

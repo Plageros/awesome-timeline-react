@@ -1167,3 +1167,111 @@ export const TimelineSecondaryStrip = () => {
     </div>
   );
 };
+
+const STRIP_THEME = {
+  barHeight: 16, laneGap: 3, rowPaddingY: 6, barRadius: 4, eventFill: "#e2e8f0",
+  eventStroke: "#94a3b8", eventTextColor: "#334155", font: "11px monospace", gridColor: "#eef1f5",
+  headerBackground: "#f5f6f8", headerTextColor: "#334155", headerBorderColor: "#e2e8f0",
+  headerShadow: "none", borderColor: "#e2e8f0",
+};
+
+/** Bars on the main timeline and a mark at each bar's start on a strip below. */
+const linkedData = () => {
+  const d = (day: number, h: number, m = 0) => new Date(2024, 4, day, h, m, 0).getTime() / 1000;
+  const bars: EventType[] = [];
+  const marks: EventType[] = [];
+  for (let day = 6; day < 27; day++) {
+    for (let k = 0; k < 3; k++) {
+      const start = d(day, 6 + k * 5);
+      bars.push({ id: `bar_${day}_${k}`, rowId: "lane", startTime: start, endTime: start + 4 * 3600,
+        props: { label: `Item ${day}.${k + 1}` } });
+      marks.push({ id: `mark_${day}_${k}`, rowId: "marks", startTime: start, endTime: start + 900,
+        props: { label: "", isLocked: true, style: { fill: "#334155" } } });
+    }
+  }
+  return { d, bars, marks };
+};
+
+const useLinked = () => {
+  const main = useRef<TimelineHandle>(null);
+  const strip = useRef<TimelineHandle>(null);
+  const sameWindow = (a: { startTime: number; endTime: number }, b: { startTime: number; endTime: number }) =>
+    Math.abs(a.startTime - b.startTime) < 1 && Math.abs(a.endTime - b.endTime) < 1;
+  const follow = (target: React.RefObject<TimelineHandle>) =>
+    (r: { startTime: number; endTime: number }) => {
+      const t = target.current;
+      if (t && !sameWindow(t.getVisibleRange(), r)) t.setWindow(r.startTime, r.endTime);
+    };
+  const onMainWindow = useCallback(follow(strip), []);
+  const onStripWindow = useCallback(follow(main), []);
+  return { main, strip, onMainWindow, onStripWindow };
+};
+
+const hms = (t: number) => new Date(t * 1000).toLocaleString([], {
+  weekday: "short", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+export const TimelinePointerLine = () => {
+  const { d, bars, marks } = React.useMemo(linkedData, []);
+  const { main, strip, onMainWindow, onStripWindow } = useLinked();
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "92vh", font: "13px sans-serif" }}>
+      <p style={{ padding: 6, margin: 0 }}>
+        Hover either timeline: a dashed line marks the time under the pointer on both, and the time
+        bar shows it. Pan or zoom with the pointer still and the time follows.
+      </p>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <Timeline ref={main} rows={[{ id: "lane", name: "Lane A" }]} events={bars}
+          startDate={new Date(d(10, 0) * 1000)} endDate={new Date(d(13, 0) * 1000)}
+          showPointerLine formatPointerTime={hms}
+          onPointerTime={(t) => strip.current?.setPointerTime(t)}
+          onWindowChange={onMainWindow} />
+      </div>
+      <div style={{ height: 90 }}>
+        <Timeline ref={strip} rows={[{ id: "marks", name: "Marks" }]} events={marks}
+          startDate={new Date(d(10, 0) * 1000)} endDate={new Date(d(13, 0) * 1000)}
+          showTimeBar={false} showRTIndicator={false} eventsResize={false} animations={false}
+          showPointerLine onPointerTime={(t) => main.current?.setPointerTime(t)}
+          theme={STRIP_THEME} onWindowChange={onStripWindow} />
+      </div>
+    </div>
+  );
+};
+
+/** The strip mounts on its own three weeks and is moved to the main timeline's three days at once —
+ *  the first resize callback, a frame later, must not put it back on the three-week scale. */
+export const TimelineStripMountedLate = () => {
+  const { d, bars, marks } = React.useMemo(linkedData, []);
+  const { main, strip, onMainWindow, onStripWindow } = useLinked();
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (!shown) return;
+    const m = main.current?.getVisibleRange();
+    if (m) strip.current?.setWindow(m.startTime, m.endTime);
+  }, [shown]);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "92vh", font: "13px sans-serif" }}>
+      <p style={{ padding: 6, margin: 0 }}>
+        <button onClick={() => main.current?.setWindow(d(12, 0), d(15, 0))}>Zoom to 3 days</button>{" "}
+        <label><input type="checkbox" checked={shown} onChange={(e) => setShown(e.target.checked)} />{" "}
+          show the strip</label>{" "}
+        — each mark must sit under the start of its bar.
+      </p>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <Timeline ref={main} rows={[{ id: "lane", name: "Lane A" }]} events={bars}
+          startDate={new Date(d(6, 0) * 1000)} endDate={new Date(d(27, 0) * 1000)}
+          showPointerLine formatPointerTime={hms}
+          onPointerTime={(t) => strip.current?.setPointerTime(t)}
+          onWindowChange={onMainWindow} />
+      </div>
+      {shown ? (
+        <div style={{ height: 90 }}>
+          <Timeline ref={strip} rows={[{ id: "marks", name: "Marks" }]} events={marks}
+            startDate={new Date(d(6, 0) * 1000)} endDate={new Date(d(27, 0) * 1000)}
+            showTimeBar={false} showRTIndicator={false} eventsResize={false} animations={false}
+            showPointerLine onPointerTime={(t) => main.current?.setPointerTime(t)}
+            theme={STRIP_THEME} onWindowChange={onStripWindow} />
+        </div>
+      ) : null}
+    </div>
+  );
+};

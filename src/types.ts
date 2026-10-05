@@ -102,6 +102,10 @@ export type Theme = {
   headerShadow?: string;
   /** the frame around the rows; unset, the stylesheet's black applies */
   borderColor?: string;
+  /** the pointer line and its time label's background (default "rgba(15,23,42,0.7)") */
+  pointerLineColor?: string;
+  /** the pointer time label's text (default "#ffffff") */
+  pointerLabelColor?: string;
 };
 
 // these stay unset unless given, so the stylesheet (and a `rowsHeader` class) still applies
@@ -286,6 +290,9 @@ export type TimelineHandle = {
   /** set the visible time window explicitly (unix seconds) */
   setWindow(startTime: number, endTime: number): void;
   getVisibleRange(): { startTime: number; endTime: number };
+  /** draw the pointer line at this time (unix seconds) from outside, e.g. where the pointer is on a
+   *  linked timeline; null hides it. Labelled only when this timeline shows its time bar. */
+  setPointerTime(time: number | null): void;
   /** replace the current selection with these event ids. No `groupId`-tag
    *  expansion (that's Cmd/Ctrl+click only), but a group-parent id still pulls
    *  in its child events (parent → children). Requires `selectable`; fires
@@ -366,6 +373,14 @@ export type TimelineProps = {
   /** draw the two-row time bar above the rows (default true). Off, the timeline is just its rows —
    *  e.g. a secondary strip kept in step with a main timeline through `onWindowChange`/`setWindow`. */
   showTimeBar?: boolean;
+  /** a dashed vertical line follows the pointer over the rows, its time shown in the time bar
+   *  (default false) */
+  showPointerLine?: boolean;
+  /** the pointer line's label for a time in unix seconds (default: the browser's locale date and time) */
+  formatPointerTime?: (time: number) => string;
+  /** fires as the pointer moves over the rows with the time under it, and null when it leaves —
+   *  feed it to a linked timeline's `setPointerTime` */
+  onPointerTime?: (time: number | null) => void;
   /** layout animations: true (default), false to disable, or durations */
   animations?: AnimationConfig;
 };

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Timeline } from "./timeline";
-import { DrawEventFn, EventPatch, EventType, TimelineHandle } from "./types";
+import { DrawEventFn, EventPatch, EventType, TimeBarConfig, TimelineHandle } from "./types";
+import { DEFAULT_TIME_BAR_LEVELS } from "./core/time-blocks";
 import { assignLanes } from "./core/lanes";
 import sortEvents from "./helpers/sort-events";
 export default {
@@ -1272,6 +1273,89 @@ export const TimelineStripMountedLate = () => {
             theme={STRIP_THEME} onWindowChange={onStripWindow} />
         </div>
       ) : null}
+    </div>
+  );
+};
+
+const unevenEdges = (start: number, end: number) => {
+  const edges: number[] = [];
+  const first = new Date(start * 1000);
+  for (
+    let day = new Date(first.getFullYear(), first.getMonth(), first.getDate() - 3);
+    day.getTime() / 1000 <= end + 3 * 86400;
+    day = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1)
+  ) {
+    const at = (h: number) => new Date(day.getFullYear(), day.getMonth(), day.getDate(), h).getTime() / 1000;
+    if (day.getDay() === 0) continue;
+    edges.push(...(day.getDay() === 6 ? [at(6)] : [at(6), at(14), at(22)]));
+  }
+  return edges;
+};
+
+const UNEVEN_TIME_BAR: TimeBarConfig = {
+  auto: {
+    levels: [
+      {
+        topRow: { unit: "day" },
+        bottomRow: {
+          unit: { boundaries: unevenEdges },
+          format: (s, e) => (e.getTime() - s.getTime() > 8 * 3600 * 1000 ? "—" : `${s.getHours()}–${e.getHours()}`),
+        },
+      },
+      ...DEFAULT_TIME_BAR_LEVELS.slice(2),
+    ],
+  },
+};
+
+/**
+ * `timeBar.auto`: the rows follow the zoom (day/hour → day/6 h → week/day → month/week → year/month),
+ * and the grid follows the bottom row. Zoom with the buttons or ctrl/cmd + wheel; no block may get
+ * narrower than 40 px. "Uneven blocks" swaps the two finest levels for a `boundaries` row: three
+ * blocks a weekday and one over the weekend.
+ */
+export const TimelineAutoTimeBar = () => {
+  const ref = useRef<TimelineHandle>(null);
+  const [uneven, setUneven] = useState(false);
+  const [days, setDays] = useState(0);
+  const origin = new Date(2024, 0, 1).getTime() / 1000;
+  const rows = [
+    { id: "r1", name: "Resource A" },
+    { id: "r2", name: "Resource B" },
+    { id: "r3", name: "Resource C" },
+  ];
+  const events = React.useMemo<EventType[]>(
+    () =>
+      Array.from({ length: 600 }, (_, i) => {
+        const start = origin + i * 4 * 3600 + (i % 3) * 1800;
+        return {
+          id: `e${i}`,
+          rowId: rows[i % 3].id,
+          startTime: start,
+          endTime: start + (3 + (i % 5)) * 3600,
+          props: { label: `Task ${i}` },
+        };
+      }),
+    []
+  );
+  const zoom = (n: number) => ref.current?.setWindow(origin + 86400 * 7, origin + 86400 * (7 + n));
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "92vh", font: "13px sans-serif" }}>
+      <p style={{ padding: 6, margin: 0 }}>
+        {[1, 3, 7, 14, 30, 90, 365].map((n) => (
+          <button key={n} onClick={() => zoom(n)}>{n} d</button>
+        ))}{" "}
+        <label><input type="checkbox" checked={uneven} onChange={(e) => setUneven(e.target.checked)} />{" "}
+          uneven blocks</label>{" "}
+        — window {days.toFixed(1)} days
+      </p>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <Timeline ref={ref} rows={rows} events={events}
+          startDate={new Date((origin + 86400 * 7) * 1000)} endDate={new Date((origin + 86400 * 14) * 1000)}
+          panZoom={{ maxWindowSeconds: 400 * 86400 }}
+          timeBar={uneven ? UNEVEN_TIME_BAR : { auto: true }}
+          showPointerLine formatPointerTime={hms}
+          onWindowChange={({ startTime, endTime }) => setDays((endTime - startTime) / 86400)} />
+      </div>
     </div>
   );
 };

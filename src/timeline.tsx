@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import {
   EventPromptActionsType,
+  OnEventHoverProps,
   TimelineHandle,
   TimelineProps,
 } from "./types";
@@ -214,6 +215,8 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
       const t = tickRef.current;
       if (!line) return;
       if (!p || !t) return line.hide();
+      // its time label would cover the hovered event's prompt
+      if ("x" in p && rendererRef.current?.getView().hoveredEventId) return line.hide();
       const start = windowTimeRef.current[0];
       const time = "x" in p ? start + p.x * t : p.time;
       const x = "x" in p ? p.x : (p.time - start) / t;
@@ -256,6 +259,13 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
       if (p && "x" in p && tick) pointerOpts.current.onPointerTime?.(windowTime[0] + p.x * tick);
       drawPointer();
     }, [windowTime[0], windowTime[1], tick, drawPointer]);
+
+    const onEventHoverRef = useRef(onEventHover);
+    onEventHoverRef.current = onEventHover;
+    const handleEventHover = useCallback((hover: OnEventHoverProps) => {
+      drawPointer();
+      onEventHoverRef.current?.(hover);
+    }, [drawPointer]);
 
     useImperativeHandle(
       handleRef,
@@ -440,9 +450,10 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
             onDrop={onDrop}
             onResize={onResize}
             onEventClick={onEventClick}
-            onEventHover={onEventHover}
+            onEventHover={handleEventHover}
             eventsResize={eventsResize}
             stripeOverlap={stripeOverlap}
+            timeBar={timeBar}
             panZoom={panZoom}
             animations={resolvedAnimations}
             selectable={selectable}

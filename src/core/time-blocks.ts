@@ -1,6 +1,11 @@
 import getMonthName from "../helpers/get-month-name";
 import getWeekDayName from "../helpers/get-week-day-name";
-import { TimeBarRowConfig, TimeBarUnit } from "../types";
+import {
+  TimeBarConfig,
+  TimeBarLevel,
+  TimeBarRowConfig,
+  TimeBarUnit,
+} from "../types";
 
 export type TimeBlock = {
   label: string;
@@ -13,6 +18,9 @@ export type TimeBlocks = {
   hourBlocks: TimeBlock[];
 };
 
+type RowUnit = NonNullable<TimeBarRowConfig["unit"]>;
+type SteppedUnit = TimeBarUnit | { stepSeconds: number };
+
 const pad2 = (n: number) => (n < 10 ? `0${n}` : `${n}`);
 const hourLabel = (hour: number) => `${pad2(hour)}:00`;
 
@@ -21,11 +29,20 @@ const dayLabel = (date: Date) =>
     date.getMonth()
   )}`;
 
+/** ISO-8601 week number (weeks start Monday; week 1 holds the year's first Thursday). */
+export const isoWeek = (date: Date): number => {
+  const thursday = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate() + 3 - ((date.getDay() + 6) % 7)
+  );
+  const jan1 = new Date(thursday.getFullYear(), 0, 1);
+  return 1 + Math.floor(Math.round((thursday.getTime() - jan1.getTime()) / 86400000) / 7);
+};
+
 /** Default label per unit — mirrors the pre-config day ("Mon 1 Jan") and
  *  hour ("HH:00") labels; week labels its starting day, month its name/year. */
-const defaultFormat = (
-  unit: TimeBarUnit | { stepSeconds: number }
-): ((blockStart: Date) => string) => {
+const defaultFormat = (unit: RowUnit): ((blockStart: Date) => string) => {
   if (typeof unit === "object") {
     return (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   }
@@ -34,6 +51,8 @@ const defaultFormat = (
       return (d) => hourLabel(d.getHours());
     case "month":
       return (d) => `${getMonthName(d.getMonth())} ${d.getFullYear()}`;
+    case "year":
+      return (d) => `${d.getFullYear()}`;
     case "day":
     case "week":
     default:
@@ -42,11 +61,7 @@ const defaultFormat = (
 };
 
 /** Start of the calendar/step block containing `date`. */
-const floorToUnit = (
-  date: Date,
-  unit: TimeBarUnit | { stepSeconds: number },
-  anchorSec: number
-): Date => {
+const floorToUnit = (date: Date, unit: SteppedUnit, anchorSec: number): Date => {
   if (typeof unit === "object") {
     const t = date.getTime() / 1000;
     const step = unit.stepSeconds;
@@ -66,14 +81,13 @@ const floorToUnit = (
     }
     case "month":
       return new Date(y, mo, 1);
+    case "year":
+      return new Date(y, 0, 1);
   }
 };
 
 /** Start of the next block after `blockStart` (calendar-correct, DST-safe). */
-const nextBoundary = (
-  blockStart: Date,
-  unit: TimeBarUnit | { stepSeconds: number }
-): Date => {
+const nextBoundary = (blockStart: Date, unit: SteppedUnit): Date => {
   if (typeof unit === "object") {
     return new Date(blockStart.getTime() + unit.stepSeconds * 1000);
   }
@@ -89,7 +103,48 @@ const nextBoundary = (
       return new Date(y, mo, d + 7);
     case "month":
       return new Date(y, mo + 1, 1);
+    case "year":
+      return new Date(y + 1, 0, 1);
   }
+};
+
+/** Each block's whole [start, end) in unix seconds, for the blocks the window
+ *  touches; null once there would be more than `limit`. */
+const blockSpans = (
+  unit: RowUnit,
+  windowStart: number,
+  windowEnd: number,
+  limit = 100000
+): [number, number][] | null => {
+  const spans: [number, number][] = [];
+  if (typeof unit === "object" && "boundaries" in unit) {
+    const edges = unit.boundaries(windowStart, windowEnd);
+    for (let i = 0; i + 1 < edges.length; i++) {
+      const [start, end] = [edges[i], edges[i + 1]];
+      if (end <= windowStart || start >= windowEnd || end <= start) continue;
+      if (spans.length >= limit) return null;
+      spans.push([start, end]);
+    }
+    return spans;
+  }
+
+  // custom fixed steps are anchored to the start of windowStart's local day,
+  // so e.g. 8h shifts fall on 00:00 / 08:00 / 16:00.
+  const day = new Date(windowStart * 1000);
+  const anchorSec =
+    new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime() / 1000;
+
+  let cursorSec = windowStart;
+  while (cursorSec < windowEnd) {
+    const blockStart = floorToUnit(new Date(cursorSec * 1000), unit, anchorSec);
+    const startSec = blockStart.getTime() / 1000;
+    const endSec = nextBoundary(blockStart, unit).getTime() / 1000;
+    if (endSec <= startSec) break; // safety against a non-advancing step
+    if (spans.length >= limit) return null;
+    spans.push([startSec, endSec]);
+    cursorSec = endSec;
+  }
+  return spans;
 };
 
 /**
@@ -110,46 +165,74 @@ export const generateUnitBlocks = ({
   windowEnd: number;
   tick: number | null;
 }): TimeBlock[] => {
-  const blocks: TimeBlock[] = [];
+  if (tick === null || tick <= 0 || windowEnd <= windowStart) return [];
   const resolvedUnit = unit ?? "hour";
-  if (tick === null || tick <= 0 || windowEnd <= windowStart) return blocks;
-
   const label = format ?? defaultFormat(resolvedUnit);
-  // custom fixed steps are anchored to the start of windowStart's local day,
-  // so e.g. 8h shifts fall on 00:00 / 08:00 / 16:00.
-  const anchorSec =
-    new Date(
-      new Date(windowStart * 1000).getFullYear(),
-      new Date(windowStart * 1000).getMonth(),
-      new Date(windowStart * 1000).getDate()
-    ).getTime() / 1000;
+  return (blockSpans(resolvedUnit, windowStart, windowEnd) ?? []).map(
+    ([startSec, endSec]) => {
+      const visibleStart = Math.max(startSec, windowStart);
+      const visibleEnd = Math.min(endSec, windowEnd);
+      return {
+        label: label(new Date(startSec * 1000), new Date(endSec * 1000)),
+        x: (visibleStart - windowStart) / tick,
+        width: (visibleEnd - visibleStart) / tick,
+      };
+    }
+  );
+};
 
-  let cursorSec = windowStart;
-  let guard = 0;
-  while (cursorSec < windowEnd && guard++ < 100000) {
-    const blockStart = floorToUnit(new Date(cursorSec * 1000), resolvedUnit, anchorSec);
-    const blockEnd = nextBoundary(blockStart, resolvedUnit);
-    const startSec = blockStart.getTime() / 1000;
-    const endSec = blockEnd.getTime() / 1000;
-    if (endSec <= startSec) break; // safety against a non-advancing step
+const shortDay = (d: Date) => `${getWeekDayName(d.getDay())} ${d.getDate()}`;
 
-    const visibleStart = Math.max(startSec, windowStart);
-    const visibleEnd = Math.min(endSec, windowEnd);
-    blocks.push({
-      label: label(blockStart, blockEnd),
-      x: (visibleStart - windowStart) / tick,
-      width: (visibleEnd - visibleStart) / tick,
-    });
-    cursorSec = endSec;
+export const DEFAULT_TIME_BAR_LEVELS: TimeBarLevel[] = [
+  { topRow: { unit: "day" }, bottomRow: { unit: "hour" } },
+  { topRow: { unit: "day" }, bottomRow: { unit: { stepSeconds: 6 * 3600 } } },
+  {
+    topRow: {
+      unit: "week",
+      format: (d) => `W${isoWeek(d)} · ${d.getDate()} ${getMonthName(d.getMonth())}`,
+    },
+    bottomRow: { unit: "day", format: shortDay },
+  },
+  { topRow: { unit: "month" }, bottomRow: { unit: "week", format: (d) => `W${isoWeek(d)}` } },
+  { topRow: { unit: "year" }, bottomRow: { unit: "month", format: (d) => getMonthName(d.getMonth()) } },
+];
+
+export const DEFAULT_MIN_BLOCK_WIDTH = 40;
+
+/** The two rows `timeBar` draws at this zoom. */
+export const resolveTimeBar = (
+  timeBar: TimeBarConfig | undefined,
+  windowStart: number,
+  windowEnd: number,
+  tick: number | null
+): TimeBarLevel => {
+  if (!timeBar?.auto) {
+    return {
+      topRow: timeBar?.topRow ?? { unit: "day" },
+      bottomRow: timeBar?.bottomRow ?? { unit: "hour" },
+    };
   }
-  return blocks;
+  const { levels = DEFAULT_TIME_BAR_LEVELS, minBlockWidth = DEFAULT_MIN_BLOCK_WIDTH } =
+    timeBar.auto === true ? {} : timeBar.auto;
+  const levelsOrDefault = levels.length > 0 ? levels : DEFAULT_TIME_BAR_LEVELS;
+  if (tick === null || tick <= 0 || windowEnd <= windowStart) return levelsOrDefault[0];
+
+  const minSecs = minBlockWidth * tick;
+  // every block at least minSecs wide means at most this many touch the window
+  const limit = Math.ceil((windowEnd - windowStart) / minSecs) + 2;
+  return (
+    levelsOrDefault.find((level) => {
+      const spans = blockSpans(level.bottomRow.unit ?? "hour", windowStart, windowEnd, limit);
+      return spans !== null && spans.every(([start, end]) => end - start >= minSecs);
+    }) ?? levelsOrDefault[levelsOrDefault.length - 1]
+  );
 };
 
 /**
  * The default two-row time bar: a day row over an hour row. Thin wrapper over
  * `generateUnitBlocks` kept for the golden tests and as the documented
- * default; the canvas time bar resolves `TimeBarConfig` and calls
- * `generateUnitBlocks` per row directly.
+ * default; the canvas time bar resolves `TimeBarConfig` through
+ * `resolveTimeBar` and calls `generateUnitBlocks` per row.
  */
 export const generateTimeBlocks = ({
   windowStart,

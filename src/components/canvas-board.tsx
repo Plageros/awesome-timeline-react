@@ -17,6 +17,7 @@ import {
   PanZoomConfig,
   ResolvedTheme,
   RowType,
+  TimeBarConfig,
 } from "../types";
 import { SceneStore } from "../core/scene";
 import { TimelineRenderer } from "../canvas/renderer";
@@ -45,6 +46,7 @@ type CanvasBoardProps = {
   onEventHover?: (props: OnEventHoverProps) => void;
   eventsResize: boolean;
   stripeOverlap: boolean;
+  timeBar?: TimeBarConfig;
   panZoom?: PanZoomConfig;
   animations: { layoutMs: number; fadeMs: number };
   selectable: boolean;
@@ -85,6 +87,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       onEventHover,
       eventsResize,
       stripeOverlap,
+      timeBar,
       panZoom,
       animations,
       selectable,
@@ -136,6 +139,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
         drawEvent,
         eventsResize,
         stripeOverlap,
+        timeBar,
       });
     }, [
       windowTime,
@@ -145,6 +149,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       drawEvent,
       eventsResize,
       stripeOverlap,
+      timeBar,
       animations,
       rendererRef,
     ]);

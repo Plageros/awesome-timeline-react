@@ -1,5 +1,5 @@
 import { describe, expect, jest, test } from "@jest/globals";
-import { drawGridLines, drawTimeBar } from "../src/canvas/draw-grid";
+import { drawBlockGridLines, drawGridLines, drawTimeBar } from "../src/canvas/draw-grid";
 
 // Minimal CanvasRenderingContext2D spy — we assert draw-call sequences, not pixels.
 const makeCtx = () => {
@@ -58,6 +58,20 @@ describe("drawGridLines", () => {
     const ctx = makeCtx();
     drawGridLines(ctx, { width: 1000, height: 4, cellWidth: 0, windowStart: 0, tick: 1 });
     expect(ctx.calls.filter((c) => c.method === "moveTo")).toHaveLength(0);
+  });
+});
+
+describe("drawBlockGridLines", () => {
+  test("draws a line on each block edge between blocks, on the time bar's pixels", () => {
+    const ctx = makeCtx();
+    const blocks = [
+      { label: "a", x: 0, width: 0.4 },
+      { label: "b", x: 0.4, width: 300.2 },
+      { label: "c", x: 300.6, width: 599.4 },
+    ];
+    drawBlockGridLines(ctx, { width: 900, height: 4, blocks });
+    // the edge at 0.4 px hugs the left edge, the last block's right edge is the frame
+    expect(ctx.calls.filter((c) => c.method === "moveTo").map((m) => m.args[0])).toEqual([300.5]);
   });
 });
 

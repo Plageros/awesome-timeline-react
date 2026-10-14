@@ -47,6 +47,35 @@ export const drawGridLines = (
   ctx.stroke();
 };
 
+/** Vertical grid lines on the time bar's block edges, so they line up with its
+ *  separators at any unit. Same edge rule as `drawGridLines`. */
+export const drawBlockGridLines = (
+  ctx: CanvasRenderingContext2D,
+  {
+    width,
+    height,
+    blocks,
+    color = DEFAULT_THEME.gridColor,
+  }: {
+    width: number;
+    height: number;
+    blocks: TimeBlock[];
+    color?: string;
+  }
+) => {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i = 0; i < blocks.length - 1; i++) {
+    const x = blocks[i].x + blocks[i].width;
+    if (x < 1 || width - x < 1) continue;
+    const crisp = Math.round(x) - 0.5;
+    ctx.moveTo(crisp, 0);
+    ctx.lineTo(crisp, height);
+  }
+  ctx.stroke();
+};
+
 /**
  * Two-row time bar (top row over bottom row) — canvas replacement for the
  * day/hour block divs of time-bar.tsx. The two rows are unit-agnostic

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { generateUnitBlocks } from "../core/time-blocks";
+import { generateUnitBlocks, resolveTimeBar } from "../core/time-blocks";
 import { sizeCanvas } from "../canvas/dpr";
 import { drawTimeBar } from "../canvas/draw-grid";
 import { DEFAULT_THEME } from "../canvas/theme";
@@ -27,9 +27,6 @@ const CanvasTimeBar = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const header = theme ?? DEFAULT_THEME;
 
-  const topRow = timeBar?.topRow ?? { unit: "day" as const };
-  const bottomRow = timeBar?.bottomRow ?? { unit: "hour" as const };
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !contentWidth) return;
@@ -41,6 +38,7 @@ const CanvasTimeBar = ({
     );
     if (!ctx) return;
     const [windowStart, windowEnd] = windowTime;
+    const { topRow, bottomRow } = resolveTimeBar(timeBar, windowStart, windowEnd, tick);
     drawTimeBar(ctx, {
       width: contentWidth,
       height: TIME_BAR_INNER_HEIGHT,
@@ -55,9 +53,6 @@ const CanvasTimeBar = ({
         tick,
       }),
     });
-    // topRow/bottomRow are derived from `timeBar`; depend on it directly so a
-    // new config object re-renders the bar.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [windowTime, tick, contentWidth, theme, timeBar]);
 
   return (

@@ -1,8 +1,9 @@
 import { SceneStore } from "../core/scene";
-import { DrawEventFn, ResolvedTheme } from "../types";
+import { DrawEventFn, ResolvedTheme, TimeBarConfig } from "../types";
+import { generateUnitBlocks, resolveTimeBar } from "../core/time-blocks";
 import { FrameScheduler, Layer, LayerDirty } from "./frame-scheduler";
 import { sizeCanvas, watchDpr } from "./dpr";
-import { drawGridLines } from "./draw-grid";
+import { drawBlockGridLines, drawGridLines } from "./draw-grid";
 import {
   drawEvents,
   drawGroupShading,
@@ -28,6 +29,7 @@ export type RendererView = {
   drawEvent?: DrawEventFn;
   eventsResize: boolean;
   stripeOverlap: boolean;
+  timeBar?: TimeBarConfig;
   // interaction state
   hoveredEventId: string | null;
   draggedEventId: string | null;
@@ -134,6 +136,29 @@ export class TimelineRenderer {
     }
   }
 
+  private drawGrid(ctx: CanvasRenderingContext2D, tick: number) {
+    const { width, height, windowTime, timeBar, theme } = this.view;
+    if (timeBar?.auto) {
+      const [windowStart, windowEnd] = windowTime;
+      const { bottomRow } = resolveTimeBar(timeBar, windowStart, windowEnd, tick);
+      drawBlockGridLines(ctx, {
+        width,
+        height,
+        blocks: generateUnitBlocks({ ...bottomRow, windowStart, windowEnd, tick }),
+        color: theme.gridColor,
+      });
+      return;
+    }
+    drawGridLines(ctx, {
+      width,
+      height,
+      cellWidth: this.view.cellWidth,
+      windowStart: windowTime[0],
+      tick,
+      color: theme.gridColor,
+    });
+  }
+
   private drawFrame(dirty: LayerDirty) {
     if (this.view.tick === null) return;
     this.animator.beginFrame(performance.now());
@@ -144,14 +169,7 @@ export class TimelineRenderer {
         // recessed-group tint/shadow first, so grid lines + dividers stay crisp
         // on top of it
         drawGroupShading(ctx, this.view, this.scene);
-        drawGridLines(ctx, {
-          width: this.view.width,
-          height: this.view.height,
-          cellWidth: this.view.cellWidth,
-          windowStart: this.view.windowTime[0],
-          tick: this.view.tick,
-          color: this.view.theme.gridColor,
-        });
+        this.drawGrid(ctx, this.view.tick);
         drawRowDividers(ctx, this.view, this.scene);
       }
     }

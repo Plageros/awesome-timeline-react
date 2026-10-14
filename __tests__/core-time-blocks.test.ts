@@ -2,7 +2,10 @@ import { describe, expect, test } from "@jest/globals";
 import {
   generateTimeBlocks,
   generateUnitBlocks,
+  isoWeek,
+  resolveTimeBar,
 } from "../src/core/time-blocks";
+import { TimeBarLevel } from "../src/types";
 
 describe("generateTimeBlocks", () => {
   // Mirrors __tests__/time-bar.test.tsx: same 4-day window must yield the
@@ -211,5 +214,105 @@ describe("generateUnitBlocks (configurable rows)", () => {
         tick: null,
       })
     ).toEqual([]);
+  });
+});
+
+describe("generateUnitBlocks (year and boundaries units)", () => {
+  test("year row labels the year and splits at 1 January", () => {
+    const windowStart = new Date(2024, 10, 1).getTime() / 1000;
+    const windowEnd = new Date(2025, 2, 1).getTime() / 1000;
+    const blocks = generateUnitBlocks({ unit: "year", windowStart, windowEnd, tick: 3600 });
+    expect(blocks.map((b) => b.label)).toEqual(["2024", "2025"]);
+  });
+
+  test("boundaries build uneven blocks, clipped to the window", () => {
+    const at = (day: number, h: number) => new Date(2024, 0, day, h).getTime() / 1000;
+    // Fri 5 Jan 06/14/22, then the weekend off until Mon 8 Jan 06:00
+    const edges = [at(5, 6), at(5, 14), at(5, 22), at(6, 6), at(8, 6), at(8, 14)];
+    const blocks = generateUnitBlocks({
+      unit: { boundaries: () => edges },
+      format: (s, e) => `${s.getHours()}-${e.getHours()}`,
+      windowStart: at(5, 10),
+      windowEnd: at(8, 10),
+      tick: 3600,
+    });
+    expect(blocks.map((b) => b.label)).toEqual(["6-14", "14-22", "22-6", "6-6", "6-14"]);
+    expect(blocks[0].x).toBe(0);
+    expect(blocks[0].width).toBe(4);
+    expect(blocks[3].width).toBe(48);
+    expect(blocks[4].width).toBe(4);
+  });
+});
+
+describe("isoWeek", () => {
+  test("follows ISO-8601 across year ends", () => {
+    expect(isoWeek(new Date(2024, 11, 30))).toBe(1); // Mon 30 Dec 2024 is W1 of 2025
+    expect(isoWeek(new Date(2026, 0, 1))).toBe(1);
+    expect(isoWeek(new Date(2027, 0, 1))).toBe(53); // Fri 1 Jan 2027 is W53 of 2026
+    expect(isoWeek(new Date(2026, 9, 14))).toBe(42);
+  });
+});
+
+describe("resolveTimeBar", () => {
+  const width = 1400;
+  const at = (days: number) => {
+    const windowStart = new Date(2026, 9, 12, 0).getTime() / 1000;
+    const windowEnd = windowStart + days * 86400;
+    return { windowStart, windowEnd, tick: (windowEnd - windowStart) / width };
+  };
+  const bottomUnit = (days: number, auto: Parameters<typeof resolveTimeBar>[0]) => {
+    const { windowStart, windowEnd, tick } = at(days);
+    return resolveTimeBar(auto, windowStart, windowEnd, tick).bottomRow.unit;
+  };
+
+  test("without auto it is the configured rows, day over hour by default", () => {
+    expect(resolveTimeBar(undefined, 0, 3600, 1)).toEqual({
+      topRow: { unit: "day" },
+      bottomRow: { unit: "hour" },
+    });
+    expect(resolveTimeBar({ bottomRow: { unit: "week" } }, 0, 3600, 1).bottomRow.unit).toBe("week");
+  });
+
+  test("auto picks the finest level whose blocks stay readable", () => {
+    expect(bottomUnit(1, { auto: true })).toBe("hour"); // 58 px an hour
+    expect(bottomUnit(7, { auto: true })).toEqual({ stepSeconds: 6 * 3600 }); // 50 px per 6 h
+    expect(bottomUnit(30, { auto: true })).toBe("day"); // 47 px a day
+    expect(bottomUnit(365, { auto: true })).toBe("month"); // a week would be 27 px
+  });
+
+  test("auto falls back to the coarsest level when nothing is wide enough", () => {
+    expect(bottomUnit(3650, { auto: true })).toBe("month");
+  });
+
+  test("auto honours custom levels and minBlockWidth", () => {
+    const levels: TimeBarLevel[] = [
+      { topRow: { unit: "day" }, bottomRow: { unit: "hour" } },
+      { topRow: { unit: "week" }, bottomRow: { unit: "day" } },
+    ];
+    expect(bottomUnit(1, { auto: { levels, minBlockWidth: 100 } })).toBe("day");
+    expect(bottomUnit(1, { auto: { levels, minBlockWidth: 50 } })).toBe("hour");
+  });
+
+  test("an uneven level is judged by its narrowest block", () => {
+    const { windowStart, windowEnd, tick } = at(7);
+    const shifts = (step: number): TimeBarLevel => ({
+      topRow: { unit: "day" },
+      bottomRow: {
+        unit: {
+          boundaries: (s, e) => {
+            const edges: number[] = [];
+            for (let t = s - (s % 3600); t <= e + step; t += step) edges.push(t);
+            return edges;
+          },
+        },
+      },
+    });
+    const coarse = shifts(8 * 3600); // 67 px
+    const fine = shifts(3600); // 8 px
+    expect(resolveTimeBar({ auto: { levels: [fine, coarse] } }, windowStart, windowEnd, tick)).toBe(coarse);
+  });
+
+  test("an unmeasured timeline gets the first level", () => {
+    expect(resolveTimeBar({ auto: true }, 0, 3600, null).bottomRow.unit).toBe("hour");
   });
 });

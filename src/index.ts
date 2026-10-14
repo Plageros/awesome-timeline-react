@@ -1,4 +1,5 @@
 export * from "./timeline";
+export { DEFAULT_TIME_BAR_LEVELS } from "./core/time-blocks";
 export type {
   RowType,
   EventType,
@@ -15,6 +16,10 @@ export type {
   OnEventHoverProps,
   DroppableError,
   PanZoomConfig,
+  TimeBarConfig,
+  TimeBarLevel,
+  TimeBarRowConfig,
+  TimeBarUnit,
   EventPatch,
   TimelineHandle,
   TimelineProps,

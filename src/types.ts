@@ -221,21 +221,39 @@ export type AnimationConfig =
     };
 
 /** Calendar unit for a time-bar row, or a fixed step in seconds. */
-export type TimeBarUnit = "hour" | "day" | "week" | "month";
+export type TimeBarUnit = "hour" | "day" | "week" | "month" | "year";
 
 export type TimeBarRowConfig = {
   /** the unit each block spans (default: "day" for the top row, "hour" for
-   *  the bottom row), or a fixed step like `{ stepSeconds: 8 * 3600 }`. */
-  unit?: TimeBarUnit | { stepSeconds: number };
+   *  the bottom row), a fixed step like `{ stepSeconds: 8 * 3600 }`, or
+   *  `{ boundaries }` for uneven blocks such as real shifts: it returns the
+   *  sorted block edges in unix seconds, one at or before `windowStart` and one
+   *  at or after `windowEnd`, so the row tiles the window. */
+  unit?:
+    | TimeBarUnit
+    | { stepSeconds: number }
+    | { boundaries: (windowStart: number, windowEnd: number) => number[] };
   /** label for a block; receives the block's start and end. Defaults mirror
    *  the built-in day ("Mon 1 Jan") and hour ("HH:00") labels. */
   format?: (blockStart: Date, blockEnd: Date) => string;
+};
+
+/** One zoom level of an automatic time bar. */
+export type TimeBarLevel = {
+  topRow: TimeBarRowConfig;
+  bottomRow: TimeBarRowConfig;
 };
 
 /** Per-row configuration for the two-row time bar. */
 export type TimeBarConfig = {
   topRow?: TimeBarRowConfig; // default { unit: "day" }
   bottomRow?: TimeBarRowConfig; // default { unit: "hour" }
+  /** pick the rows by zoom instead: the first of `levels` (finest first; default
+   *  day/hour → day/6 h → week/day → month/week → year/month) whose bottom-row
+   *  blocks are at least `minBlockWidth` px wide (default 40). `topRow`/`bottomRow`
+   *  are ignored, and the grid lines follow the bottom row rather than the grid
+   *  cell; drops still snap to the cell. */
+  auto?: boolean | { levels?: TimeBarLevel[]; minBlockWidth?: number };
 };
 
 export type PanZoomConfig = {
@@ -373,8 +391,8 @@ export type TimelineProps = {
   /** draw the two-row time bar above the rows (default true). Off, the timeline is just its rows —
    *  e.g. a secondary strip kept in step with a main timeline through `onWindowChange`/`setWindow`. */
   showTimeBar?: boolean;
-  /** a dashed vertical line follows the pointer over the rows, its time shown in the time bar
-   *  (default false) */
+  /** a dashed vertical line follows the pointer over the rows, its time shown in the time bar;
+   *  hidden while the pointer is on an event (default false) */
   showPointerLine?: boolean;
   /** the pointer line's label for a time in unix seconds (default: the browser's locale date and time) */
   formatPointerTime?: (time: number) => string;

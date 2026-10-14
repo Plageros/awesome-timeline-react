@@ -79,8 +79,8 @@ export const drawBlockGridLines = (
 /**
  * Two-row time bar (top row over bottom row) — canvas replacement for the
  * day/hour block divs of time-bar.tsx. The two rows are unit-agnostic
- * (day/hour by default, configurable via TimeBarConfig). Background is left
- * transparent so the .time-bar container color shows through.
+ * (day/hour by default, configurable via TimeBarConfig). A row without its own
+ * background is left transparent, so the .time-bar container color shows through.
  */
 export const drawTimeBar = (
   ctx: CanvasRenderingContext2D,
@@ -92,17 +92,32 @@ export const drawTimeBar = (
     font,
     borderColor = DEFAULT_THEME.timeBarBorder,
     textColor = DEFAULT_THEME.timeBarTextColor,
+    topBackground,
+    bottomBackground,
+    bottomTextColor = textColor,
   }: {
     width: number;
     height: number;
     font: string;
     borderColor?: string;
     textColor?: string;
+    topBackground?: string;
+    bottomBackground?: string;
+    bottomTextColor?: string;
     topBlocks: TimeBlock[];
     bottomBlocks: TimeBlock[];
   }
 ) => {
   const mid = height / 2;
+
+  if (topBackground) {
+    ctx.fillStyle = topBackground;
+    ctx.fillRect(0, 0, width, Math.round(mid));
+  }
+  if (bottomBackground) {
+    ctx.fillStyle = bottomBackground;
+    ctx.fillRect(0, Math.round(mid), width, height - Math.round(mid));
+  }
 
   ctx.strokeStyle = borderColor;
   ctx.lineWidth = 1;
@@ -141,6 +156,7 @@ export const drawTimeBar = (
       block.width - inset
     );
   }
+  ctx.fillStyle = bottomTextColor;
   for (const block of bottomBlocks) {
     ctx.fillText(
       block.label,

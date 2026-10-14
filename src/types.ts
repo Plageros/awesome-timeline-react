@@ -59,6 +59,12 @@ export type Theme = {
   gridColor?: string;
   timeBarBorder?: string;
   timeBarTextColor?: string;
+  /** fills of the time bar's top and bottom rows, so the two read apart; unset, both show the
+   *  header background */
+  timeBarTopBackground?: string;
+  timeBarBottomBackground?: string;
+  /** the bottom row's labels; unset, `timeBarTextColor` */
+  timeBarBottomTextColor?: string;
   /** opacity applied to NON-selected events while a selection is active, so the
    *  selection stands out (default 0.35). 1 disables dimming. */
   dimmedOpacity?: number;
@@ -110,7 +116,7 @@ export type Theme = {
 
 // these stay unset unless given, so the stylesheet (and a `rowsHeader` class) still applies
 type HeaderToken = "headerBackground" | "headerTextColor" | "headerBorderColor" | "headerShadow"
-  | "borderColor";
+  | "borderColor" | "timeBarTopBackground" | "timeBarBottomBackground" | "timeBarBottomTextColor";
 export type ResolvedTheme = Required<Omit<Theme, "font" | HeaderToken>> &
   Pick<Theme, "font" | HeaderToken>;
 

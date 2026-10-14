@@ -3,11 +3,11 @@ import { drawBlockGridLines, drawGridLines, drawTimeBar } from "../src/canvas/dr
 
 // Minimal CanvasRenderingContext2D spy — we assert draw-call sequences, not pixels.
 const makeCtx = () => {
-  const calls: { method: string; args: unknown[] }[] = [];
+  const calls: { method: string; args: unknown[]; fill: string }[] = [];
   const record =
     (method: string) =>
     (...args: unknown[]) =>
-      calls.push({ method, args });
+      calls.push({ method, args, fill: ctx.fillStyle });
   const ctx = {
     calls,
     strokeStyle: "",
@@ -21,6 +21,7 @@ const makeCtx = () => {
     lineTo: record("lineTo"),
     stroke: record("stroke"),
     fillText: record("fillText"),
+    fillRect: record("fillRect"),
     clearRect: record("clearRect"),
   };
   return ctx as unknown as CanvasRenderingContext2D & { calls: typeof calls };
@@ -115,5 +116,34 @@ describe("drawTimeBar", () => {
     // 1 day-row bottom border + (2-1) day separators + (10-1) hour separators
     const moves = ctx.calls.filter((c) => c.method === "moveTo");
     expect(moves).toHaveLength(1 + 1 + 9);
+  });
+
+  test("leaves both rows unfilled unless given a background", () => {
+    const ctx = makeCtx();
+    drawTimeBar(ctx, { width: 1000, height: 48, font: "16px sans-serif", topBlocks: dayBlocks, bottomBlocks: hourBlocks });
+    expect(ctx.calls.filter((c) => c.method === "fillRect")).toHaveLength(0);
+  });
+
+  test("fills each row and labels the bottom one in its own colour", () => {
+    const ctx = makeCtx();
+    drawTimeBar(ctx, {
+      width: 1000,
+      height: 48,
+      font: "16px sans-serif",
+      topBlocks: dayBlocks,
+      bottomBlocks: hourBlocks,
+      textColor: "#fff",
+      topBackground: "#222",
+      bottomBackground: "#333",
+      bottomTextColor: "#999",
+    });
+    const fills = ctx.calls.filter((c) => c.method === "fillRect");
+    expect(fills.map((c) => [c.fill, ...c.args])).toEqual([
+      ["#222", 0, 0, 1000, 24],
+      ["#333", 0, 24, 1000, 24],
+    ]);
+    const labels = ctx.calls.filter((c) => c.method === "fillText");
+    expect(labels.find((c) => c.args[0] === "Mon 1 Jan")?.fill).toBe("#fff");
+    expect(labels.find((c) => c.args[0] === "00:00")?.fill).toBe("#999");
   });
 });

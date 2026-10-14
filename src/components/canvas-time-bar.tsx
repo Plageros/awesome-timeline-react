@@ -45,6 +45,9 @@ const CanvasTimeBar = ({
       font: theme?.font ?? getComputedStyle(canvas).font,
       borderColor: theme?.timeBarBorder,
       textColor: theme?.timeBarTextColor,
+      topBackground: theme?.timeBarTopBackground,
+      bottomBackground: theme?.timeBarBottomBackground,
+      bottomTextColor: theme?.timeBarBottomTextColor ?? theme?.timeBarTextColor,
       topBlocks: generateUnitBlocks({ ...topRow, windowStart, windowEnd, tick }),
       bottomBlocks: generateUnitBlocks({
         ...bottomRow,

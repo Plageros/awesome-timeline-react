@@ -1311,11 +1311,28 @@ const UNEVEN_TIME_BAR: TimeBarConfig = {
  * `timeBar.auto`: the rows follow the zoom (day/hour → day/6 h → week/day → month/week → year/month),
  * and the grid follows the bottom row. Zoom with the buttons or ctrl/cmd + wheel; no block may get
  * narrower than 40 px. "Uneven blocks" swaps the two finest levels for a `boundaries` row: three
- * blocks a weekday and one over the weekend.
+ * blocks a weekday and one over the weekend. "Two-tone rows" fills the rows apart
+ * (`timeBarTopBackground`, `timeBarBottomBackground`, `timeBarBottomTextColor`) on a dark header.
  */
+const DARK_HEADER = {
+  headerBackground: "#272424",
+  headerTextColor: "#ffffff",
+  headerBorderColor: "#4a4545",
+  timeBarBorder: "#4a4545",
+  timeBarTextColor: "#ffffff",
+  gridColor: "#edeff3",
+};
+const TWO_TONE = {
+  ...DARK_HEADER,
+  timeBarTopBackground: "#272424",
+  timeBarBottomBackground: "#3b3737",
+  timeBarBottomTextColor: "#d6d0d0",
+};
+
 export const TimelineAutoTimeBar = () => {
   const ref = useRef<TimelineHandle>(null);
   const [uneven, setUneven] = useState(false);
+  const [header, setHeader] = useState<"default" | "dark" | "twoTone">("twoTone");
   const [days, setDays] = useState(0);
   const origin = new Date(2024, 0, 1).getTime() / 1000;
   const rows = [
@@ -1346,10 +1363,15 @@ export const TimelineAutoTimeBar = () => {
         ))}{" "}
         <label><input type="checkbox" checked={uneven} onChange={(e) => setUneven(e.target.checked)} />{" "}
           uneven blocks</label>{" "}
+        {(["default", "dark", "twoTone"] as const).map((h) => (
+          <label key={h}><input type="radio" checked={header === h} onChange={() => setHeader(h)} />{" "}
+            {h === "default" ? "default header" : h === "dark" ? "dark header" : "two-tone rows"}{" "}</label>
+        ))}
         — window {days.toFixed(1)} days
       </p>
       <div style={{ flex: 1, minHeight: 0 }}>
         <Timeline ref={ref} rows={rows} events={events}
+          theme={header === "default" ? undefined : header === "dark" ? DARK_HEADER : TWO_TONE}
           startDate={new Date((origin + 86400 * 7) * 1000)} endDate={new Date((origin + 86400 * 14) * 1000)}
           panZoom={{ maxWindowSeconds: 400 * 86400 }}
           timeBar={uneven ? UNEVEN_TIME_BAR : { auto: true }}

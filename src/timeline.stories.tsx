@@ -1329,6 +1329,129 @@ const TWO_TONE = {
   timeBarBottomTextColor: "#d6d0d0",
 };
 
+/**
+ * Long bars running across two months of unavailable bands (every night 22:00–06:00 and every
+ * weekend), with `stripeOverlap` on. "Auto-pan" scrolls the window by a fixed step for 120 frames and
+ * reports the mean frame time, so one pan can be compared across: the first long bar selected or not,
+ * a long bar on every track or only the first, and a second timeline kept in step below.
+ */
+export const TimelineLongStripedBar = () => {
+  const ref = useRef<TimelineHandle>(null);
+  const second = useRef<TimelineHandle>(null);
+  const [selected, setSelected] = useState(true);
+  const [stripes, setStripes] = useState(true);
+  const [everyTrack, setEveryTrack] = useState(false);
+  const [strip, setStrip] = useState(false);
+  const [days, setDays] = useState(30);
+  const [result, setResult] = useState("");
+  const origin = new Date(2024, 0, 1).getTime() / 1000;
+  const span = 60;
+  const rows = Array.from({ length: 8 }, (_, i) => ({ id: `r${i + 1}`, name: `Track ${"ABCDEFGH"[i]}` }));
+  const staticEvents = React.useMemo<EventType[]>(() => {
+    const out: EventType[] = [];
+    let from = origin;
+    for (let d = 0; d < span; d++) {
+      const day = origin + d * 86400;
+      if (new Date(day * 1000).getDay() % 6 === 0) continue;
+      if (day + 6 * 3600 > from) {
+        for (const row of rows) {
+          out.push({ id: `${row.id}-off-${d}`, rowId: row.id, startTime: from, endTime: day + 6 * 3600 });
+        }
+      }
+      from = day + 22 * 3600;
+    }
+    return out;
+  }, []);
+  const events = React.useMemo<EventType[]>(
+    () => rows.flatMap((row, r) => {
+      const long = { id: `long-${row.id}`, rowId: row.id,
+        startTime: origin + 86400 + (8 + r) * 3600, endTime: origin + 55 * 86400,
+        props: { label: `Long task ${r + 1}`,
+                 style: { fill: "#2563eb", stroke: "#1e3a8a", textColor: "#ffffff" } } };
+      const short = Array.from({ length: 20 }, (_, i) => ({
+        id: `t-${row.id}-${i}`, rowId: row.id,
+        startTime: origin + i * 3 * 86400 + 7 * 3600, endTime: origin + i * 3 * 86400 + 12 * 3600,
+        props: { label: `Task ${i}` },
+      }));
+      return r === 0 || everyTrack ? [long] : short;
+    }),
+    [everyTrack]
+  );
+  const stripRows = [{ id: "s1", name: "Level" }, { id: "s2", name: "Use" }];
+  const stripEvents = React.useMemo<EventType[]>(
+    () => Array.from({ length: 120 }, (_, i) => ({
+      id: `s${i}`, rowId: i % 2 ? "s2" : "s1",
+      startTime: origin + i * 12 * 3600, endTime: origin + (i + 1) * 12 * 3600,
+      props: { label: `${(i * 37) % 100}` },
+    })),
+    []
+  );
+  useEffect(() => {
+    ref.current?.setSelection(selected ? ["long-r1"] : []);
+  }, [selected, everyTrack]);
+  useEffect(() => {
+    ref.current?.setWindow(origin + 7 * 86400, origin + (7 + days) * 86400);
+  }, [days]);
+  const autoPan = () => {
+    const frames = 120;
+    const step = (days * 86400) / 400;
+    const times: number[] = [];
+    let i = 0;
+    let last = performance.now();
+    const tick = (now: number) => {
+      if (i > 0) times.push(now - last);
+      last = now;
+      if (i === frames) {
+        const mean = times.reduce((a, b) => a + b, 0) / times.length;
+        setResult(`${selected ? "selected" : "not selected"}, ${everyTrack ? "every track" : "one track"}, `
+          + `${days} d, stripes ${stripes ? "on" : "off"}, second ${strip ? "on" : "off"}: `
+          + `mean ${mean.toFixed(1)} ms/frame, worst ${Math.max(...times).toFixed(1)} ms`);
+        return;
+      }
+      const start = origin + 7 * 86400 + (i % 200) * step;
+      ref.current?.setWindow(start, start + days * 86400);
+      i++;
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "92vh", font: "13px sans-serif" }}>
+      <p style={{ padding: 6, margin: 0, display: "flex", gap: 12, alignItems: "center" }}>
+        <label><input type="checkbox" checked={selected} onChange={(e) => setSelected(e.target.checked)} />{" "}
+          first long bar selected</label>
+        <label><input type="checkbox" checked={everyTrack} onChange={(e) => setEveryTrack(e.target.checked)} />{" "}
+          long bar on every track</label>
+        <label><input type="checkbox" checked={stripes} onChange={(e) => setStripes(e.target.checked)} />{" "}
+          stripeOverlap</label>
+        <label><input type="checkbox" checked={strip} onChange={(e) => setStrip(e.target.checked)} />{" "}
+          second timeline</label>
+        {[2, 7, 30].map((n) => (
+          <label key={n}><input type="radio" checked={days === n} onChange={() => setDays(n)} /> {n} d</label>
+        ))}
+        <button onClick={autoPan}>Auto-pan</button>
+        <span>{result}</span>
+      </p>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <Timeline ref={ref} rows={rows} events={events} staticEvents={staticEvents}
+          stripeOverlap={stripes} selectable
+          startDate={new Date((origin + 7 * 86400) * 1000)}
+          endDate={new Date((origin + (7 + days) * 86400) * 1000)}
+          panZoom={{ maxWindowSeconds: 90 * 86400 }} timeBar={{ auto: true }}
+          onWindowChange={({ startTime, endTime }) => second.current?.setWindow(startTime, endTime)} />
+      </div>
+      {strip ? (
+        <div style={{ height: 160 }}>
+          <Timeline ref={second} rows={stripRows} events={stripEvents}
+            startDate={new Date((origin + 7 * 86400) * 1000)}
+            endDate={new Date((origin + (7 + days) * 86400) * 1000)}
+            panZoom={{ maxWindowSeconds: 90 * 86400 }} timeBar={{ auto: true }} />
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 export const TimelineAutoTimeBar = () => {
   const ref = useRef<TimelineHandle>(null);
   const [uneven, setUneven] = useState(false);

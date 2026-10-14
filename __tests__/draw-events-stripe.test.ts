@@ -6,7 +6,7 @@ import { DEFAULT_THEME } from "../src/canvas/theme";
 import type { RendererView } from "../src/canvas/renderer";
 import { EventType, RowType } from "../src/types";
 
-type Counts = { clip: number; stroke: number; fillRect: number };
+type Counts = { clip: number; stroke: number; fillRect: number; shadowed: number };
 
 // Minimal spy ctx that counts the calls the stripe pass makes. A recording
 // `drawEvent` (below) returns void so the default bar draw is skipped — every
@@ -24,7 +24,7 @@ const makeCtx = (counts: Counts) => {
     shadowBlur: 0,
     shadowOffsetY: 0,
     save() {
-      stack.push({ globalAlpha: this.globalAlpha });
+      stack.push({ globalAlpha: this.globalAlpha, shadowColor: this.shadowColor });
     },
     restore() {
       const s = stack.pop();
@@ -40,6 +40,7 @@ const makeCtx = (counts: Counts) => {
     },
     stroke() {
       counts.stroke++;
+      if (this.shadowColor && this.shadowColor !== "transparent") counts.shadowed++;
     },
     clip() {
       counts.clip++;
@@ -54,13 +55,13 @@ const makeCtx = (counts: Counts) => {
 const rows: RowType[] = [{ id: "r1", name: "Row 1" }];
 
 // one event 0..100 that straddles a static band 40..60 on the same row
-const run = (stripeOverlap: boolean): Counts => {
+const run = (stripeOverlap: boolean, selected = false): Counts => {
   const scene = new SceneStore();
   scene.setRows(rows);
   scene.setEvents([{ id: "e", rowId: "r1", startTime: 0, endTime: 100 }]);
   scene.setStaticEvents([{ id: "band", rowId: "r1", startTime: 40, endTime: 60 }]);
 
-  const counts: Counts = { clip: 0, stroke: 0, fillRect: 0 };
+  const counts: Counts = { clip: 0, stroke: 0, fillRect: 0, shadowed: 0 };
   const view: RendererView = {
     windowTime: [0, 1000],
     tick: 1,
@@ -76,7 +77,7 @@ const run = (stripeOverlap: boolean): Counts => {
     hoveredEventId: null,
     draggedEventId: null,
     resizePreview: null,
-    selectedEventIds: new Set<string>(),
+    selectedEventIds: new Set<string>(selected ? ["e"] : []),
   };
   drawEvents(makeCtx(counts), view, scene, "16px sans-serif", new LayoutAnimator());
   return counts;
@@ -95,5 +96,11 @@ describe("drawEvents — overlap striping", () => {
     expect(c.clip).toBe(1); // one overlapping band → one clipped slice
     expect(c.fillRect).toBe(1); // the faint wash
     expect(c.stroke).toBeGreaterThan(0); // 45° stripe lines
+  });
+
+  test("a selected bar's stripes are drawn without its lift shadow", () => {
+    const c = run(true, true);
+    expect(c.stroke).toBeGreaterThan(0);
+    expect(c.shadowed).toBe(0);
   });
 });

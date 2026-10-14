@@ -343,6 +343,8 @@ export const drawEvents = (
     }
 
     if (view.stripeOverlap && rowStatics.length > 0) {
+      // the lift shadow belongs to the bar body: blurring every stripe of a long selected bar stalls a pan
+      ctx.shadowColor = "transparent";
       paintOverlapStripes(
         ctx,
         event,

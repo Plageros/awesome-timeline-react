@@ -130,6 +130,10 @@ CSS classes cannot style canvas pixels, so canvas-drawn elements are themed with
     gridColor: "#e4dcdc",
     timeBarBorder: "yellow",
     timeBarTextColor: "white",
+    // since 0.13.0, unset by default: fill the time bar's two rows apart
+    timeBarTopBackground: "#272424",
+    timeBarBottomBackground: "#3b3737",
+    timeBarBottomTextColor: "#d6d0d0", // unset, timeBarTextColor
     // selection visuals (see Selection)
     dimmedOpacity: 0.35, // opacity of non-selected events while a selection is active
     selectionShadowColor: "rgba(0,0,0,0.35)", // lift shadow of selected events

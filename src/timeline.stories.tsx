@@ -1504,3 +1504,50 @@ export const TimelineAutoTimeBar = () => {
     </div>
   );
 };
+
+/**
+ * Links: `links` draws a line from the end of one event to the start of another, above the bars and
+ * under the selected ones. Here each chain is a group (`props.groupId`) of steps on tracks far apart;
+ * Cmd/Ctrl+click a step to select its chain, and the chain's links are drawn. Scroll a chain's other
+ * steps out of view: a marker at the top or bottom edge names each one, and clicking it scrolls there
+ * (and pans the window when the step is off it). Chain C's second step starts before its first ends,
+ * so its line goes around the corner.
+ */
+export const TimelineLinks = () => {
+  const d = (h: number, m = 0) => new Date(2024, 4, 27, h, m, 0).getTime() / 1000;
+  const rows = Array.from({ length: 40 }, (_, i) => ({ id: `t${i + 1}`, name: `Track ${i + 1}` }));
+  const palette = ["#1e88e5", "#fb8c00", "#8e24aa", "#43a047"];
+  const chains: { id: string; steps: [number, number, number][] }[] = [
+    { id: "A", steps: [[2, 1, 3], [19, 3, 5], [36, 5, 7], [11, 8, 9]] },
+    { id: "B", steps: [[5, 2, 4], [6, 4, 6], [30, 6, 8]] },
+    { id: "C", steps: [[14, 1, 5], [27, 3, 6], [3, 30, 32]] },
+    { id: "D", steps: [[22, 9, 11], [40, 11, 12], [1, 12, 14]] },
+  ];
+  const events: EventType[] = chains.flatMap((c, ci) => c.steps.map(([track, from, to], i) => ({
+    id: `${c.id}${i + 1}`, rowId: `t${track}`, startTime: d(from), endTime: d(to),
+    props: { label: `Chain ${c.id} · step ${i + 1}`, groupId: c.id,
+             style: { fill: palette[ci], stroke: palette[ci], textColor: "#ffffff" } },
+  })));
+  const allLinks = chains.flatMap((c) => c.steps.slice(1).map((_, i) =>
+    ({ id: `${c.id}${i + 1}-${c.id}${i + 2}`, fromEventId: `${c.id}${i + 1}`, toEventId: `${c.id}${i + 2}` })));
+  const [selected, setSelected] = useState<string[]>([]);
+  const [showAll, setShowAll] = useState(false);
+  const [revealed, setRevealed] = useState<string | null>(null);
+  const chainsOn = new Set(selected.map((id) => id.charAt(0)));
+  const links = showAll ? allLinks : allLinks.filter((l) => chainsOn.has(l.fromEventId.charAt(0)));
+  return (
+    <div style={{ height: "90vh", display: "flex", flexDirection: "column" }}>
+      <p style={{ margin: "8px 0" }}>
+        Cmd/Ctrl+click a step to select its chain.{" "}
+        <label><input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />{" "}
+          every chain's links</label>
+        {revealed ? ` — revealed ${revealed}` : null}
+      </p>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <Timeline rows={rows} events={events} links={links} selectable onSelectionChange={setSelected}
+          onLinkReveal={setRevealed} theme={{ barHeight: 28 }}
+          startDate={new Date(2024, 4, 27, 0)} endDate={new Date(2024, 4, 27, 16)} />
+      </div>
+    </div>
+  );
+};

@@ -24,6 +24,9 @@ export const DEFAULT_THEME: ResolvedTheme = {
   groupShadowColor: "rgba(0,0,0,0.22)",
   pointerLineColor: "rgba(15,23,42,0.7)",
   pointerLabelColor: "#ffffff",
+  linkColor: "#2563eb",
+  linkWidth: 2,
+  linkMarkerTextColor: "#ffffff",
 };
 
 export const resolveTheme = (theme?: Theme): ResolvedTheme => ({

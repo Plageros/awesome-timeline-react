@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import {
   EventPromptActionsType,
+  LinkType,
   OnEventHoverProps,
   TimelineHandle,
   TimelineProps,
@@ -31,6 +32,7 @@ import { resolveTheme } from "./canvas/theme";
 import { geometryFromTheme } from "./core/geometry";
 
 const defaultPointerFormat = (time: number) => new Date(time * 1000).toLocaleString();
+const NO_LINKS: LinkType[] = [];
 
 export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
   (
@@ -65,6 +67,8 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
       formatPointerTime,
       onPointerTime,
       animations = true,
+      links = NO_LINKS,
+      onLinkReveal,
     },
     handleRef
   ) => {
@@ -453,6 +457,8 @@ export const Timeline = forwardRef<TimelineHandle, TimelineProps>(
             onEventHover={handleEventHover}
             eventsResize={eventsResize}
             stripeOverlap={stripeOverlap}
+            links={links}
+            onLinkReveal={onLinkReveal}
             timeBar={timeBar}
             panZoom={panZoom}
             animations={resolvedAnimations}

@@ -1,5 +1,7 @@
 import { SceneStore } from "../core/scene";
-import { DrawEventFn, ResolvedTheme, TimeBarConfig } from "../types";
+import { LinkMarker } from "../core/links";
+import { DrawEventFn, LinkType, ResolvedTheme, TimeBarConfig } from "../types";
+import { drawLinks } from "./draw-links";
 import { generateUnitBlocks, resolveTimeBar } from "../core/time-blocks";
 import { FrameScheduler, Layer, LayerDirty } from "./frame-scheduler";
 import { sizeCanvas, watchDpr } from "./dpr";
@@ -35,6 +37,7 @@ export type RendererView = {
   draggedEventId: string | null;
   resizePreview: ResizePreview | null;
   selectedEventIds: ReadonlySet<string>;
+  links: LinkType[];
 };
 
 /**
@@ -63,7 +66,9 @@ export class TimelineRenderer {
     draggedEventId: null,
     resizePreview: null,
     selectedEventIds: new Set<string>(),
+    links: [],
   };
+  private linkMarkers: LinkMarker[] = [];
   readonly animator = new LayoutAnimator();
   private scheduler: FrameScheduler;
   private unsubscribeScene: () => void;
@@ -89,6 +94,11 @@ export class TimelineRenderer {
 
   getView(): RendererView {
     return this.view;
+  }
+
+  /** the link edge markers as last drawn, in viewport px */
+  getLinkMarkers(): LinkMarker[] {
+    return this.linkMarkers;
   }
 
   setView(partial: Partial<RendererView>) {
@@ -177,7 +187,9 @@ export class TimelineRenderer {
       const ctx = this.dynamicCanvas.getContext("2d");
       if (ctx) {
         ctx.clearRect(0, 0, this.view.width, this.view.height);
-        drawEvents(ctx, this.view, this.scene, this.font, this.animator);
+        drawEvents(ctx, this.view, this.scene, this.font, this.animator, () => {
+          this.linkMarkers = drawLinks(ctx, this.view, this.scene, this.font);
+        });
       }
     }
     // layout tweens in progress -> keep the frame loop running

@@ -188,6 +188,28 @@ always operate on the single grabbed event, regardless of how many are selected.
 > Follow-ups not yet implemented: rubber-band rectangle selection, group-drag
 > (moving a whole selection together), and a controlled `selectedEventIds` prop.
 
+## Links
+
+`links` draws a line from the end of one event to the start of another, with an
+arrowhead, above the bars and under the selected ones. A target that starts
+before its source ends is reached around the corner.
+
+```tsx
+const links: LinkType[] = [
+  { id: "a1-a2", fromEventId: "a1", toEventId: "a2" },
+  { id: "a2-a3", fromEventId: "a2", toEventId: "a3", style: { stroke: "#e65100", dash: [4, 3] } },
+];
+
+<Timeline links={links} onLinkReveal={(eventId) => …} … />
+```
+
+When one end of a link is scrolled above or below the view while the other is
+in it, a marker at that edge names it (its `props.label`). Clicking the marker
+scrolls its row into view, pans the window when the event is off it, and fires
+`onLinkReveal(eventId)`. Colours come from `theme.linkColor`, `theme.linkWidth`
+and `theme.linkMarkerTextColor`. Pass only the links you want shown, e.g. those
+of the selected group.
+
 ## Grouped (collapsible) rows
 
 Rows can be nested one level: give a row a `parentId` to make it a **child** of a

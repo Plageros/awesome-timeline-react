@@ -112,6 +112,21 @@ export type Theme = {
   pointerLineColor?: string;
   /** the pointer time label's text (default "#ffffff") */
   pointerLabelColor?: string;
+  /** a link's line, arrowhead and edge marker (default "#2563eb") */
+  linkColor?: string;
+  /** a link's line width in px (default 2) */
+  linkWidth?: number;
+  /** the text on a link's edge marker (default "#ffffff") */
+  linkMarkerTextColor?: string;
+};
+
+/** A line from the end of one event to the start of another (a step that follows another). When one
+ *  end is scrolled out of view, a marker at the edge names it; clicking the marker reveals it. */
+export type LinkType = {
+  id: string;
+  fromEventId: string;
+  toEventId: string;
+  style?: { stroke?: string; strokeWidth?: number; dash?: number[] };
 };
 
 // these stay unset unless given, so the stylesheet (and a `rowsHeader` class) still applies
@@ -407,6 +422,10 @@ export type TimelineProps = {
   onPointerTime?: (time: number | null) => void;
   /** layout animations: true (default), false to disable, or durations */
   animations?: AnimationConfig;
+  /** lines between events, drawn above the bars and under the selected ones */
+  links?: LinkType[];
+  /** fires when a link's edge marker is clicked, after the timeline has scrolled to that event */
+  onLinkReveal?: (eventId: string) => void;
 };
 
 /** @deprecated renamed to TimelineProps in 0.2.0 */

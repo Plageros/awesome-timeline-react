@@ -21,6 +21,7 @@ export type {
   TimeBarRowConfig,
   TimeBarUnit,
   EventPatch,
+  LinkType,
   TimelineHandle,
   TimelineProps,
   TimelineType,

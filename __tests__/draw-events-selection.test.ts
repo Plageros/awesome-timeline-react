@@ -94,6 +94,7 @@ const run = (selectedEventIds: Set<string>) => {
     draggedEventId: null,
     resizePreview: null,
     selectedEventIds,
+    links: [],
   };
 
   const ctx = makeCtx();

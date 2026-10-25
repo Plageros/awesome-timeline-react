@@ -15,7 +15,7 @@ const HANDLE_BAR_WIDTH = 3;
 const HANDLE_BAR_GAP = 1;
 const HANDLE_BAR_HEIGHT = 10;
 
-const roundedRect = (
+export const roundedRect = (
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
@@ -294,7 +294,8 @@ export const drawEvents = (
   view: RendererView,
   scene: SceneStore,
   font: string,
-  animator: LayoutAnimator
+  animator: LayoutAnimator,
+  beforeSelected?: () => void
 ) => {
   if (view.tick === null) return;
   const [windowStart, windowEnd] = view.windowTime;
@@ -465,5 +466,6 @@ export const drawEvents = (
     }
   }
 
+  beforeSelected?.();
   for (const paint of deferred) paint();
 };

@@ -11,6 +11,7 @@ import {
 import { SceneStore } from "../core/scene";
 import { TimelineRenderer } from "../canvas/renderer";
 import { hitTest, HitTarget } from "../core/hit-test";
+import { LinkMarker, markerAt } from "../core/links";
 import {
   canResizeEvent,
   computeDropTimes,
@@ -70,7 +71,8 @@ type InteractionState =
       anchorX: number;
       contentWidth: number;
       snapshot: ZoomBase;
-    };
+    }
+  | { mode: "marker"; eventId: string; startClientX: number; startClientY: number };
 
 type UseCanvasInteractionsArgs = {
   scene: SceneStore;
@@ -86,6 +88,7 @@ type UseCanvasInteractionsArgs = {
   onResize?: (props: OnResizeProps) => void;
   onEventClick?: (props: OnEventClickProps) => void;
   onEventHover?: (props: OnEventHoverProps) => void;
+  onLinkReveal?: (eventId: string) => void;
   eventsResize: boolean;
   panZoom?: PanZoomConfig;
   selectable: boolean;
@@ -125,6 +128,7 @@ const useCanvasInteractions = ({
   onResize,
   onEventClick,
   onEventHover,
+  onLinkReveal,
   eventsResize,
   panZoom,
   selectable,
@@ -262,6 +266,36 @@ const useCanvasInteractions = ({
     [dynamicCanvasRef, eventsResize]
   );
 
+  const markerUnder = useCallback(
+    (clientX: number, clientY: number): LinkMarker | null => {
+      const canvas = dynamicCanvasRef.current;
+      const renderer = rendererRef.current;
+      if (!canvas || !renderer) return null;
+      const rect = canvas.getBoundingClientRect();
+      return markerAt(renderer.getLinkMarkers(), clientX - rect.left, clientY - rect.top);
+    },
+    [dynamicCanvasRef, rendererRef]
+  );
+
+  /** Scroll a linked event into view: its row a third of the way down, and the window panned to its
+   *  start when that is off it. */
+  const reveal = useCallback(
+    (eventId: string) => {
+      const event = scene.getEvent(eventId);
+      if (!event) return;
+      const body = bodyRef.current;
+      const top = scene.getRowOffsets().offsetOf.get(event.rowId);
+      if (top !== undefined && body) body.scrollTop = Math.max(0, top - body.clientHeight / 3);
+      setWindowTime((prev) => {
+        if (event.startTime >= prev[0] && event.startTime <= prev[1]) return prev;
+        const span = prev[1] - prev[0];
+        return [event.startTime - span / 5, event.startTime - span / 5 + span];
+      });
+      onLinkReveal?.(eventId);
+    },
+    [scene, bodyRef, setWindowTime, onLinkReveal]
+  );
+
   // pan applies at most once per frame regardless of pointermove rate
   const schedulePan = useCallback(() => {
     if (panFrameRef.current !== null) return;
@@ -374,6 +408,17 @@ const useCanvasInteractions = ({
       }
 
       if (pointerEvent.button !== 0) return;
+      const marker = markerUnder(pointerEvent.clientX, pointerEvent.clientY);
+      if (marker) {
+        stateRef.current = {
+          mode: "marker",
+          eventId: marker.eventId,
+          startClientX: pointerEvent.clientX,
+          startClientY: pointerEvent.clientY,
+        };
+        canvas.setPointerCapture(pointerEvent.pointerId);
+        return;
+      }
       const hit = currentHit(pointerEvent.clientX, pointerEvent.clientY);
 
       if (hit?.kind === "event" && !hit.event.props?.isLocked) {
@@ -450,6 +495,7 @@ const useCanvasInteractions = ({
       rendererRef,
       styleGhost,
       selectable,
+      markerUnder,
     ]
   );
 
@@ -472,6 +518,7 @@ const useCanvasInteractions = ({
       } else {
         canvas.style.cursor = "grab";
       }
+      if (markerUnder(pointerEvent.clientX, pointerEvent.clientY)) canvas.style.cursor = "pointer";
 
       const hoveredId = hit?.kind === "event" ? hit.event.id : null;
       const prevId = prevHovered?.kind === "event" ? prevHovered.event.id : null;
@@ -513,6 +560,7 @@ const useCanvasInteractions = ({
       eventPromptRef,
       rendererRef,
       onEventHover,
+      markerUnder,
     ]
   );
 
@@ -614,6 +662,7 @@ const useCanvasInteractions = ({
         }
         return;
       }
+      if (state.mode === "marker") return;
       // resize
       state.deltaPx = pointerEvent.clientX - state.startClientX;
       rendererRef.current?.setView({
@@ -782,6 +831,12 @@ const useCanvasInteractions = ({
         }
       } else if (state.mode === "resize") {
         commitResize(state);
+      } else if (state.mode === "marker") {
+        const moved =
+          Math.abs(pointerEvent.clientX - state.startClientX) +
+            Math.abs(pointerEvent.clientY - state.startClientY) >
+          DRAG_THRESHOLD_PX;
+        if (!moved) reveal(state.eventId);
       }
     },
     [
@@ -795,6 +850,7 @@ const useCanvasInteractions = ({
       applySelection,
       getSelection,
       scene,
+      reveal,
     ]
   );
 

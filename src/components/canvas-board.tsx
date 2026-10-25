@@ -10,6 +10,7 @@ import React, {
 import {
   DrawEventFn,
   EventPromptActionsType,
+  LinkType,
   OnDropProps,
   OnEventClickProps,
   OnEventHoverProps,
@@ -46,6 +47,8 @@ type CanvasBoardProps = {
   onEventHover?: (props: OnEventHoverProps) => void;
   eventsResize: boolean;
   stripeOverlap: boolean;
+  links: LinkType[];
+  onLinkReveal?: (eventId: string) => void;
   timeBar?: TimeBarConfig;
   panZoom?: PanZoomConfig;
   animations: { layoutMs: number; fadeMs: number };
@@ -87,6 +90,8 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       onEventHover,
       eventsResize,
       stripeOverlap,
+      links,
+      onLinkReveal,
       timeBar,
       panZoom,
       animations,
@@ -139,6 +144,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
         drawEvent,
         eventsResize,
         stripeOverlap,
+        links,
         timeBar,
       });
     }, [
@@ -149,6 +155,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       drawEvent,
       eventsResize,
       stripeOverlap,
+      links,
       timeBar,
       animations,
       rendererRef,
@@ -310,6 +317,7 @@ const CanvasBoard = forwardRef<HTMLDivElement, CanvasBoardProps>(
       onResize,
       onEventClick,
       onEventHover,
+      onLinkReveal,
       eventsResize,
       panZoom,
       selectable,

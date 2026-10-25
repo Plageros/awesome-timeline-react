@@ -78,6 +78,7 @@ const run = (stripeOverlap: boolean, selected = false): Counts => {
     draggedEventId: null,
     resizePreview: null,
     selectedEventIds: new Set<string>(selected ? ["e"] : []),
+    links: [],
   };
   drawEvents(makeCtx(counts), view, scene, "16px sans-serif", new LayoutAnimator());
   return counts;
